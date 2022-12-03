@@ -1,0 +1,282 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Resource {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roleAccessesResource RoleAccessesResource[]
+}
+
+model Hospital {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  operatorAccount OperatorAccount[]
+  medicationPlan  MedicationPlan[]
+  article         Article[]
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roleAccessesResource   RoleAccessesResource[]
+  operatorAccountHasRole OperatorAccountHasRole[]
+}
+
+model UserAccount {
+  id                   Int      @id @default(autoincrement())
+  username             String   @unique @db.VarChar(255)
+  phoneNumber          String   @unique @db.VarChar(255)
+  passwordHash         String   @db.Text
+  email                String?  @unique @db.VarChar(255)
+  firstName            String   @db.VarChar(255)
+  lastName             String   @db.VarChar(255)
+  gender               String   @db.VarChar(255)
+  address              String?  @db.VarChar(255)
+  lastActive           DateTime
+  socialSecurityNumber String?  @unique @db.Text
+  nationality          String?  @db.VarChar(255)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  operatorAccount OperatorAccount?
+  patientAccount  PatientAccount?
+}
+
+model OperatorAccount {
+  userAccountId Int         @unique
+  userAccount   UserAccount @relation(fields: [userAccountId], references: [id])
+
+  hospitalId Int      @unique
+  hospital   Hospital @relation(fields: [hospitalId], references: [id])
+
+  hospitalAdminAccount   HospitalAdminAccount?
+  doctorAccount          DoctorAccount?
+  operatorAccountHasRole OperatorAccountHasRole[]
+
+  @@index([userAccountId])
+}
+
+model HospitalAdminAccount {
+  operatorAccountId Int             @unique
+  operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId])
+
+  doctorAccount DoctorAccount[]
+
+  @@index([operatorAccountId])
+}
+
+model DoctorAccount {
+  operatorAccountId Int             @unique
+  operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId])
+
+  hospitalAdminId Int                  @unique
+  hospitalAdmin   HospitalAdminAccount @relation(fields: [hospitalAdminId], references: [operatorAccountId])
+
+  faculty          String @db.VarChar(255)
+  yearOfExperience Float
+
+  doctorManagesPatient DoctorManagesPatient[]
+  qualification        Qualification[]
+  medicationPlan       MedicationPlan[]
+
+  @@index([operatorAccountId])
+}
+
+model PatientAccount {
+  userAccountId Int         @unique
+  userAccount   UserAccount @relation(fields: [userAccountId], references: [id])
+
+  occupation      String? @db.VarChar(255)
+  insuranceNumber String  @unique @db.VarChar(255)
+
+  doctorManagesPatient DoctorManagesPatient[]
+  patientSavesArticle  PatientSavesArticle[]
+  medicationPlan       MedicationPlan[]
+  reminderPlan         ReminderPlan[]
+
+  @@index([userAccountId])
+}
+
+model Qualification {
+  doctorAccountId Int           @unique
+  doctor          DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
+
+  name      String   @db.VarChar(255)
+  expireDay DateTime
+
+  @@index([doctorAccountId, name])
+}
+
+model MedicationPlan {
+  id                Int       @id @default(autoincrement())
+  name              String?   @db.VarChar(255)
+  frequency         String    @db.VarChar(255)
+  note              String?   @db.Text
+  takeRemindersPlan Int?
+  startDate         DateTime
+  endDate           DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  doctorAccountId Int           @unique
+  doctor          DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
+
+  patientAccountId Int            @unique
+  patient          PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+
+  hospitalId Int      @unique
+  hospital   Hospital @relation(fields: [hospitalId], references: [id])
+
+  medicationPlanIncludesMedication MedicationPlanIncludesMedication[]
+  reminderPlan                     ReminderPlan[]
+}
+
+model ReminderPlan {
+  id        Int       @id @default(autoincrement())
+  isTaken   Boolean
+  isSkipped Boolean
+  note      String?   @db.Text
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  medicationPlanId Int            @unique
+  medicationPlan   MedicationPlan @relation(fields: [medicationPlanId], references: [id])
+
+  patientAccountId Int            @unique
+  patient          PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+
+  reminderPlanIncludesMedication ReminderPlanIncludesMedication[]
+}
+
+model Medication {
+  id                Int      @id @default(autoincrement())
+  code              String   @unique @db.VarChar(255)
+  name              String   @unique @db.VarChar(255)
+  branch            String   @db.VarChar(255)
+  activeIngredients String?  @db.Text
+  positiveNote      String?  @db.Text
+  negativeNote      String?  @db.Text
+  alternativeName   String?  @db.VarChar(255)
+  description       String?  @db.Text
+  color             String?  @db.VarChar(255)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  medicationPlanIncludesMedication MedicationPlanIncludesMedication[]
+
+  reminderPlanIncludesMedication ReminderPlanIncludesMedication[]
+}
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title     String   @unique @db.Text
+  content   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hospitalId Int      @unique
+  hospital   Hospital @relation(fields: [hospitalId], references: [id])
+
+  patientSavesArticle PatientSavesArticle[]
+}
+
+// RELATION TABLE
+
+model DoctorManagesPatient {
+  doctorId Int           @unique
+  doctor   DoctorAccount @relation(fields: [doctorId], references: [operatorAccountId])
+
+  patientId Int            @unique
+  patient   PatientAccount @relation(fields: [patientId], references: [userAccountId])
+
+  @@index([doctorId, patientId])
+}
+
+model MedicationPlanIncludesMedication {
+  medicationPlanId Int            @unique
+  medicationPlan   MedicationPlan @relation(fields: [medicationPlanId], references: [id])
+
+  medicationId Int        @unique
+  medication   Medication @relation(fields: [medicationId], references: [id])
+
+  stock Int @default(0)
+
+  @@index([medicationPlanId, medicationId])
+}
+
+model ReminderPlanIncludesMedication {
+  reminderPlanId Int          @unique
+  reminderPlan   ReminderPlan @relation(fields: [reminderPlanId], references: [id])
+
+  medicationId Int        @unique
+  medication   Medication @relation(fields: [medicationId], references: [id])
+
+  isLocal Boolean @default(false)
+  amount  Int     @default(0)
+
+  @@index([reminderPlanId, medicationId])
+}
+
+model PatientSavesArticle {
+  patientId Int            @unique
+  patient   PatientAccount @relation(fields: [patientId], references: [userAccountId])
+
+  articleId Int     @unique
+  article   Article @relation(fields: [articleId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([patientId, articleId])
+}
+
+model RoleAccessesResource {
+  roleId Int  @unique
+  role   Role @relation(fields: [roleId], references: [id])
+
+  resourceId Int      @unique
+  resource   Resource @relation(fields: [resourceId], references: [id])
+
+  canAdd    Boolean  @default(false)
+  canView   Boolean  @default(false)
+  canEdit   Boolean  @default(false)
+  canDelete Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roleId, resourceId])
+}
+
+model OperatorAccountHasRole {
+  operatorAccountId Int             @unique
+  operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId])
+
+  roleId Int  @unique
+  role   Role @relation(fields: [roleId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([operatorAccountId, roleId])
+}

@@ -1,0 +1,269 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Resource {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  roleAccesesResources RoleAccessesResource[]
+
+  @@map("resource")
+}
+
+model RoleAccessesResource {
+  resource   Resource @relation(fields: [resourceId], references: [id])
+  resourceId Int      @map("resource_id")
+  role       Role     @relation(fields: [roleId], references: [id])
+  roleId     Int      @map("role_id")
+  canView    Boolean  @default(false) @map("can_view")
+  canAdd     Boolean  @default(false) @map("can_add")
+  canEdit    Boolean  @default(false) @map("can_edit")
+  canDelete  Boolean  @default(false) @map("can_delete")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@id([resourceId, roleId])
+  @@map("role_accesses_resource")
+}
+
+model Role {
+  id                    Int                    @id @default(autoincrement())
+  name                  String                 @unique @db.VarChar(255)
+  description           String?                @db.Text
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  roleAccessesResources RoleAccessesResource[]
+  userAccountHasRole    UserAccountHasRole[]
+
+  @@map("role")
+}
+
+model UserAccountHasRole {
+  userAccountId Int         @map("user_account_id")
+  user          UserAccount @relation(fields: [userAccountId], references: [id])
+  roleId        Int         @map("role_id")
+  role          Role        @relation(fields: [roleId], references: [id])
+
+  @@id([userAccountId, roleId])
+  @@map("user_account_has_role")
+}
+
+model UserAccount {
+  id                   Int      @id @default(autoincrement())
+  username             String   @unique @db.VarChar(255)
+  phoneNumber          String   @unique @db.VarChar(255)
+  passwordHash         String   @map("password_hash") @db.Text
+  email                String?  @unique @db.VarChar(255)
+  firstName            String   @map("first_name") @db.VarChar(255)
+  lastName             String   @map("last_name") @db.VarChar(255)
+  gender               String   @db.VarChar(255)
+  address              String?  @db.VarChar(255)
+  lastActive           DateTime @default(now()) @map("last_active")
+  socialSecurityNumber String?  @unique @map("social_security_number") @db.Text
+  nationality          String?  @db.VarChar(255)
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  userAccountHasRoles UserAccountHasRole[]
+  patientAccount      PatientAccount?
+  operatorAccount     OperatorAccount?
+
+  @@map("user_account")
+}
+
+model OperatorAccount {
+  userAccountId Int         @unique @map("user_account_id")
+  user          UserAccount @relation(fields: [userAccountId], references: [id])
+
+  hospitalId           Int                   @map("hospital_id")
+  hospital             Hospital              @relation(fields: [hospitalId], references: [id])
+  hospitalAdminAccount HospitalAdminAccount?
+  doctorAccount        DoctorAccount?
+
+  @@map("operator_account")
+}
+
+model HospitalAdminAccount {
+  operatorAccountId Int             @unique @map("operator_account_id")
+  operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId])
+
+  doctorAccounts DoctorAccount[]
+
+  @@map("hospital_admin_account")
+}
+
+model DoctorAccount {
+  operatorAccountId Int             @unique @map("operator_account_id")
+  operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId])
+
+  hospitalAdminAccountId Int                  @map("hospital_admin_account_id")
+  hospitalAdminAccount   HospitalAdminAccount @relation(fields: [hospitalAdminAccountId], references: [operatorAccountId])
+
+  faculty          String @db.VarChar(255)
+  yearOfExperience Float  @map("year_of_experience")
+
+  qualifications        Qualification[]
+  doctorManagesPatients DoctorManagesPatient[]
+  medicationPlans       MedicationPlan[]
+
+  @@map("doctor_account")
+}
+
+model DoctorManagesPatient {
+  doctorAccount   DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
+  doctorAccountId Int           @map("doctor_account_id")
+
+  patientAccount   PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+  patientAccountId Int            @map("patient_account_id")
+
+  @@id([doctorAccountId, patientAccountId])
+  @@map("doctor_manages_patient")
+}
+
+model Qualification {
+  doctorAccountId Int           @map("doctor_account_id")
+  doctorAccount   DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
+
+  name      String   @db.VarChar(255)
+  expireDay DateTime @map("expire_day")
+
+  @@id([doctorAccountId, name])
+  @@map("qualification")
+}
+
+model PatientAccount {
+  userAccountId Int         @unique @map("user_account_id")
+  userAccount   UserAccount @relation(fields: [userAccountId], references: [id])
+
+  insuranceNumber String  @unique @map("insurance_number") @db.VarChar(255)
+  occupation      String? @db.VarChar(255)
+
+  doctorManagesPatients DoctorManagesPatient[]
+  medicationPlans       MedicationPlan[]
+  reminderPlans         ReminderPlan[]
+  patientSavesArticles  PatientSavesArticle[]
+
+  @@map("patient_account")
+}
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title     String   @unique @db.Text
+  content   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  hospitalId           Int
+  hospital             Hospital              @relation(fields: [hospitalId], references: [id])
+  patientSavesArticles PatientSavesArticle[]
+
+  @@map("article")
+}
+
+model PatientSavesArticle {
+  patientAccountId Int            @map("patient_account_id")
+  patientAccount   PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+
+  articleId Int     @map("article_id")
+  article   Article @relation(fields: [articleId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([patientAccountId, articleId])
+  @@map("patient_saves_article")
+}
+
+model Hospital {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  articles         Article[]
+  operatorAccounts OperatorAccount[]
+
+  @@map("hospital")
+}
+
+model MedicationPlan {
+  id                 Int       @id @default(autoincrement())
+  name               String?   @db.VarChar(255)
+  frequency          String    @db.VarChar(255)
+  note               String?   @db.Text
+  stockInformation   Json      @map("stock_information") @db.Json
+  takenRemindersPlan Int?      @map("taken_reminders_plan")
+  startDate          DateTime  @map("start_date")
+  endDate            DateTime? @map("end_date")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  doctorAccountId Int           @map("doctor_account_id")
+  doctorAccount   DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
+
+  patientAccountId Int            @map("patient_account_id")
+  patientAccount   PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+
+  reminderPlans ReminderPlan[]
+
+  @@map("medication_plan")
+}
+
+model ReminderPlan {
+  id        Int       @id @default(autoincrement())
+  isTaken   Boolean   @map("is_taken")
+  isSkipped Boolean   @map("is_skipped")
+  note      String?   @db.Text
+  sentAt    DateTime? @map("sent_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  medicationPlanId Int            @map("medication_plan_id")
+  medicationPlan   MedicationPlan @relation(fields: [medicationPlanId], references: [id])
+
+  patientAccountId Int            @map("patient_account_id")
+  patientAccount   PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+
+  reminderPlanIncludesMedications ReminderPlanIncludesMedication[]
+
+  @@map("reminder_plan")
+}
+
+model ReminderPlanIncludesMedication {
+  reminderPlanId Int          @map("reminder_plan_id")
+  reminderPlan   ReminderPlan @relation(fields: [reminderPlanId], references: [id])
+
+  medicationId Int        @map("medication_id")
+  medication   Medication @relation(fields: [medicationId], references: [id])
+
+  isLocal Boolean @default(false) @map("is_local")
+  amount  Int     @default(0)
+
+  @@id([reminderPlanId, medicationId])
+  @@map("reminder_plan_includes_medication")
+}
+
+model Medication {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique @db.VarChar(255)
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  reminderPlanIncludesMedications ReminderPlanIncludesMedication[]
+
+  @@map("medication")
+}

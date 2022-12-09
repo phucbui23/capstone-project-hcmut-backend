@@ -1,11 +1,19 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 
+import res from './sample_medication.json';
 import {
   RESOURCES,
   RESOURCE_LIST,
   DEPENDENT_RESOURCE_LIST,
 } from './seed-data/resources';
 import { ROLES } from './seed-data/roles';
+
+//Map the data to data array to be used in createMany
+const data = res.drugbank.drug.map((drug) => ({
+  code : drug['drugbank-id'][0],
+  name : drug.name,
+  description : drug.description,
+}));
 
 const prisma = new PrismaClient();
 
@@ -314,6 +322,11 @@ async function main() {
         ],
       },
     },
+  })
+  
+  await prisma.medication.createMany({
+    data,
+    skipDuplicates: true, // Skip duplicate entries
   });
 }
 

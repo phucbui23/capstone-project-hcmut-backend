@@ -24,8 +24,8 @@ CREATE DATABASE medireminder_nestjs_api_dev WITH OWNER developer;
 
 Run the following command to create your PostgreSQL database file. This also creates the tables that are defined in [`prisma/schema.prisma`](./capstone_project/prisma/schema.prisma):
 
-```nodejs
-npx prisma migrate dev --name init
+```
+npx prisma migrate
 ```
 
 First, we need to assure that the right schema is being used, run the above command first to migrate.Before seeding the database, we need to add the following packages to the project, run:

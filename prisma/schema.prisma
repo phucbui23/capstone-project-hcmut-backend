@@ -10,6 +10,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Frequency {
+  AS_NEEDED
+  DAILY
+  SELECTED_DAYS
+  DAY_INTERVAL
+  MONTH_INTERVAL
+}
+
 model Resource {
   id          Int      @id @default(autoincrement())
   name        String   @unique @db.VarChar(255)
@@ -64,18 +78,22 @@ model UserAccountHasRole {
 }
 
 model UserAccount {
-  id                   Int      @id @default(autoincrement())
-  email                String?  @unique @db.VarChar(255)
-  firstName            String   @map("first_name") @db.VarChar(255)
-  lastName             String   @map("last_name") @db.VarChar(255)
-  gender               String   @db.VarChar(255)
-  address              String?  @db.VarChar(255)
-  lastActive           DateTime @default(now()) @map("last_active")
-  socialSecurityNumber String?  @unique @map("social_security_number") @db.Text
-  nationality          String?  @db.VarChar(255)
-  createdAt            DateTime @default(now()) @map("created_at")
-  updatedAt            DateTime @updatedAt @map("updated_at")
+  id                   Int       @id @default(autoincrement())
+  attachmentId         Int?      @unique
+  code                 String    @default(uuid())
+  email                String?   @unique @db.VarChar(255)
+  firstName            String?   @map("first_name") @db.VarChar(255)
+  lastName             String?   @map("last_name") @db.VarChar(255)
+  gender               Gender?
+  address              String?   @db.VarChar(255)
+  socialSecurityNumber String?   @unique @map("social_security_number") @db.Text
+  nationality          String?   @db.VarChar(255)
+  birthday             DateTime? @db.Date
+  lastActive           DateTime  @default(now()) @map("last_active")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
+  avatar              Attachment?          @relation(fields: [attachmentId], references: [id])
   userAccountHasRoles UserAccountHasRole[]
   patientAccount      PatientAccount?
   operatorAccount     OperatorAccount?
@@ -84,9 +102,9 @@ model UserAccount {
 }
 
 model OperatorAccount {
-  phoneNumber   String? @default("") @map("phone_number") @db.VarChar(255)
   username      String  @unique @db.VarChar(255)
   passwordHash  String  @map("password_hash") @db.Text
+  phoneNumber   String? @map("phone_number") @db.VarChar(255)
   userAccountId Int     @unique @map("user_account_id")
   hospitalId    Int     @map("hospital_id")
 
@@ -108,10 +126,10 @@ model HospitalAdminAccount {
 }
 
 model DoctorAccount {
-  operatorAccountId      Int    @unique @map("operator_account_id")
-  hospitalAdminAccountId Int    @map("hospital_admin_account_id")
-  faculty                String @db.VarChar(255)
-  yearOfExperience       Float  @map("year_of_experience")
+  operatorAccountId      Int     @unique @map("operator_account_id")
+  hospitalAdminAccountId Int     @map("hospital_admin_account_id")
+  faculty                String? @db.VarChar(255)
+  yearOfExperience       Float?  @map("year_of_experience")
 
   operatorAccount       OperatorAccount        @relation(fields: [operatorAccountId], references: [userAccountId])
   hospitalAdminAccount  HospitalAdminAccount   @relation(fields: [hospitalAdminAccountId], references: [operatorAccountId])
@@ -147,9 +165,9 @@ model Qualification {
 model PatientAccount {
   userAccountId   Int     @unique @map("user_account_id")
   phoneNumber     String  @unique @map("phone_number") @db.VarChar(255)
-  username        String? @default("") @db.VarChar(255)
   passwordHash    String  @map("password_hash") @db.Text
-  insuranceNumber String  @unique @map("insurance_number") @db.VarChar(255)
+  username        String? @default(uuid()) @db.VarChar(255)
+  insuranceNumber String? @unique @map("insurance_number") @db.VarChar(255)
   occupation      String? @db.VarChar(255)
 
   userAccount           UserAccount            @relation(fields: [userAccountId], references: [id])
@@ -163,14 +181,15 @@ model PatientAccount {
 
 model Article {
   id         Int      @id @default(autoincrement())
+  hospitalId Int      @map("hospital_id")
   title      String   @unique @db.Text
   content    String?  @db.Text
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
-  hospitalId Int
 
-  hospital             Hospital              @relation(fields: [hospitalId], references: [id])
-  patientSavesArticles PatientSavesArticle[]
+  hospital                  Hospital                    @relation(fields: [hospitalId], references: [id])
+  patientSavesArticles      PatientSavesArticle[]
+  ArticleIncludesAttachment ArticleIncludesAttachment[]
 
   @@map("article")
 }
@@ -202,8 +221,10 @@ model Hospital {
 
 model MedicationPlan {
   id                 Int       @id @default(autoincrement())
+  doctorAccountId    Int       @map("doctor_account_id")
+  patientAccountId   Int       @map("patient_account_id")
   name               String?   @db.VarChar(255)
-  frequency          String    @db.VarChar(255)
+  frequency          Frequency @default(AS_NEEDED)
   note               String?   @db.Text
   stockInformation   Json      @map("stock_information") @db.Json
   takenRemindersPlan Int?      @map("taken_reminders_plan")
@@ -211,8 +232,6 @@ model MedicationPlan {
   endDate            DateTime? @map("end_date")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
-  doctorAccountId    Int       @map("doctor_account_id")
-  patientAccountId   Int       @map("patient_account_id")
 
   doctorAccount  DoctorAccount  @relation(fields: [doctorAccountId], references: [operatorAccountId])
   patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
@@ -223,8 +242,8 @@ model MedicationPlan {
 
 model ReminderPlan {
   id               Int       @id @default(autoincrement())
-  isTaken          Boolean   @map("is_taken")
-  isSkipped        Boolean   @map("is_skipped")
+  isTaken          Boolean   @default(false) @map("is_taken")
+  isSkipped        Boolean   @default(false) @map("is_skipped")
   note             String?   @db.Text
   sentAt           DateTime? @map("sent_at")
   createdAt        DateTime  @default(now()) @map("created_at")
@@ -240,10 +259,11 @@ model ReminderPlan {
 }
 
 model ReminderPlanIncludesMedication {
-  reminderPlanId Int     @map("reminder_plan_id")
-  medicationId   Int     @map("medication_id")
-  isLocal        Boolean @default(false) @map("is_local")
-  amount         Int     @default(0)
+  reminderPlanId      Int     @map("reminder_plan_id")
+  medicationId        Int     @map("medication_id")
+  isLocal             Boolean @default(false) @map("is_local")
+  localMedicationName String? @map("local_medication_name")
+  amount              Int     @default(0)
 
   reminderPlan ReminderPlan @relation(fields: [reminderPlanId], references: [id])
   medication   Medication   @relation(fields: [medicationId], references: [id])
@@ -263,4 +283,28 @@ model Medication {
   reminderPlanIncludesMedications ReminderPlanIncludesMedication[]
 
   @@map("medication")
+}
+
+model ArticleIncludesAttachment {
+  articleId    Int @map("article_id")
+  attachmentId Int @map("attachment_id")
+
+  article    Article    @relation(fields: [articleId], references: [id])
+  attachment Attachment @relation(fields: [attachmentId], references: [id])
+
+  @@id([articleId, attachmentId])
+  @@map("article_includes_attachment")
+}
+
+model Attachment {
+  id                        Int                         @id @default(autoincrement())
+  fileName                  String?                     @map("file_name")
+  filePath                  String?                     @map("file_path")
+  fileSize                  BigInt?                     @map("file_size")
+  createdAt                 DateTime                    @default(now()) @map("created_at")
+  updatedAt                 DateTime                    @updatedAt @map("updated_at")
+  ArticleIncludesAttachment ArticleIncludesAttachment[]
+  UserAccount               UserAccount?
+
+  @@map("attachment")
 }

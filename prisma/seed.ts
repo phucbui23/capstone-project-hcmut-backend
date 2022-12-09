@@ -8,7 +8,7 @@ import {
 } from './seed-data/resources';
 import { ROLES } from './seed-data/roles';
 
-//Map the data to data array to be used in createMany
+// Map the data to data array to be used in createMany
 const data = res.drugbank.drug.map((drug) => ({
   code : drug['drugbank-id'][0],
   name : drug.name,

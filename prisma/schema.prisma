@@ -23,9 +23,7 @@ model Resource {
 }
 
 model RoleAccessesResource {
-  resource   Resource @relation(fields: [resourceId], references: [id])
   resourceId Int      @map("resource_id")
-  role       Role     @relation(fields: [roleId], references: [id])
   roleId     Int      @map("role_id")
   canView    Boolean  @default(false) @map("can_view")
   canAdd     Boolean  @default(false) @map("can_add")
@@ -34,16 +32,20 @@ model RoleAccessesResource {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
+  resource Resource @relation(fields: [resourceId], references: [id])
+  role     Role     @relation(fields: [roleId], references: [id])
+
   @@id([resourceId, roleId])
   @@map("role_accesses_resource")
 }
 
 model Role {
-  id                    Int                    @id @default(autoincrement())
-  name                  String                 @unique @db.VarChar(255)
-  description           String?                @db.Text
-  createdAt             DateTime               @default(now()) @map("created_at")
-  updatedAt             DateTime               @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
   roleAccessesResources RoleAccessesResource[]
   userAccountHasRole    UserAccountHasRole[]
 
@@ -51,10 +53,11 @@ model Role {
 }
 
 model UserAccountHasRole {
-  userAccountId Int         @map("user_account_id")
-  user          UserAccount @relation(fields: [userAccountId], references: [id])
-  roleId        Int         @map("role_id")
-  role          Role        @relation(fields: [roleId], references: [id])
+  userAccountId Int @map("user_account_id")
+  roleId        Int @map("role_id")
+
+  role Role        @relation(fields: [roleId], references: [id])
+  user UserAccount @relation(fields: [userAccountId], references: [id])
 
   @@id([userAccountId, roleId])
   @@map("user_account_has_role")
@@ -62,9 +65,6 @@ model UserAccountHasRole {
 
 model UserAccount {
   id                   Int      @id @default(autoincrement())
-  username             String   @unique @db.VarChar(255)
-  phoneNumber          String   @unique @db.VarChar(255)
-  passwordHash         String   @map("password_hash") @db.Text
   email                String?  @unique @db.VarChar(255)
   firstName            String   @map("first_name") @db.VarChar(255)
   lastName             String   @map("last_name") @db.VarChar(255)
@@ -84,10 +84,13 @@ model UserAccount {
 }
 
 model OperatorAccount {
-  userAccountId Int         @unique @map("user_account_id")
-  user          UserAccount @relation(fields: [userAccountId], references: [id])
+  phoneNumber   String? @default("") @map("phone_number") @db.VarChar(255)
+  username      String  @unique @db.VarChar(255)
+  passwordHash  String  @map("password_hash") @db.Text
+  userAccountId Int     @unique @map("user_account_id")
+  hospitalId    Int     @map("hospital_id")
 
-  hospitalId           Int                   @map("hospital_id")
+  user                 UserAccount           @relation(fields: [userAccountId], references: [id])
   hospital             Hospital              @relation(fields: [hospitalId], references: [id])
   hospitalAdminAccount HospitalAdminAccount?
   doctorAccount        DoctorAccount?
@@ -105,15 +108,13 @@ model HospitalAdminAccount {
 }
 
 model DoctorAccount {
-  operatorAccountId Int             @unique @map("operator_account_id")
-  operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId])
+  operatorAccountId      Int    @unique @map("operator_account_id")
+  hospitalAdminAccountId Int    @map("hospital_admin_account_id")
+  faculty                String @db.VarChar(255)
+  yearOfExperience       Float  @map("year_of_experience")
 
-  hospitalAdminAccountId Int                  @map("hospital_admin_account_id")
-  hospitalAdminAccount   HospitalAdminAccount @relation(fields: [hospitalAdminAccountId], references: [operatorAccountId])
-
-  faculty          String @db.VarChar(255)
-  yearOfExperience Float  @map("year_of_experience")
-
+  operatorAccount       OperatorAccount        @relation(fields: [operatorAccountId], references: [userAccountId])
+  hospitalAdminAccount  HospitalAdminAccount   @relation(fields: [hospitalAdminAccountId], references: [operatorAccountId])
   qualifications        Qualification[]
   doctorManagesPatients DoctorManagesPatient[]
   medicationPlans       MedicationPlan[]
@@ -122,34 +123,36 @@ model DoctorAccount {
 }
 
 model DoctorManagesPatient {
-  doctorAccount   DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
-  doctorAccountId Int           @map("doctor_account_id")
+  doctorAccountId  Int @map("doctor_account_id")
+  patientAccountId Int @map("patient_account_id")
 
-  patientAccount   PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
-  patientAccountId Int            @map("patient_account_id")
+  doctorAccount  DoctorAccount  @relation(fields: [doctorAccountId], references: [operatorAccountId])
+  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
 
   @@id([doctorAccountId, patientAccountId])
   @@map("doctor_manages_patient")
 }
 
 model Qualification {
-  doctorAccountId Int           @map("doctor_account_id")
-  doctorAccount   DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
+  doctorAccountId Int      @map("doctor_account_id")
+  name            String   @db.VarChar(255)
+  expireDay       DateTime @map("expire_day")
 
-  name      String   @db.VarChar(255)
-  expireDay DateTime @map("expire_day")
+  doctorAccount DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
 
   @@id([doctorAccountId, name])
   @@map("qualification")
 }
 
 model PatientAccount {
-  userAccountId Int         @unique @map("user_account_id")
-  userAccount   UserAccount @relation(fields: [userAccountId], references: [id])
-
+  userAccountId   Int     @unique @map("user_account_id")
+  phoneNumber     String  @unique @map("phone_number") @db.VarChar(255)
+  username        String? @default("") @db.VarChar(255)
+  passwordHash    String  @map("password_hash") @db.Text
   insuranceNumber String  @unique @map("insurance_number") @db.VarChar(255)
   occupation      String? @db.VarChar(255)
 
+  userAccount           UserAccount            @relation(fields: [userAccountId], references: [id])
   doctorManagesPatients DoctorManagesPatient[]
   medicationPlans       MedicationPlan[]
   reminderPlans         ReminderPlan[]
@@ -159,13 +162,13 @@ model PatientAccount {
 }
 
 model Article {
-  id        Int      @id @default(autoincrement())
-  title     String   @unique @db.Text
-  content   String?  @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         Int      @id @default(autoincrement())
+  title      String   @unique @db.Text
+  content    String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  hospitalId Int
 
-  hospitalId           Int
   hospital             Hospital              @relation(fields: [hospitalId], references: [id])
   patientSavesArticles PatientSavesArticle[]
 
@@ -173,13 +176,12 @@ model Article {
 }
 
 model PatientSavesArticle {
-  patientAccountId Int            @map("patient_account_id")
-  patientAccount   PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+  patientAccountId Int      @map("patient_account_id")
+  articleId        Int      @map("article_id")
+  createdAt        DateTime @default(now()) @map("created_at")
 
-  articleId Int     @map("article_id")
-  article   Article @relation(fields: [articleId], references: [id])
-
-  createdAt DateTime @default(now()) @map("created_at")
+  article        Article        @relation(fields: [articleId], references: [id])
+  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
 
   @@id([patientAccountId, articleId])
   @@map("patient_saves_article")
@@ -209,47 +211,42 @@ model MedicationPlan {
   endDate            DateTime? @map("end_date")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
+  doctorAccountId    Int       @map("doctor_account_id")
+  patientAccountId   Int       @map("patient_account_id")
 
-  doctorAccountId Int           @map("doctor_account_id")
-  doctorAccount   DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
-
-  patientAccountId Int            @map("patient_account_id")
-  patientAccount   PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
-
-  reminderPlans ReminderPlan[]
+  doctorAccount  DoctorAccount  @relation(fields: [doctorAccountId], references: [operatorAccountId])
+  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+  reminderPlans  ReminderPlan[]
 
   @@map("medication_plan")
 }
 
 model ReminderPlan {
-  id        Int       @id @default(autoincrement())
-  isTaken   Boolean   @map("is_taken")
-  isSkipped Boolean   @map("is_skipped")
-  note      String?   @db.Text
-  sentAt    DateTime? @map("sent_at")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  id               Int       @id @default(autoincrement())
+  isTaken          Boolean   @map("is_taken")
+  isSkipped        Boolean   @map("is_skipped")
+  note             String?   @db.Text
+  sentAt           DateTime? @map("sent_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  medicationPlanId Int       @map("medication_plan_id")
+  patientAccountId Int       @map("patient_account_id")
 
-  medicationPlanId Int            @map("medication_plan_id")
-  medicationPlan   MedicationPlan @relation(fields: [medicationPlanId], references: [id])
-
-  patientAccountId Int            @map("patient_account_id")
-  patientAccount   PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
-
+  medicationPlan                  MedicationPlan                   @relation(fields: [medicationPlanId], references: [id])
+  patientAccount                  PatientAccount                   @relation(fields: [patientAccountId], references: [userAccountId])
   reminderPlanIncludesMedications ReminderPlanIncludesMedication[]
 
   @@map("reminder_plan")
 }
 
 model ReminderPlanIncludesMedication {
-  reminderPlanId Int          @map("reminder_plan_id")
-  reminderPlan   ReminderPlan @relation(fields: [reminderPlanId], references: [id])
+  reminderPlanId Int     @map("reminder_plan_id")
+  medicationId   Int     @map("medication_id")
+  isLocal        Boolean @default(false) @map("is_local")
+  amount         Int     @default(0)
 
-  medicationId Int        @map("medication_id")
-  medication   Medication @relation(fields: [medicationId], references: [id])
-
-  isLocal Boolean @default(false) @map("is_local")
-  amount  Int     @default(0)
+  reminderPlan ReminderPlan @relation(fields: [reminderPlanId], references: [id])
+  medication   Medication   @relation(fields: [medicationId], references: [id])
 
   @@id([reminderPlanId, medicationId])
   @@map("reminder_plan_includes_medication")

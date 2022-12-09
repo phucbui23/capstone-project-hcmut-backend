@@ -90,7 +90,7 @@ model OperatorAccount {
   userAccountId Int     @unique @map("user_account_id")
   hospitalId    Int     @map("hospital_id")
 
-  user                 UserAccount           @relation(fields: [userAccountId], references: [id])
+  userAccount          UserAccount           @relation(fields: [userAccountId], references: [id])
   hospital             Hospital              @relation(fields: [hospitalId], references: [id])
   hospitalAdminAccount HospitalAdminAccount?
   doctorAccount        DoctorAccount?

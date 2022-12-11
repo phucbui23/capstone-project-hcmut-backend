@@ -79,7 +79,6 @@ model UserAccountHasRole {
 
 model UserAccount {
   id                   Int       @id @default(autoincrement())
-  attachmentId         Int?      @unique
   code                 String    @default(uuid())
   email                String?   @unique @db.VarChar(255)
   firstName            String?   @map("first_name") @db.VarChar(255)
@@ -93,10 +92,10 @@ model UserAccount {
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
-  avatar              Attachment?          @relation(fields: [attachmentId], references: [id])
   userAccountHasRoles UserAccountHasRole[]
   patientAccount      PatientAccount?
   operatorAccount     OperatorAccount?
+  Attachment          Attachment[]
 
   @@map("user_account")
 }
@@ -163,12 +162,12 @@ model Qualification {
 }
 
 model PatientAccount {
-  userAccountId   Int     @unique @map("user_account_id")
   phoneNumber     String  @unique @map("phone_number") @db.VarChar(255)
   passwordHash    String  @map("password_hash") @db.Text
   username        String? @default(uuid()) @db.VarChar(255)
   insuranceNumber String? @unique @map("insurance_number") @db.VarChar(255)
   occupation      String? @db.VarChar(255)
+  userAccountId   Int     @unique @map("user_account_id")
 
   userAccount           UserAccount            @relation(fields: [userAccountId], references: [id])
   doctorManagesPatients DoctorManagesPatient[]
@@ -187,9 +186,9 @@ model Article {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  hospital                  Hospital                    @relation(fields: [hospitalId], references: [id])
-  patientSavesArticles      PatientSavesArticle[]
-  ArticleIncludesAttachment ArticleIncludesAttachment[]
+  hospital                   Hospital                    @relation(fields: [hospitalId], references: [id])
+  patientSavesArticles       PatientSavesArticle[]
+  articleIncludesAttachments ArticleIncludesAttachment[]
 
   @@map("article")
 }
@@ -297,14 +296,16 @@ model ArticleIncludesAttachment {
 }
 
 model Attachment {
-  id                        Int                         @id @default(autoincrement())
-  fileName                  String?                     @map("file_name")
-  filePath                  String?                     @map("file_path")
-  fileSize                  BigInt?                     @map("file_size")
-  createdAt                 DateTime                    @default(now()) @map("created_at")
-  updatedAt                 DateTime                    @updatedAt @map("updated_at")
-  ArticleIncludesAttachment ArticleIncludesAttachment[]
-  UserAccount               UserAccount?
+  id            Int      @id @default(autoincrement())
+  userAccountId Int?     @map("user_account_id")
+  fileName      String?  @map("file_name")
+  filePath      String?  @map("file_path")
+  fileSize      BigInt?  @map("file_size")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  userAccount                UserAccount?                @relation(fields: [userAccountId], references: [id])
+  articleIncludesAttachments ArticleIncludesAttachment[]
 
   @@map("attachment")
 }

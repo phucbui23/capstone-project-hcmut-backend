@@ -147,6 +147,21 @@ async function main() {
       description: RESOURCES.medication,
     },
   });
+
+  const articleIncludesAttachmentResource = await prisma.resource.create({
+    data: {
+      name: RESOURCES.articleIncludesAttachment,
+      description: RESOURCES.articleIncludesAttachment,
+    }
+  })
+
+  const attachmentResource = await prisma.resource.create({
+    data: {
+      name: RESOURCES.attachment,
+      description: RESOURCES.attachment,
+    }
+  })
+
   // Initialize RBAC model for specific type of users
   await prisma.role.create({
     data: {
@@ -172,6 +187,8 @@ async function main() {
             reminderPlanResource,
             reminderPlanIncludesMedicationResource,
             medicationResource,
+            articleIncludesAttachmentResource,
+            attachmentResource,
           ].map(
             (resource): Prisma.RoleAccessesResourceCreateWithoutRoleInput => ({
               canAdd: true,
@@ -206,6 +223,7 @@ async function main() {
             medicationPlanResource,
             reminderPlanResource,
             reminderPlanIncludesMedicationResource,
+            articleIncludesAttachmentResource
           ].map(
             (resource): Prisma.RoleAccessesResourceCreateWithoutRoleInput => ({
               canAdd: true,
@@ -219,7 +237,7 @@ async function main() {
               },
             }),
           ),
-          ...[medicationResource, hospitalResource].map(
+          ...[medicationResource, hospitalResource, attachmentResource].map(
             (resource): Prisma.RoleAccessesResourceCreateWithoutRoleInput => ({
               canAdd: false,
               canDelete: false,
@@ -306,7 +324,10 @@ async function main() {
               },
             }),
           ),
-          ...[articleResource, medicationResource].map(
+          ...[
+            articleResource, 
+            medicationResource,
+          ].map(
             (resource): Prisma.RoleAccessesResourceCreateWithoutRoleInput => ({
               canAdd: false,
               canDelete: false,

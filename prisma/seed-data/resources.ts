@@ -1,6 +1,5 @@
 export const DEPENDENT_RESOURCES = {
   roleAccessResource: 'role_accesses_resource',
-  userAccountHasRole: 'user_account_has_role',
   operatorAccount: 'operator_account',
   hospitalAdminAccount: 'hospital_admin_account',
   doctorAccount: 'doctor_account',
@@ -16,7 +15,6 @@ export const RESOURCES = {
   resource: 'resource',
   roleAccessResource: 'role_accesses_resource',
   role: 'role',
-  userAccountHasRole: 'user_account_has_role',
   userAccount: 'user_account',
   operatorAccount: 'operator_account',
   hospitalAdminAccount: 'hospital_admin_account',

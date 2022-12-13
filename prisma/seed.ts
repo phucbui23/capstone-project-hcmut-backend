@@ -50,13 +50,6 @@ async function main() {
     },
   });
 
-  const userAccountHasRoleResource = await prisma.resource.create({
-    data: {
-      name: RESOURCES.userAccountHasRole,
-      description: RESOURCES.userAccountHasRole,
-    },
-  });
-
   const userAccountResource = await prisma.resource.create({
     data: {
       name: RESOURCES.userAccount,
@@ -173,7 +166,6 @@ async function main() {
             resourceResource,
             roleAccessesResourceResource,
             roleResource,
-            userAccountHasRoleResource,
             userAccountResource,
             operatorAccountResource,
             hospitalAdminAccountResource,
@@ -213,7 +205,6 @@ async function main() {
       roleAccessesResources: {
         create: [
           ...[
-            userAccountHasRoleResource,
             operatorAccountResource,
             doctorAccountResource,
             doctorManagesPatientResource,

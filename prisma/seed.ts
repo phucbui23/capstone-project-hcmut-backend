@@ -10,14 +10,17 @@ import { ROLES } from './seed-data/roles';
 
 // Map the data to data array to be used in createMany
 const data = res.drugbank.drug.map((drug) => ({
-  code : drug['drugbank-id'][0],
-  name : drug.name,
-  description : drug.description,
+  code: drug['drugbank-id'][0],
+  name: drug.name,
+  description: drug.description,
 }));
 
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.hospital.deleteMany({});
+  await prisma.patientAccount.deleteMany({});
+  await prisma.userAccount.deleteMany({});
   await prisma.roleAccessesResource.deleteMany({});
   await prisma.role.deleteMany();
   await prisma.resource.deleteMany();
@@ -145,15 +148,15 @@ async function main() {
     data: {
       name: RESOURCES.articleIncludesAttachment,
       description: RESOURCES.articleIncludesAttachment,
-    }
-  })
+    },
+  });
 
   const attachmentResource = await prisma.resource.create({
     data: {
       name: RESOURCES.attachment,
       description: RESOURCES.attachment,
-    }
-  })
+    },
+  });
 
   // Initialize RBAC model for specific type of users
   await prisma.role.create({
@@ -214,7 +217,7 @@ async function main() {
             medicationPlanResource,
             reminderPlanResource,
             reminderPlanIncludesMedicationResource,
-            articleIncludesAttachmentResource
+            articleIncludesAttachmentResource,
           ].map(
             (resource): Prisma.RoleAccessesResourceCreateWithoutRoleInput => ({
               canAdd: true,
@@ -315,10 +318,7 @@ async function main() {
               },
             }),
           ),
-          ...[
-            articleResource, 
-            medicationResource,
-          ].map(
+          ...[articleResource, medicationResource].map(
             (resource): Prisma.RoleAccessesResourceCreateWithoutRoleInput => ({
               canAdd: false,
               canDelete: false,
@@ -334,11 +334,17 @@ async function main() {
         ],
       },
     },
-  })
-  
+  });
+
   await prisma.medication.createMany({
     data,
     skipDuplicates: true, // Skip duplicate entries
+  });
+
+  await prisma.hospital.create({
+    data: {
+      name: 'Diamond',
+    },
   });
 }
 

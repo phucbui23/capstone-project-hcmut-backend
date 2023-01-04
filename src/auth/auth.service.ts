@@ -1,103 +1,112 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { AuthDto } from './dto/auth.dto';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { jwtSecret } from '../utils/constants';
+import { Injectable } from '@nestjs/common';
+import { PatientsService } from 'src/patients/patients.service';
+import { DoctorsService } from 'src/doctors/doctors.service';
+import { OperatorAccount, PatientAccount } from '@prisma/client';
+import { OperatorsService } from 'src/operators/operators.service';
+import { HospitalAdminsService } from 'src/hospital-admins/hospital-admins.service';
+import { AuthHelper } from './auth.helper';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwt: JwtService) {}
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly doctorsService: DoctorsService,
+    private readonly operatorsService: OperatorsService,
+    private readonly hospitalAdminsService: HospitalAdminsService,
+    private readonly authHelper: AuthHelper,
+  ) {}
 
-  async signup(dto: AuthDto, type: string) {
-    const { dummy, password } = dto;
-    const foundUser = await this.prisma.userAccount.findUnique({
-      where: { dummy },
-    });
-
-    if (foundUser) {
-      throw new BadRequestException('User already exists');
-    }
-    const hashedPassword = await this.hashPassword(password);
-
-    const prefix = dummy.substring(0, dummy.indexOf('@'));
-
-    if (type === 'PATIENT') {
-      const newPatient = await this.prisma.userAccount.create({
-        data: {
-          username: prefix,
-          phoneNumber: prefix,
-          hashedPassword,
-          firstName: '',
-          lastName: '',
-          gender: '',
-          dummy,
-        },
-      });
-
-      return { newPatient, message: 'Patient sign up sucessfully' };
-    } else {
-      const newUser = await this.prisma.userAccount.create({
-        data: {
-          username: prefix,
-          phoneNumber: '',
-          hashedPassword,
-          firstName: '',
-          lastName: '',
-          gender: '',
-          dummy,
-        },
-      });
-
-      return { newUser, message: 'User sign up sucessfully' };
-    }
-  }
-
-  async signin(dto: AuthDto) {
-    const { dummy, password } = dto;
-
-    const foundUser = await this.prisma.userAccount.findUnique({
-      where: { dummy },
-    });
-
-    if (!foundUser) {
-      throw new BadRequestException('Wrong credential');
+  async validatePatient(phoneNumber: string, password: string) {
+    const patient = await this.patientsService.findOne({ phoneNumber });
+    if (!patient) {
+      return null;
     }
 
-    const isMatch = await this.comparePasswords({
-      password,
-      hash: foundUser.hashedPassword,
-    });
-
-    if (!isMatch) {
-      throw new BadRequestException('Wrong credential');
+    if (
+      !(await this.authHelper.isPasswordValid(
+        password,
+        patient.userAccount.passwordHash,
+      ))
+    ) {
+      return null;
     }
-    const token = await this.signToken({
-      id: foundUser.id,
-      email: foundUser.email,
-    });
 
-    return { token };
+    const {
+      userAccount: { passwordHash, ...restUserAccount },
+      ...restPatient
+    } = patient;
+    return { ...restPatient, ...restUserAccount };
   }
 
-  async signout() {
-    return '';
+  async validateOperator(username: string, password: string) {
+    const operator = await this.operatorsService.findOne({ username });
+    if (!operator) {
+      return null;
+    }
+
+    if (
+      !(await this.authHelper.isPasswordValid(
+        password,
+        operator.userAccount.passwordHash,
+      ))
+    ) {
+      return null;
+    }
+
+    const {
+      userAccount: { passwordHash, ...restUserAccount },
+      ...restOperator
+    } = operator;
+
+    return { ...restOperator, ...restUserAccount };
   }
 
-  async hashPassword(password: string) {
-    const saltOrRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltOrRounds);
+  async loginPatient(patient: PatientAccount) {
+    const payload = {
+      sub: patient.userAccountId,
+      phoneNumber: patient.phoneNumber,
+    };
 
-    return hashedPassword;
+    return this.authHelper.generateToken(payload);
   }
 
-  async comparePasswords(args: { password: string; hash: string }) {
-    return await bcrypt.compare(args.password, args.hash);
+  async loginOperator(operator: OperatorAccount) {
+    const payload = {
+      sub: operator.userAccountId,
+      username: operator.username,
+    };
+
+    return this.authHelper.generateToken(payload);
   }
 
-  async signToken(args: { id: number; email: string }) {
-    const payload = args;
+  async registerPatient(phoneNumber: string, password: string) {
+    return await this.patientsService.createOne(
+      phoneNumber,
+      await this.authHelper.encodePassword(password),
+    );
+  }
 
-    return this.jwt.signAsync(payload, { secret: jwtSecret });
+  async registerDoctor(
+    username: string,
+    password: string,
+    hospitalName: string,
+  ) {
+    return await this.doctorsService.createOne(
+      username,
+      await this.authHelper.encodePassword(password),
+      hospitalName,
+    );
+  }
+
+  async registerHospitalAdmin(
+    username: string,
+    password: string,
+    hospitalName: string,
+  ) {
+    return await this.hospitalAdminsService.createOne(
+      username,
+      await this.authHelper.encodePassword(password),
+      hospitalName,
+    );
   }
 }

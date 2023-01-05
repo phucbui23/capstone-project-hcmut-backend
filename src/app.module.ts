@@ -7,6 +7,9 @@ import { PatientsModule } from './patients/patients.module';
 import { DoctorsModule } from './doctors/doctors.module';
 import { HospitalAdminsModule } from './hospital-admins/hospital-admins.module';
 import { OperatorsModule } from './operators/operators.module';
+import { HospitalsModule } from './hospitals/hospitals.module';
+import { RolesModule } from './roles/roles.module';
+import { ResourcesModule } from './resources/resources.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { OperatorsModule } from './operators/operators.module';
     HospitalAdminsModule,
     OperatorsModule,
     ConfigModule.forRoot(),
+    HospitalsModule,
+    RolesModule,
+    ResourcesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

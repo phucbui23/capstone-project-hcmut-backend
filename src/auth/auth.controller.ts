@@ -1,32 +1,43 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { OperatorAccount, PatientAccount } from '@prisma/client';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  Frequency,
+  Gender,
+  OperatorAccount,
+  PatientAccount,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 import { User } from 'src/decorator/user.decorator';
 import { OperatorLocalAuthGuard } from 'src/guard/operator/local-auth.guard';
 import { PatientLocalAuthGuard } from 'src/guard/patient/local-auth.guard';
 import { AuthService } from './auth.service';
-import { CreateOperatorAccount } from './dto/create-operator.dto';
-import { CreatePatientAccount } from './dto/create-user.dto';
+import { CreateOperatorDto } from './dto/create-operator.dto';
+import { CreatePatientDto } from './dto/create-patient.dto';
 
+@ApiTags('authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {
+    Gender;
+  }
 
   @Post('operator/register')
-  async registerOperator(@Body() createOperatorAccount: CreateOperatorAccount) {
-    const { role, username, password, hospitalName } = createOperatorAccount;
-    if (role === 'Doctor') {
+  async registerOperator(@Body() createOperatorDto: CreateOperatorDto) {
+    const { role, username, password, hospitalId } = createOperatorDto;
+    if (role === UserRole.DOCTOR) {
       return await this.authService.registerDoctor(
         username,
         password,
-        hospitalName,
+        hospitalId,
       );
     }
 
-    if (role === 'Hospital admin') {
+    if (role === UserRole.HOSPITAL_ADMIN) {
       return await this.authService.registerHospitalAdmin(
         username,
         password,
-        hospitalName,
+        hospitalId,
       );
     }
   }
@@ -38,8 +49,8 @@ export class AuthController {
   }
 
   @Post('patient/register')
-  async registerPatient(@Body() createPatientAccount: CreatePatientAccount) {
-    const { password, phoneNumber } = createPatientAccount;
+  async registerPatient(@Body() createPatientDto: CreatePatientDto) {
+    const { password, phoneNumber } = createPatientDto;
     return await this.authService.registerPatient(phoneNumber, password);
   }
 

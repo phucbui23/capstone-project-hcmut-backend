@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -52,7 +52,7 @@ export class PatientsService {
           create: {
             passwordHash: password,
             role: {
-              connect: { name: 'Patient' },
+              connect: { name: UserRole.PATIENT },
             },
           },
         },

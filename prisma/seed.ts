@@ -1,12 +1,17 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { PrismaClient, Prisma, UserRole } from '@prisma/client';
 
 import res from './sample_medication.json';
+import { HOSPITALS } from './seed-data/hospitals';
+import { PATIENTS } from './seed-data/patients';
 import {
   RESOURCES,
   RESOURCE_LIST,
   DEPENDENT_RESOURCE_LIST,
 } from './seed-data/resources';
-import { ROLES } from './seed-data/roles';
+import { HOSPITAL_ADMINS } from './seed-data/hospital-admins';
+import { DOCTORS } from './seed-data/doctors';
+// import { ROLES } from './seed-data/roles';
 
 // Map the data to data array to be used in createMany
 const data = res.drugbank.drug.map((drug) => ({
@@ -17,7 +22,16 @@ const data = res.drugbank.drug.map((drug) => ({
 
 const prisma = new PrismaClient();
 
+async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, process.env.BCRYPT_SALT);
+}
+
 async function main() {
+  await prisma.hospitalAdminAccount.deleteMany({});
+  await prisma.doctorAccount.deleteMany({});
+  await prisma.operatorAccount.deleteMany({});
+  await prisma.patientAccount.deleteMany({});
+  await prisma.userAccount.deleteMany({});
   await prisma.hospital.deleteMany({});
   await prisma.patientAccount.deleteMany({});
   await prisma.userAccount.deleteMany({});
@@ -161,8 +175,8 @@ async function main() {
   // Initialize RBAC model for specific type of users
   await prisma.role.create({
     data: {
-      name: ROLES.admin,
-      description: ROLES.admin,
+      name: UserRole.ADMIN,
+      description: UserRole.ADMIN,
       roleAccessesResources: {
         create: [
           ...[
@@ -203,8 +217,8 @@ async function main() {
   });
   await prisma.role.create({
     data: {
-      name: ROLES.hospitalAdmin,
-      description: ROLES.hospitalAdmin,
+      name: UserRole.HOSPITAL_ADMIN,
+      description: UserRole.HOSPITAL_ADMIN,
       roleAccessesResources: {
         create: [
           ...[
@@ -250,8 +264,8 @@ async function main() {
   });
   await prisma.role.create({
     data: {
-      name: ROLES.doctor,
-      description: ROLES.doctor,
+      name: UserRole.DOCTOR,
+      description: UserRole.DOCTOR,
       roleAccessesResources: {
         create: [
           ...[
@@ -296,8 +310,8 @@ async function main() {
   });
   await prisma.role.create({
     data: {
-      name: ROLES.patient,
-      description: ROLES.patient,
+      name: UserRole.PATIENT,
+      description: UserRole.PATIENT,
       roleAccessesResources: {
         create: [
           ...[
@@ -341,10 +355,66 @@ async function main() {
     skipDuplicates: true, // Skip duplicate entries
   });
 
-  await prisma.hospital.create({
-    data: {
-      name: 'Diamond',
-    },
+  await prisma.hospital.createMany({
+    data: HOSPITALS,
+    skipDuplicates: true,
+  });
+
+  // Create sample patient accounts
+  PATIENTS.forEach(async (patient) => {
+    await prisma.patientAccount.create({
+      data: {
+        phoneNumber: patient.phoneNumber,
+        userAccount: {
+          create: {
+            passwordHash: await hashPassword(patient.password),
+            role: { connect: { name: UserRole.PATIENT } },
+          },
+        },
+      },
+    });
+  });
+  // Create sample hospital admins who administrate one and only one hospital
+  HOSPITAL_ADMINS.forEach(async (hospitalAdmin) => {
+    await prisma.hospitalAdminAccount.create({
+      data: {
+        operatorAccount: {
+          create: {
+            username: hospitalAdmin.username,
+            hospital: {
+              connect: { id: hospitalAdmin.hospitalId },
+            },
+            userAccount: {
+              create: {
+                passwordHash: await hashPassword(hospitalAdmin.password),
+                role: {
+                  connect: { name: hospitalAdmin.role },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+  // Create sample doctors who work in one and only one hospital
+  DOCTORS.forEach(async (doctor) => {
+    await prisma.doctorAccount.create({
+      data: {
+        operatorAccount: {
+          create: {
+            username: doctor.username,
+            hospital: { connect: { id: doctor.hospitalId } },
+            userAccount: {
+              create: {
+                passwordHash: await hashPassword(doctor.password),
+                role: { connect: { name: doctor.role } },
+              },
+            },
+          },
+        },
+      },
+    });
   });
 }
 

@@ -24,6 +24,13 @@ enum Frequency {
   MONTH_INTERVAL
 }
 
+enum UserRole {
+  PATIENT
+  DOCTOR
+  HOSPITAL_ADMIN
+  ADMIN
+}
+
 model Resource {
   id          Int      @id @default(autoincrement())
   name        String   @unique @db.VarChar(255)
@@ -55,7 +62,7 @@ model RoleAccessesResource {
 
 model Role {
   id          Int      @id @default(autoincrement())
-  name        String   @unique @db.VarChar(255)
+  name        UserRole @unique
   description String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -109,8 +116,6 @@ model HospitalAdminAccount {
   operatorAccountId Int             @unique @map("operator_account_id")
   operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId])
 
-  // doctorAccounts DoctorAccount[]
-
   @@map("hospital_admin_account")
 }
 
@@ -121,7 +126,6 @@ model DoctorAccount {
   yearOfExperience  Float?  @map("year_of_experience")
 
   operatorAccount       OperatorAccount        @relation(fields: [operatorAccountId], references: [userAccountId])
-  // hospitalAdminAccount  HospitalAdminAccount   @relation(fields: [hospitalAdminAccountId], references: [operatorAccountId])
   qualifications        Qualification[]
   doctorManagesPatients DoctorManagesPatient[]
   medicationPlans       MedicationPlan[]
@@ -152,7 +156,7 @@ model Qualification {
 }
 
 model PatientAccount {
-  insuranceNumber String? @unique @map("insurance_number") @db.VarChar(255)
+  insuranceNumber String? @unique @default(uuid()) @map("insurance_number") @db.VarChar(255)
   occupation      String? @db.VarChar(255)
   userAccountId   Int     @unique @map("user_account_id")
   phoneNumber     String  @unique @map("phone_number") @db.VarChar(255)

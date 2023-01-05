@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class HospitalAdminsService {
     };
   }
 
-  async createOne(username: string, password: string, hospitalName: string) {
+  async createOne(username: string, password: string, hospitalId: number) {
     await this.prismaService.hospitalAdminAccount.create({
       data: {
         operatorAccount: {
@@ -31,12 +31,12 @@ export class HospitalAdminsService {
             userAccount: {
               create: {
                 passwordHash: password,
-                role: { connect: { name: 'Hospital admin' } },
+                role: { connect: { name: UserRole.HOSPITAL_ADMIN } },
               },
             },
             hospital: {
               connect: {
-                name: hospitalName,
+                id: hospitalId,
               },
             },
           },

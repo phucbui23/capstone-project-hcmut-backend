@@ -86,27 +86,23 @@ export class AuthService {
     );
   }
 
-  async registerDoctor(
-    username: string,
-    password: string,
-    hospitalName: string,
-  ) {
+  async registerDoctor(username: string, password: string, hospitalId: number) {
     return await this.doctorsService.createOne(
       username,
       await this.authHelper.encodePassword(password),
-      hospitalName,
+      hospitalId,
     );
   }
 
   async registerHospitalAdmin(
     username: string,
     password: string,
-    hospitalName: string,
+    hospitalId: number,
   ) {
     return await this.hospitalAdminsService.createOne(
       username,
       await this.authHelper.encodePassword(password),
-      hospitalName,
+      hospitalId,
     );
   }
 }

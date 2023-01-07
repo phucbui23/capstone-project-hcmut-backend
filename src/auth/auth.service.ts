@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PatientsService } from 'src/patients/patients.service';
 import { DoctorsService } from 'src/doctors/doctors.service';
 import { OperatorAccount, PatientAccount } from '@prisma/client';
@@ -22,20 +22,16 @@ export class AuthService {
       return null;
     }
 
-    if (
-      !(await this.authHelper.isPasswordValid(
-        password,
-        patient.userAccount.passwordHash,
-      ))
-    ) {
+    const validPassword = await this.authHelper.isPasswordValid(
+      password,
+      patient.passwordHash,
+    );
+    if (!validPassword) {
       return null;
     }
 
-    const {
-      userAccount: { passwordHash, ...restUserAccount },
-      ...restPatient
-    } = patient;
-    return { ...restPatient, ...restUserAccount };
+    const { passwordHash, ...restPatient } = patient;
+    return { ...restPatient };
   }
 
   async validateOperator(username: string, password: string) {
@@ -45,41 +41,48 @@ export class AuthService {
     }
 
     if (
-      !(await this.authHelper.isPasswordValid(
-        password,
-        operator.userAccount.passwordHash,
-      ))
+      !(await this.authHelper.isPasswordValid(password, operator.passwordHash))
     ) {
       return null;
     }
 
-    const {
-      userAccount: { passwordHash, ...restUserAccount },
-      ...restOperator
-    } = operator;
+    const { passwordHash, ...restOperator } = operator;
 
-    return { ...restOperator, ...restUserAccount };
+    return { ...restOperator };
   }
-
-  async loginPatient(patient: PatientAccount) {
+  // Data returned from the local guard
+  async loginPatient(patient: any) {
     const payload = {
-      sub: patient.userAccountId,
-      phoneNumber: patient.phoneNumber,
+      sub: patient.id,
+      phoneNumber: patient.patientAccount.phoneNumber,
     };
+    const token = this.authHelper.generateToken(payload);
 
-    return this.authHelper.generateToken(payload);
+    return {
+      token,
+      ...patient,
+    };
   }
-
-  async loginOperator(operator: OperatorAccount) {
+  // Data returned from the local guard
+  async loginOperator(operator: any) {
     const payload = {
-      sub: operator.userAccountId,
-      username: operator.username,
+      sub: operator.id,
+      username: operator.operatorAccount.username,
     };
+    const token = this.authHelper.generateToken(payload);
 
-    return this.authHelper.generateToken(payload);
+    return {
+      token,
+      ...operator,
+    };
   }
 
   async registerPatient(phoneNumber: string, password: string) {
+    const existingPatient = await this.patientsService.findOne({ phoneNumber });
+    if (existingPatient) {
+      throw new BadRequestException('Patient already exists');
+    }
+
     return await this.patientsService.createOne(
       phoneNumber,
       await this.authHelper.encodePassword(password),
@@ -87,6 +90,11 @@ export class AuthService {
   }
 
   async registerDoctor(username: string, password: string, hospitalId: number) {
+    const existingDoctor = await this.doctorsService.findOne({ username });
+    if (existingDoctor) {
+      throw new BadRequestException('Doctor already exists');
+    }
+
     return await this.doctorsService.createOne(
       username,
       await this.authHelper.encodePassword(password),
@@ -99,6 +107,12 @@ export class AuthService {
     password: string,
     hospitalId: number,
   ) {
+    const existingHospitalAdmin = await this.hospitalAdminsService.findOne({
+      username,
+    });
+    if (existingHospitalAdmin) {
+      throw new BadRequestException('Hospital admin already exists');
+    }
     return await this.hospitalAdminsService.createOne(
       username,
       await this.authHelper.encodePassword(password),

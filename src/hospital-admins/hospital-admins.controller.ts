@@ -14,7 +14,7 @@ export class HospitalAdminsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.hospitalAdminsService.findOne({ operatorAccountId: +id });
+    return await this.hospitalAdminsService.findOne({ userAccountId: +id });
   }
 
   @Delete(':id')

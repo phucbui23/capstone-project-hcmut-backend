@@ -1,4 +1,12 @@
-import { Controller, Delete, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 
@@ -20,5 +28,25 @@ export class PatientsController {
   @Delete(':id')
   async deleteOne(@Param('id') id: string) {
     return this.patientsService.deleteOne({ userAccountId: +id });
+  }
+
+  @Patch(':id')
+  async updateOne(
+    @Param('id') id: string,
+    @Body()
+    {
+      address,
+      email,
+      insuranceNumber,
+    }: { insuranceNumber: string; email: string; address: string },
+  ) {
+    return await this.patientsService.updateOne({
+      where: { id: +id },
+      data: {
+        address,
+        email,
+        patientAccount: { update: { insuranceNumber } },
+      },
+    });
   }
 }

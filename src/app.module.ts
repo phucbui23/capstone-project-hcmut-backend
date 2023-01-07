@@ -10,6 +10,7 @@ import { OperatorsModule } from './operators/operators.module';
 import { HospitalsModule } from './hospitals/hospitals.module';
 import { RolesModule } from './roles/roles.module';
 import { ResourcesModule } from './resources/resources.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -18,10 +19,10 @@ import { ResourcesModule } from './resources/resources.module';
     DoctorsModule,
     HospitalAdminsModule,
     OperatorsModule,
-    ConfigModule.forRoot(),
     HospitalsModule,
     RolesModule,
     ResourcesModule,
+    ConfigModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

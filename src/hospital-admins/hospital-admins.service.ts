@@ -1,70 +1,64 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { roleIncludeFields } from 'src/roles/constants';
+import { RolesService } from 'src/roles/roles.service';
+import { hospitalAdminIncludeFields } from './constants';
 
 @Injectable()
 export class HospitalAdminsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  private getIncludeFields(): Prisma.HospitalAdminAccountInclude {
-    return {
-      operatorAccount: {
-        include: {
-          hospital: true,
-          userAccount: {
-            include: {
-              role: true,
-              attachments: true,
-            },
-          },
-        },
-      },
-    };
-  }
-
   async createOne(username: string, password: string, hospitalId: number) {
-    await this.prismaService.hospitalAdminAccount.create({
+    return await this.prismaService.userAccount.create({
       data: {
+        passwordHash: password,
+        role: { connect: { name: UserRole.HOSPITAL_ADMIN } },
         operatorAccount: {
           create: {
             username,
-            userAccount: {
-              create: {
-                passwordHash: password,
-                role: { connect: { name: UserRole.HOSPITAL_ADMIN } },
-              },
-            },
-            hospital: {
-              connect: {
-                id: hospitalId,
-              },
-            },
+            hospital: { connect: { id: hospitalId } },
           },
         },
       },
-      include: this.getIncludeFields(),
+      include: hospitalAdminIncludeFields,
     });
   }
 
-  async findOne(where: Prisma.DoctorAccountWhereUniqueInput) {
-    return await this.prismaService.hospitalAdminAccount.findUnique({
+  async findOne(where: Prisma.OperatorAccountWhereUniqueInput) {
+    const operator = await this.prismaService.operatorAccount.findUnique({
       where,
-      include: this.getIncludeFields(),
+      select: { userAccountId: true },
     });
+    if (!operator) {
+      return null;
+    }
+    const { userAccountId } = operator;
+
+    const user = await this.prismaService.userAccount.findUnique({
+      where: { id: userAccountId },
+      include: hospitalAdminIncludeFields,
+    });
+
+    return user;
   }
 
   async findAll() {
-    return await this.prismaService.hospitalAdminAccount.findMany({
-      include: this.getIncludeFields(),
+    return await this.prismaService.userAccount.findMany({
+      where: {
+        role: { name: { equals: UserRole.HOSPITAL_ADMIN } },
+      },
+      include: hospitalAdminIncludeFields,
     });
   }
 
   async deleteOne(where: Prisma.DoctorAccountWhereUniqueInput) {
-    const deletedDoctor = await this.prismaService.hospitalAdminAccount.delete({
-      where,
-    });
+    const deletedHospitalAdmin =
+      await this.prismaService.hospitalAdminAccount.delete({
+        where,
+      });
     const deletedOperator = await this.prismaService.operatorAccount.delete({
-      where: { userAccountId: deletedDoctor.operatorAccountId },
+      where: { userAccountId: deletedHospitalAdmin.operatorAccountId },
     });
     const deletedUser = await this.prismaService.userAccount.delete({
       where: { id: deletedOperator.userAccountId },

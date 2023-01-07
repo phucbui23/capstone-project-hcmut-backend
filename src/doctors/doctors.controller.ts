@@ -14,7 +14,7 @@ export class DoctorsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.doctorsService.findOne({ operatorAccountId: +id });
+    return await this.doctorsService.findOne({ userAccountId: +id });
   }
 
   @Delete(':id')

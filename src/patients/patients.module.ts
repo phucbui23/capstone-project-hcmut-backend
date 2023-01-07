@@ -6,7 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from 'src/guard/jwt/jwt.strategy';
 
 @Module({
-  imports: [PrismaModule, JwtModule],
+  imports: [JwtModule, PrismaModule],
   controllers: [PatientsController],
   providers: [PatientsService, JwtStrategy],
   exports: [PatientsService],

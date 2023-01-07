@@ -18,12 +18,11 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 @ApiTags('authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {
-    Gender;
-  }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('operator/register')
   async registerOperator(@Body() createOperatorDto: CreateOperatorDto) {
+    console.log(createOperatorDto);
     const { role, username, password, hospitalId } = createOperatorDto;
     if (role === UserRole.DOCTOR) {
       return await this.authService.registerDoctor(
@@ -44,7 +43,7 @@ export class AuthController {
 
   @Post('operator/login')
   @UseGuards(OperatorLocalAuthGuard)
-  async loginOperator(@User() operator: OperatorAccount) {
+  async loginOperator(@User() operator: any) {
     return await this.authService.loginOperator(operator);
   }
 
@@ -56,7 +55,7 @@ export class AuthController {
 
   @Post('patient/login')
   @UseGuards(PatientLocalAuthGuard)
-  async loginPatient(@User() patient: PatientAccount) {
+  async loginPatient(@User() patient: any) {
     return await this.authService.loginPatient(patient);
   }
 }

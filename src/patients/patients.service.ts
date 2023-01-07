@@ -1,66 +1,63 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  DoctorManagesPatient,
+  MedicationPlan,
+  PatientAccount,
+  PatientSavesArticle,
+  Prisma,
+  ReminderPlan,
+  UserAccount,
+  UserRole,
+} from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { roleIncludeFields } from 'src/roles/constants';
+import { RolesService } from 'src/roles/roles.service';
+import { patientIncludeFields } from './constants';
 
 @Injectable()
 export class PatientsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  private getIncludeFields(): Prisma.PatientAccountInclude {
-    return {
-      userAccount: {
-        include: {
-          role: {
-            include: {
-              roleAccessesResources: {
-                orderBy: {
-                  resourceId: 'asc',
-                },
-                include: {
-                  resource: true,
-                },
-              },
-            },
-          },
-          attachments: true,
-        },
-      },
-    };
-  }
-
   async findAll() {
-    return await this.prismaService.patientAccount.findMany({
-      include: this.getIncludeFields(),
-      orderBy: {
-        userAccountId: 'asc',
+    return await this.prismaService.userAccount.findMany({
+      where: {
+        role: { name: { equals: UserRole.PATIENT } },
       },
+      include: patientIncludeFields,
     });
   }
 
   async findOne(where: Prisma.PatientAccountWhereUniqueInput) {
-    return await this.prismaService.patientAccount.findUnique({
+    const patient = await this.prismaService.patientAccount.findUnique({
       where,
-      include: this.getIncludeFields(),
+      select: { userAccountId: true },
     });
+    if (!patient) {
+      return null;
+    }
+    const { userAccountId } = patient;
+
+    const user = await this.prismaService.userAccount.findUnique({
+      where: { id: userAccountId },
+      include: patientIncludeFields,
+    });
+
+    return user;
   }
 
   async createOne(phoneNumber: string, password: string) {
-    const patient = await this.prismaService.patientAccount.create({
+    return await this.prismaService.userAccount.create({
       data: {
-        phoneNumber,
-        userAccount: {
+        passwordHash: password,
+        role: { connect: { name: UserRole.PATIENT } },
+        patientAccount: {
           create: {
-            passwordHash: password,
-            role: {
-              connect: { name: UserRole.PATIENT },
-            },
+            phoneNumber,
           },
         },
       },
-      include: this.getIncludeFields(),
+      include: patientIncludeFields,
     });
-
-    return patient;
   }
 
   async deleteOne(where: Prisma.PatientAccountWhereUniqueInput) {
@@ -72,5 +69,17 @@ export class PatientsService {
     });
 
     return 'Deleted';
+  }
+
+  async updateOne(params: {
+    where: Prisma.UserAccountWhereUniqueInput;
+    data: Prisma.UserAccountUpdateInput;
+  }) {
+    const { where, data } = params;
+    return await this.prismaService.userAccount.update({
+      where,
+      data,
+      include: patientIncludeFields,
+    });
   }
 }

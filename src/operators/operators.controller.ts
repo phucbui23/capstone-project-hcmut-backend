@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OperatorsService } from './operators.service';
 
@@ -10,5 +10,10 @@ export class OperatorsController {
   @Get()
   async findAll() {
     return await this.operatorsService.findAll();
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.operatorsService.findOne({ userAccountId: +id });
   }
 }

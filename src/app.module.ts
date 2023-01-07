@@ -12,6 +12,9 @@ import { RolesModule } from './roles/roles.module';
 import { ResourcesModule } from './resources/resources.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { MedicationsModule } from './medications/medications.module';
+import { MedicationPlansModule } from './medication-plans/medication-plans.module';
+import { ReminderPlanTimesModule } from './reminder-plan-times/reminder-plan-times.module';
+import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
 
 @Module({
   imports: [
@@ -25,6 +28,9 @@ import { MedicationsModule } from './medications/medications.module';
     ResourcesModule,
     ConfigModule.forRoot(),
     MedicationsModule,
+    MedicationPlansModule,
+    ReminderPlanTimesModule,
+    ReminderPlansModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -11,6 +11,7 @@ import { HospitalsModule } from './hospitals/hospitals.module';
 import { RolesModule } from './roles/roles.module';
 import { ResourcesModule } from './resources/resources.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { MedicationsModule } from './medications/medications.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PrismaModule } from './prisma/prisma.module';
     RolesModule,
     ResourcesModule,
     ConfigModule.forRoot(),
+    MedicationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

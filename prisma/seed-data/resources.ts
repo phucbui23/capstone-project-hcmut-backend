@@ -9,6 +9,7 @@ export const DEPENDENT_RESOURCES = {
   patientSavesArticle: 'patient_saves_article',
   reminderPlanIncludesMedication: 'reminder_plan_includes_medication',
   articleIncludesAttachment: 'article_includes_attachment',
+  reminderPlan: 'reminder_plan',
 };
 
 export const RESOURCES = {
@@ -25,12 +26,12 @@ export const RESOURCES = {
   article: 'article',
   patientSavesArticle: 'patient_saves_article',
   hospital: 'hospital',
-  medicationPlan: 'medication_plan',
   reminderPlan: 'reminder_plan',
+  medicationPlan: 'medication_plan',
   reminderPlanIncludesMedication: 'reminder_plan_includes_medication',
   medication: 'medication',
   articleIncludesAttachment: 'article_includes_attachment',
-  attachment: 'attachment'
+  attachment: 'attachment',
 };
 
 export const RESOURCE_LIST = Object.values(RESOURCES);

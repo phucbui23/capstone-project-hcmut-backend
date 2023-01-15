@@ -13,7 +13,7 @@ function getDateAndTime(str: string): [number, number] {
   return [hour, minutes];
 }
 
-const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
+export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
   reminderPlans: {
     include: {
       medication: true,

@@ -165,8 +165,8 @@ model PatientAccount {
   userAccount           UserAccount            @relation(fields: [userAccountId], references: [id])
   doctorManagesPatients DoctorManagesPatient[]
   medicationPlans       MedicationPlan[]
-  reminderPlans         ReminderPlan[]
   patientSavesArticles  PatientSavesArticle[]
+  reminderPlanTimes     ReminderPlanTime[]
 
   @@map("patient_account")
 }
@@ -213,7 +213,7 @@ model Hospital {
 
 model MedicationPlan {
   id               Int      @id @default(autoincrement())
-  doctorAccountId  Int      @map("doctor_account_id")
+  doctorAccountId  Int?     @map("doctor_account_id")
   patientAccountId Int      @map("patient_account_id")
   name             String?  @db.VarChar(255)
   note             String?  @db.Text
@@ -221,45 +221,46 @@ model MedicationPlan {
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   reminderPlans  ReminderPlan[]
-  doctorAccount  DoctorAccount  @relation(fields: [doctorAccountId], references: [operatorAccountId])
+  doctorAccount  DoctorAccount? @relation(fields: [doctorAccountId], references: [operatorAccountId])
   patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
 
   @@map("medication_plan")
 }
 
 model ReminderPlan {
-  id                  Int       @id @default(autoincrement())
   frequency           Frequency @default(DAILY)
-  stock               Int?
+  stock               Int
   startDate           DateTime  @map("start_date")
   endDate             DateTime? @map("end_date")
   note                String?   @db.Text
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
-  medicationPlanId    Int       @map("medication_plan_id")
-  patientAccountId    Int       @map("patient_account_id")
   localMedicationName String?   @map("local_medication_name")
-  medicationId        Int?      @map("medication_id")
+  medicationPlanId    Int       @map("medication_plan_id")
+  medicationId        Int       @map("medication_id")
 
   reminderPlanTimes ReminderPlanTime[]
-  medication        Medication?        @relation(fields: [medicationId], references: [id])
+  medication        Medication         @relation(fields: [medicationId], references: [id])
   medicationPlan    MedicationPlan     @relation(fields: [medicationPlanId], references: [id])
-  patientAccount    PatientAccount     @relation(fields: [patientAccountId], references: [userAccountId])
 
+  @@id([medicationPlanId, medicationId])
   @@map("reminder_plan")
 }
 
 model ReminderPlanTime {
-  reminderPlanId Int       @map("reminder_plan_id")
-  isTaken        Boolean   @default(false) @map("is_taken")
-  isSkipped      Boolean   @default(false) @map("is_skipped")
-  time           DateTime
-  dosage         Int       @default(1)
-  sentAt         DateTime? @map("sent_at")
+  isTaken          Boolean   @default(false) @map("is_taken")
+  isSkipped        Boolean   @default(false) @map("is_skipped")
+  time             DateTime
+  dosage           Int       @default(1)
+  sentAt           DateTime? @map("sent_at")
+  patientAccountId Int       @map("patient_account_id")
 
-  reminderPlan ReminderPlan @relation(fields: [reminderPlanId], references: [id])
+  reminderPlan                 ReminderPlan   @relation(references: [medicationPlanId, medicationId], fields: [reminderPlanMedicationPlanId, reminderPlanMedicationId])
+  patientAccount               PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+  reminderPlanMedicationPlanId Int
+  reminderPlanMedicationId     Int
 
-  @@id([reminderPlanId, time])
+  @@id([reminderPlanMedicationPlanId, reminderPlanMedicationId, time])
   @@map("reminder_plan_time")
 }
 

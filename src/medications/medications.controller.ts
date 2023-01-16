@@ -19,8 +19,15 @@ export class MedicationsController {
   constructor(private readonly medicationsService: MedicationsService) {}
 
   @Get()
-  async findAll(): Promise<Medication[]> {
-    return await this.medicationsService.findAll({});
+  async findAll(@Query('searchString') searchString?:string): Promise<Medication[]> {
+    return await this.medicationsService.findAll({
+      where:{
+        name: {
+          contains: searchString,
+          mode: 'insensitive',
+        }        
+      }
+    });
   }
 
   @Get(':id')

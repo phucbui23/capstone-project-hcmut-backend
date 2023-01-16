@@ -40,24 +40,30 @@ export class ReminderPlanTimesService {
       },
     });
 
-    await this.medicationPlansService.updateOne({
-      where: { id: where.reminderPlanMedicationPlanId },
-      data: {
-        reminderPlans: {
-          update: {
-            where: {
-              medicationPlanId_medicationId: {
-                medicationId: where.reminderPlanMedicationId,
-                medicationPlanId: where.reminderPlanMedicationPlanId,
+    // Reduce pill in stock
+
+    if (data.isTaken) {
+      await this.medicationPlansService.updateOne({
+        where: { id: where.reminderPlanMedicationPlanId },
+        data: {
+          reminderPlans: {
+            update: {
+              where: {
+                medicationPlanId_medicationId: {
+                  medicationId: where.reminderPlanMedicationId,
+                  medicationPlanId: where.reminderPlanMedicationPlanId,
+                },
               },
-            },
-            data: {
-              stock: reminderPlan.stock - updatedReminderPlanTime.dosage,
+              data: {
+                stock: reminderPlan.stock - updatedReminderPlanTime.dosage,
+              },
             },
           },
         },
-      },
-    });
+      });
+    }
+
+    return { updatedReminderPlanTime };
   }
 
   async deleteOne(

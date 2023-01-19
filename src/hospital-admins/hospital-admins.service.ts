@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
+
 import { PrismaService } from 'src/prisma/prisma.service';
-import { roleIncludeFields } from 'src/roles/constants';
-import { RolesService } from 'src/roles/roles.service';
 import { hospitalAdminIncludeFields } from './constants';
 
 @Injectable()

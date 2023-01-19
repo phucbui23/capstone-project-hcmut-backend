@@ -1,6 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Resource } from '@prisma/client';
+
 import { ResourcesService } from './resources.service';
 
 @ApiTags('resources')

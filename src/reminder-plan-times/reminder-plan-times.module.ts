@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { ReminderPlanTimesService } from './reminder-plan-times.service';
 import { ReminderPlanTimesController } from './reminder-plan-times.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';

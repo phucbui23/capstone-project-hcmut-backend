@@ -16,8 +16,6 @@ export class PatientLocalStrategy extends PassportStrategy(
   }
 
   async validate(phoneNumber: string, password: string) {
-    console.log({ phoneNumber, password });
-
     const patient = await this.authSerivce.validatePatient(
       phoneNumber,
       password,

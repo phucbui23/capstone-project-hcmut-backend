@@ -4,13 +4,12 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
-  Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Medication, Prisma } from '@prisma/client';
+
 import { MedicationsService } from './medications.service';
 
 @ApiTags('medications')
@@ -18,15 +17,20 @@ import { MedicationsService } from './medications.service';
 export class MedicationsController {
   constructor(private readonly medicationsService: MedicationsService) {}
 
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    type: String,
+  })
   @Get()
-  async findAll(@Query('searchString') searchString?:string): Promise<Medication[]> {
+  async findAll(@Query('keyword') keyword?: string): Promise<Medication[]> {
     return await this.medicationsService.findAll({
-      where:{
+      where: {
         name: {
-          contains: searchString,
+          contains: keyword,
           mode: 'insensitive',
-        }        
-      }
+        },
+      },
     });
   }
 

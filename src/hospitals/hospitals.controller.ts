@@ -1,6 +1,7 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Hospital } from '@prisma/client';
+
 import { HospitalsService } from './hospitals.service';
 
 @ApiTags('hospitals')
@@ -8,9 +9,21 @@ import { HospitalsService } from './hospitals.service';
 export class HospitalsController {
   constructor(private readonly hospitalsService: HospitalsService) {}
 
+  @ApiQuery({
+    name: 'keyword',
+    type: String,
+    required: false,
+  })
   @Get()
-  async findAll(): Promise<Hospital[]> {
-    return await this.hospitalsService.findAll();
+  async findAll(@Query('keyword') keyword?: string): Promise<Hospital[]> {
+    return await this.hospitalsService.findAll({
+      where: {
+        name: {
+          mode: 'insensitive',
+          contains: keyword,
+        },
+      },
+    });
   }
 
   @Get(':id')

@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+
+import { AuthService } from './auth.service';
 import { PatientsModule } from 'src/patients/patients.module';
 import { DoctorsModule } from 'src/doctors/doctors.module';
 import { PatientLocalStrategy } from 'src/guard/patient/local.strategy';

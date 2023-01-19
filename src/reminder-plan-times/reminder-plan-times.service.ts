@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+
 import { MedicationPlansService } from 'src/medication-plans/medication-plans.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReminderPlansService } from 'src/reminder-plans/reminder-plans.service';
-
-const reminderPlanTimeIncludeFields: Prisma.ReminderPlanTimeInclude = {};
 
 @Injectable()
 export class ReminderPlanTimesService {

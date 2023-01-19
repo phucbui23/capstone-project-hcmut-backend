@@ -1,16 +1,8 @@
-import {
-  Body,
-  ClassSerializerInterceptor,
-  Controller,
-  Get,
-  Post,
-  Request,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { IsDate, IsNotEmpty } from 'class-validator';
+
 import { AppService } from './app.service';
 
 class SampleDate {
@@ -28,16 +20,5 @@ export class AppController {
   @Get()
   async checkAppRunning(): Promise<string> {
     return await this.appService.checkAppRunning();
-  }
-
-  @Get('get-date')
-  getDate() {
-    return new Date(Date.now());
-  }
-
-  @Post('post-date')
-  postDate(@Body() data: SampleDate) {
-    console.log(data);
-    return data;
   }
 }

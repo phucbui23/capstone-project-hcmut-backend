@@ -1,16 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import {
-  DoctorAccount,
-  DoctorManagesPatient,
-  MedicationPlan,
-  OperatorAccount,
-  Prisma,
-  Qualification,
-  UserRole,
-} from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
+
 import { PrismaService } from 'src/prisma/prisma.service';
-import { roleIncludeFields } from 'src/roles/constants';
-import { RolesService } from 'src/roles/roles.service';
 import { doctorFieldIncludes } from './constants';
 
 const doctorResponse = Prisma.validator<Prisma.UserAccountArgs>()({

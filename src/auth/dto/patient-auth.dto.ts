@@ -1,22 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
 import { IsMobilePhone, IsNotEmpty, Length } from 'class-validator';
 import { PROPERTY } from 'src/constant';
 
-export class CreatePatientDto {
+export class PatientAuthDto {
   @ApiProperty({
-    description: 'The phone number of a patient account',
-  })
-  @IsMobilePhone('vi-VN')
-  @IsNotEmpty()
-  phoneNumber: string;
-
-  @ApiProperty({
-    description: 'The password of an operator account',
+    description: 'Patient account phone number',
     minLength: PROPERTY.PASSWORD.MIN_LENGTH,
     maxLength: PROPERTY.PASSWORD.MAX_LENGTH,
   })
   @IsNotEmpty()
-  @Length(6, 20)
+  @IsMobilePhone('vi-VN')
+  phoneNumber: string;
+
+  @ApiProperty({
+    description: 'Patient account password',
+    minLength: PROPERTY.PASSWORD.MIN_LENGTH,
+    maxLength: PROPERTY.PASSWORD.MAX_LENGTH,
+  })
+  @IsNotEmpty()
+  @Length(PROPERTY.PASSWORD.MIN_LENGTH, PROPERTY.PASSWORD.MAX_LENGTH)
   password: string;
 }

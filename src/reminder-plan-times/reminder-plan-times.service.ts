@@ -3,19 +3,10 @@ import { Prisma } from '@prisma/client';
 import { MedicationPlansService } from 'src/medication-plans/medication-plans.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReminderPlansService } from 'src/reminder-plans/reminder-plans.service';
-import { ReminderPlanTimesSerializer } from './reminder-plan-times.serializer';
+import { exclude } from './reminder-plan-times.serializer';
 
 const reminderPlanTimeIncludeFields: Prisma.ReminderPlanTimeInclude = {};
 
-function exclude<reminderPlanTime, Key extends keyof reminderPlanTime>(
-  _reminderPlanTime: reminderPlanTime,
-  keys: Key[],
-): Omit<reminderPlanTime, Key> {
-  for (let key of keys) {
-    delete _reminderPlanTime[key];
-  }
-  return _reminderPlanTime;
-}
 @Injectable()
 export class ReminderPlanTimesService {
   constructor(
@@ -118,7 +109,7 @@ export class ReminderPlanTimesService {
       },
     });
 
-    return updatedReminderPlanTime;
+    return exclude(updatedReminderPlanTime, ['isTaken', 'isSkipped']);
   }
 
   async deleteOne(

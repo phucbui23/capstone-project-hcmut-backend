@@ -1,5 +1,6 @@
 import { Controller, Delete, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+
 import { HospitalAdminsService } from './hospital-admins.service';
 
 @ApiTags('hospital admins')

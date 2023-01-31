@@ -1,17 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import {
-  DoctorManagesPatient,
-  MedicationPlan,
-  PatientAccount,
-  PatientSavesArticle,
-  Prisma,
-  ReminderPlan,
-  UserAccount,
-  UserRole,
-} from '@prisma/client';
+import { Injectable } from '@nestjs/common';
+import { Prisma, UserRole } from '@prisma/client';
+
 import { PrismaService } from 'src/prisma/prisma.service';
-import { roleIncludeFields } from 'src/roles/constants';
-import { RolesService } from 'src/roles/roles.service';
 import { patientIncludeFields } from './constants';
 
 @Injectable()

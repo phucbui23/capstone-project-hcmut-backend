@@ -11,7 +11,6 @@ import {
 } from './seed-data/resources';
 import { HOSPITAL_ADMINS } from './seed-data/hospital-admins';
 import { DOCTORS } from './seed-data/doctors';
-// import { ROLES } from './seed-data/roles';
 
 // Map the data to data array to be used in createMany
 const data = res.drugbank.drug.map((drug) => ({

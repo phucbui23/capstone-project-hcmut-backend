@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Frequency, Prisma } from '@prisma/client';
-import { doctorBaseFieldIncludes } from 'src/doctors/constants';
-import { patientBaseIncludeFields } from 'src/patients/constants';
+import { Prisma } from '@prisma/client';
+
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateMedicationPlanDto } from './medication-plans.controller';
+import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 
 function getDateAndTime(str: string): [number, number] {
   const [hour, minutes, ...rest] = str
@@ -39,122 +38,113 @@ export class MedicationPlansService {
     doctorId,
     note,
   }: CreateMedicationPlanDto) {
-    try {
-      const medicationPlan = await this.prismaSerivce.medicationPlan.create({
-        data: {
-          name,
-          note,
-          patientAccount: { connect: { userAccountId: patientId } },
-          doctorAccount: { connect: { operatorAccountId: doctorId } },
-          reminderPlans: {
-            create: remindersPlans.map((reminderPlan) => {
-              const {
-                startDate,
-                endDate,
-                stock,
-                reminderPlanTime,
-                interval,
-                selectedDays,
-              } = reminderPlan;
-              let totalStock = 0;
-              const createdReminderPlanTimes: Prisma.ReminderPlanTimeCreateWithoutReminderPlanInput[] =
-                [];
-              startDate.setHours(0, 0, 0);
-              if (endDate) {
-                endDate.setHours(0, 0, 0);
-                // Include the end day
-                for (
-                  let d = new Date(startDate);
-                  d < endDate;
-                  d.setDate(d.getDate() + interval)
-                ) {
-                  console.log(
-                    `Day ${d.toLocaleString()} has day value ${d.getDay()}, and selected days are ${selectedDays}`,
+    return await this.prismaSerivce.medicationPlan.create({
+      data: {
+        name,
+        note,
+        patientAccount: { connect: { userAccountId: patientId } },
+        doctorAccount: { connect: { operatorAccountId: doctorId } },
+        reminderPlans: {
+          create: remindersPlans.map((reminderPlan) => {
+            const {
+              startDate,
+              endDate,
+              stock,
+              reminderPlanTime,
+              interval,
+              selectedDays,
+              frequency,
+              medicationId,
+              // TODO: Add logic to create self-defined medication name
+              localMedicationName,
+              note,
+            } = reminderPlan;
+            let totalStock = 0;
+            let selectedInterval =
+              frequency === 'MONTH_INTERVAL' ? 30 : interval;
+            const createdReminderPlanTimes: Prisma.ReminderPlanTimeCreateWithoutReminderPlanInput[] =
+              [];
+            startDate.setHours(0, 0, 0);
+            if (endDate) {
+              endDate.setHours(0, 0, 0);
+              // Make the end day inclusive
+              for (
+                let d = new Date(startDate);
+                d < endDate;
+                d.setDate(d.getDate() + selectedInterval)
+              ) {
+                if (selectedDays.includes(d.getDay())) {
+                  reminderPlan.reminderPlanTime.forEach(
+                    ({ dosage, time, sentAt }) => {
+                      const [hour, minutes] = getDateAndTime(time);
+                      const timestamp = new Date(d);
+                      timestamp.setHours(hour);
+                      timestamp.setMinutes(minutes);
+                      timestamp.setMilliseconds(0);
+                      const createdReminderPlanTime: Prisma.ReminderPlanTimeCreateWithoutReminderPlanInput =
+                        {
+                          dosage,
+                          time: timestamp,
+                          patientAccount: {
+                            connect: { userAccountId: patientId },
+                          },
+                        };
+                      createdReminderPlanTimes.push(createdReminderPlanTime);
+                      totalStock += dosage;
+                    },
                   );
-                  if (selectedDays.includes(d.getDay())) {
-                    reminderPlan.reminderPlanTime.forEach(
-                      (reminderPlanTime) => {
-                        const [hour, minutes] = getDateAndTime(
-                          reminderPlanTime.time,
-                        );
-                        const time = new Date(d);
-                        time.setHours(hour);
-                        time.setMinutes(minutes);
-                        time.setMilliseconds(0);
-                        const createdReminderPlanTime: Prisma.ReminderPlanTimeCreateWithoutReminderPlanInput =
-                          {
-                            time,
-                            patientAccount: {
-                              connect: { userAccountId: patientId },
-                            },
-                            dosage: reminderPlanTime.dosage,
-                          };
-                        createdReminderPlanTimes.push(createdReminderPlanTime);
-                        totalStock += reminderPlanTime.dosage;
-                      },
-                    );
-                  }
-                }
-              } else if (stock && stock > 0) {
-                totalStock = stock;
-                // TODO: Medication plan creation logic base on stock
-                let count = stock;
-                const d = new Date(startDate);
-                while (
-                  reminderPlanTime.some(
-                    (reminderPlanTime) => reminderPlanTime.dosage <= count,
-                  )
-                ) {
-                  if (selectedDays.includes(d.getDate())) {
-                    reminderPlanTime.forEach((reminderPlanTime) => {
-                      if (reminderPlanTime.dosage <= count) {
-                        const [hour, minutes] = getDateAndTime(
-                          reminderPlanTime.time,
-                        );
-                        const time = new Date(d);
-                        time.setHours(hour);
-                        time.setMinutes(minutes);
-                        time.setMilliseconds(0);
-                        const createdReminderPlanTime: Prisma.ReminderPlanTimeCreateWithoutReminderPlanInput =
-                          {
-                            time,
-                            patientAccount: {
-                              connect: { userAccountId: patientId },
-                            },
-                            dosage: reminderPlanTime.dosage,
-                          };
-                        createdReminderPlanTimes.push(createdReminderPlanTime);
-                        count -= reminderPlanTime.dosage;
-                      }
-                    });
-                    d.setDate(d.getDate() + interval);
-                  }
                 }
               }
+            } else if (stock && stock > 0) {
+              totalStock = stock;
+              // TODO: Medication plan creation logic base on stock
+              let count = stock;
+              const d = new Date(startDate);
+              while (reminderPlanTime.some(({ dosage }) => dosage <= count)) {
+                if (selectedDays.includes(d.getDate())) {
+                  reminderPlanTime.forEach(({ dosage, time, sentAt }) => {
+                    if (dosage <= count) {
+                      const [hour, minutes] = getDateAndTime(time);
+                      const timestamp = new Date(d);
+                      timestamp.setHours(hour);
+                      timestamp.setMinutes(minutes);
+                      timestamp.setMilliseconds(0);
+                      const createdReminderPlanTime: Prisma.ReminderPlanTimeCreateWithoutReminderPlanInput =
+                        {
+                          dosage,
+                          time: timestamp,
+                          patientAccount: {
+                            connect: { userAccountId: patientId },
+                          },
+                        };
+                      createdReminderPlanTimes.push(createdReminderPlanTime);
+                      count -= dosage;
+                    }
+                  });
+                  d.setDate(d.getDate() + selectedInterval);
+                }
+              }
+            }
 
-              const createdReminderPlan: Prisma.ReminderPlanCreateWithoutMedicationPlanInput =
-                {
-                  medication: { connect: { id: reminderPlan.medicationId } },
-                  frequency: reminderPlan.frequency,
-                  startDate: reminderPlan.startDate,
-                  endDate: reminderPlan.endDate,
-                  stock: totalStock,
-                  reminderPlanTimes: {
-                    create: createdReminderPlanTimes,
-                  },
-                };
+            const createdReminderPlan: Prisma.ReminderPlanCreateWithoutMedicationPlanInput =
+              {
+                frequency,
+                startDate,
+                endDate,
+                note,
+                medication: { connect: { id: medicationId } },
+                stock: totalStock,
+                reminderPlanTimes: {
+                  create: createdReminderPlanTimes,
+                },
+              };
 
-              return createdReminderPlan;
-            }),
-          },
+            return createdReminderPlan;
+          }),
         },
-        include: medicationPlanIncludeFields,
-      });
-
-      return medicationPlan;
-    } catch (error) {
-      console.log(error);
-    }
+      },
+      include: medicationPlanIncludeFields,
+    });
   }
 
   async updateOne({

@@ -182,6 +182,7 @@ model Article {
   hospital                   Hospital                    @relation(fields: [hospitalId], references: [id])
   patientSavesArticles       PatientSavesArticle[]
   articleIncludesAttachments ArticleIncludesAttachment[]
+  ArticleIncludesTag         ArticleIncludesTag[]
 
   @@map("article")
 }
@@ -301,4 +302,21 @@ model Attachment {
   articleIncludesAttachments ArticleIncludesAttachment[]
 
   @@map("attachment")
+}
+
+model ArticleIncludesTag {
+  articleId Int @map("article_id")
+  tagId     Int @map("tag_id")
+
+  article Article @relation(fields: [articleId], references: [id])
+  tag     Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([articleId, tagId])
+  @@map("article_includes_tag")
+}
+
+model Tag {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @unique
+  ArticleIncludesTag ArticleIncludesTag[]
 }

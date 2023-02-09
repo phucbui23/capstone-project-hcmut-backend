@@ -76,6 +76,10 @@ export class ReminderPlanTimesController {
       },
     });
 
+    if (!updatedReminder.isTaken) {
+      throw new BadRequestException('Reminder has not been taken');
+    }
+
     if (updatedReminder.isSkipped) {
       throw new BadRequestException('Reminder is skipped');
     }

@@ -4,7 +4,6 @@ import { Prisma } from '@prisma/client';
 import { MedicationPlansService } from 'src/medication-plans/medication-plans.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReminderPlansService } from 'src/reminder-plans/reminder-plans.service';
-import { exclude } from './reminder-plan-times.serializer';
 
 @Injectable()
 export class ReminderPlanTimesService {
@@ -31,6 +30,21 @@ export class ReminderPlanTimesService {
           reminderPlanMedicationPlanId_reminderPlanMedicationId_time: where,
         },
         data,
+        select: {
+          isTaken: true,
+          time: true,
+          dosage: true,
+          reminderPlan: {
+            select: {
+              stock: true,
+              medication: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
       });
 
     const reminderPlan = await this.reminderPlansService.findOne({
@@ -63,7 +77,7 @@ export class ReminderPlanTimesService {
       });
     }
 
-    return exclude(updatedReminderPlanTime, ['isTaken', 'isSkipped']);
+    return updatedReminderPlanTime;
   }
 
   async revertOne({
@@ -78,6 +92,21 @@ export class ReminderPlanTimesService {
         },
         data: {
           isTaken: false,
+        },
+        select: {
+          isTaken: true,
+          time: true,
+          dosage: true,
+          reminderPlan: {
+            select: {
+              stock: true,
+              medication: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -108,7 +137,7 @@ export class ReminderPlanTimesService {
       },
     });
 
-    return exclude(updatedReminderPlanTime, ['isTaken', 'isSkipped']);
+    return updatedReminderPlanTime;
   }
 
   async deleteOne(

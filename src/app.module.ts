@@ -15,6 +15,8 @@ import { MedicationsModule } from './medications/medications.module';
 import { MedicationPlansModule } from './medication-plans/medication-plans.module';
 import { ReminderPlanTimesModule } from './reminder-plan-times/reminder-plan-times.module';
 import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
+import { ArticlesModule } from './articles/articles.module';
+import { PatientSavesArticlesModule } from './patient-saves-articles/patient-saves-articles.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
     ReminderPlanTimesModule,
     ReminderPlansModule,
     ConfigModule.forRoot(),
+    ArticlesModule,
+    PatientSavesArticlesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

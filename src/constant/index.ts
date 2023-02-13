@@ -4,3 +4,7 @@ export const PROPERTY = {
     MAX_LENGTH: 20,
   },
 };
+
+export const PAGINATION = {
+  PERPAGE: 5,
+};

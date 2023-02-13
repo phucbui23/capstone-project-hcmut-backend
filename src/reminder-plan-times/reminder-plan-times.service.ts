@@ -30,6 +30,21 @@ export class ReminderPlanTimesService {
           reminderPlanMedicationPlanId_reminderPlanMedicationId_time: where,
         },
         data,
+        select: {
+          isTaken: true,
+          time: true,
+          dosage: true,
+          reminderPlan: {
+            select: {
+              stock: true,
+              medication: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
       });
 
     const reminderPlan = await this.reminderPlansService.findOne({
@@ -39,6 +54,70 @@ export class ReminderPlanTimesService {
       },
     });
 
+    // Reduce pill in stock
+
+    if (data.isTaken) {
+      await this.medicationPlansService.updateOne({
+        where: { id: where.reminderPlanMedicationPlanId },
+        data: {
+          reminderPlans: {
+            update: {
+              where: {
+                medicationPlanId_medicationId: {
+                  medicationId: where.reminderPlanMedicationId,
+                  medicationPlanId: where.reminderPlanMedicationPlanId,
+                },
+              },
+              data: {
+                stock: reminderPlan.stock - updatedReminderPlanTime.dosage,
+              },
+            },
+          },
+        },
+      });
+    }
+
+    return updatedReminderPlanTime;
+  }
+
+  async revertOne({
+    where,
+  }: {
+    where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput;
+  }) {
+    const updatedReminderPlanTime =
+      await this.prismaSerivce.reminderPlanTime.update({
+        where: {
+          reminderPlanMedicationPlanId_reminderPlanMedicationId_time: where,
+        },
+        data: {
+          isTaken: false,
+        },
+        select: {
+          isTaken: true,
+          time: true,
+          dosage: true,
+          reminderPlan: {
+            select: {
+              stock: true,
+              medication: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+    const reminderPlan = await this.reminderPlansService.findOne({
+      medicationPlanId_medicationId: {
+        medicationId: where.reminderPlanMedicationId,
+        medicationPlanId: where.reminderPlanMedicationPlanId,
+      },
+    });
+
+    // Revert pill in stock
     await this.medicationPlansService.updateOne({
       where: { id: where.reminderPlanMedicationPlanId },
       data: {
@@ -51,12 +130,14 @@ export class ReminderPlanTimesService {
               },
             },
             data: {
-              stock: reminderPlan.stock - updatedReminderPlanTime.dosage,
+              stock: reminderPlan.stock + updatedReminderPlanTime.dosage,
             },
           },
         },
       },
     });
+
+    return updatedReminderPlanTime;
   }
 
   async deleteOne(

@@ -1,51 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { createPaginator } from 'prisma-pagination';
-import { PAGINATION } from 'src/constant';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
-const paginate = createPaginator({ perPage: PAGINATION.PERPAGE });
-
 @Injectable()
 export class ArticlesService {
   constructor(private readonly prismaService: PrismaService) {}
-
-  async filterByKeyword(keyword: string, page: number) {
-    const result = await paginate(
-      this.prismaService.article,
-      {
-        where: {
-          OR: [
-            {
-              title: {
-                contains: keyword,
-              },
-            },
-            {
-              content: {
-                contains: keyword,
-              },
-            },
-          ],
-        },
-        orderBy: {
-          updatedAt: 'desc',
-        },
-        select: {
-          id: true,
-          title: true,
-          articleIncludesAttachments: true,
-          updatedAt: true,
-        },
-      },
-      {
-        page,
-      },
-    );
-
-    return result;
-  }
 
   async create(createArticleDto: CreateArticleDto) {
     const existArticle = await this.prismaService.article.findUnique({
@@ -68,10 +29,31 @@ export class ArticlesService {
     return newArticle;
   }
 
-  async findAll(page: number) {
+  async findAll(
+    page: number,
+    perPage: number,
+    field: string,
+    order: string,
+    keyword: string,
+  ) {
+    const paginate = createPaginator({ perPage });
     const result = await paginate(
       this.prismaService.article,
       {
+        where: {
+          OR: [
+            {
+              title: {
+                contains: keyword,
+              },
+            },
+            {
+              content: {
+                contains: keyword,
+              },
+            },
+          ],
+        },
         select: {
           id: true,
           title: true,
@@ -79,7 +61,7 @@ export class ArticlesService {
           updatedAt: true,
         },
         orderBy: {
-          updatedAt: 'desc',
+          updatedAt: order,
         },
       },
       { page },

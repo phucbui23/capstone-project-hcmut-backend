@@ -17,11 +17,11 @@ enum Gender {
 }
 
 enum Frequency {
-  AS_NEEDED
-  DAILY
+  // AS_NEEDED
+  // DAILY
   SELECTED_DAYS
   DAY_INTERVAL
-  MONTH_INTERVAL
+  // MONTH_INTERVAL
 }
 
 enum UserRole {
@@ -182,7 +182,7 @@ model Article {
   hospital                   Hospital                    @relation(fields: [hospitalId], references: [id])
   patientSavesArticles       PatientSavesArticle[]
   articleIncludesAttachments ArticleIncludesAttachment[]
-  ArticleIncludesTag         ArticleIncludesTag[]
+  articleIncludesTags        ArticleIncludesTag[]
 
   @@map("article")
 }
@@ -229,7 +229,7 @@ model MedicationPlan {
 }
 
 model ReminderPlan {
-  frequency           Frequency @default(DAILY)
+  frequency           Frequency @default(DAY_INTERVAL)
   stock               Int
   startDate           DateTime  @map("start_date")
   endDate             DateTime? @map("end_date")
@@ -249,12 +249,12 @@ model ReminderPlan {
 }
 
 model ReminderPlanTime {
-  isTaken          Boolean   @default(false) @map("is_taken")
-  isSkipped        Boolean   @default(false) @map("is_skipped")
+  isTaken          Boolean  @default(false) @map("is_taken")
+  isSkipped        Boolean  @default(false) @map("is_skipped")
   time             DateTime
-  dosage           Int       @default(1)
+  dosage           Int      @default(1)
   sentAt           DateTime? @map("sent_at")
-  patientAccountId Int       @map("patient_account_id")
+  patientAccountId Int      @map("patient_account_id")
 
   reminderPlan                 ReminderPlan   @relation(references: [medicationPlanId, medicationId], fields: [reminderPlanMedicationPlanId, reminderPlanMedicationId])
   patientAccount               PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
@@ -316,7 +316,7 @@ model ArticleIncludesTag {
 }
 
 model Tag {
-  id                 Int                  @id @default(autoincrement())
-  name               String               @unique
-  ArticleIncludesTag ArticleIncludesTag[]
+  id                  Int                  @id @default(autoincrement())
+  name                String               @unique
+  articleIncludesTags ArticleIncludesTag[]
 }

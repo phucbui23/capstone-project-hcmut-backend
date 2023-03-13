@@ -61,7 +61,7 @@ export class ArticlesService {
           updatedAt: true,
         },
         orderBy: {
-          updatedAt: order,
+          [field]: order,
         },
       },
       { page },

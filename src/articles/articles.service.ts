@@ -37,23 +37,41 @@ export class ArticlesService {
     keyword: string,
   ) {
     const paginate = createPaginator({ perPage });
-    const result = await paginate(
+    if (keyword.length > 0) {
+      return await paginate(
+        this.prismaService.article,
+        {
+          where: {
+            OR: [
+              {
+                title: {
+                  contains: keyword,
+                },
+              },
+              {
+                content: {
+                  contains: keyword,
+                },
+              },
+            ],
+          },
+          select: {
+            id: true,
+            title: true,
+            articleIncludesAttachments: true,
+            updatedAt: true,
+          },
+          orderBy: {
+            [field]: order,
+          },
+        },
+        { page },
+      );
+    }
+
+    return await paginate(
       this.prismaService.article,
       {
-        where: {
-          OR: [
-            {
-              title: {
-                contains: keyword,
-              },
-            },
-            {
-              content: {
-                contains: keyword,
-              },
-            },
-          ],
-        },
         select: {
           id: true,
           title: true,
@@ -66,7 +84,6 @@ export class ArticlesService {
       },
       { page },
     );
-    return result;
   }
 
   findOne(id: number) {

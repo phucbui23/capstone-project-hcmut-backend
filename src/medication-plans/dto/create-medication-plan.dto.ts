@@ -9,6 +9,8 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  Max,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -40,6 +42,9 @@ class ReminderPlan {
     default: 1,
     required: false,
   })
+  @IsNumber()
+  @Min(1)
+  @Max(30)
   @IsOptional()
   interval: number = 1;
 

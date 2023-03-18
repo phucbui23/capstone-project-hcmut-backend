@@ -1,6 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-
+import { Response } from 'express';
+import { PAGINATION } from 'src/constant';
 import { PatientsService } from './patients.service';
 
 @ApiTags('patients')
@@ -9,8 +19,23 @@ export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
   @Get()
-  async findAll() {
-    return await this.patientsService.findAll();
+  async getListPatients(
+    @Query('page') page: number = 1,
+    @Query('perPage') perPage: number = PAGINATION.PERPAGE,
+    @Query('field') field: string = 'updatedAt',
+    @Query('order') order: string = 'desc',
+    @Query('keyword') keyword: string = '',
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.patientsService.findAll(
+      page,
+      perPage,
+      field,
+      order,
+      keyword,
+    );
+    res.set('X-Total-Count', String(result.meta.total));
+    return result;
   }
 
   @Get(':id')

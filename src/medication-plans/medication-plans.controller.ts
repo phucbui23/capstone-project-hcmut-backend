@@ -1,15 +1,17 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 import { MedicationPlansService } from './medication-plans.service';
@@ -22,8 +24,25 @@ export class MedicationPlansController {
   ) {}
 
   @Get()
-  async findAll() {
-    return this.medicationPlansService.findAll();
+  @ApiQuery({
+    name: 'patientId',
+    required: false,
+    description: "Patient's id",
+  })
+  async findAll(
+    @Query('patientId', new DefaultValuePipe(-1), ParseIntPipe)
+    patientId?: number,
+  ) {
+    if (patientId == -1) {
+      return this.medicationPlansService.findAll({});
+    }
+    return this.medicationPlansService.findAll({
+      where: {
+        patientAccountId: {
+          equals: patientId,
+        },
+      },
+    });
   }
 
   @Post()

@@ -1,20 +1,106 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import { PatientAccount, Prisma, UserRole } from '@prisma/client';
+import { createPaginator } from 'prisma-pagination';
 
 import { PrismaService } from 'src/prisma/prisma.service';
-import { patientIncludeFields } from './constants';
+import { patientList, patientSelectedFields } from './constants';
 
 @Injectable()
 export class PatientsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findAll() {
-    return await this.prismaService.userAccount.findMany({
-      where: {
-        role: { name: { equals: UserRole.PATIENT } },
-      },
-      include: patientIncludeFields,
-    });
+  async findAll(
+    page: number,
+    perPage: number,
+    field: string,
+    order: string,
+    keyword: string,
+  ) {
+    const paginate = createPaginator({ perPage });
+
+    if (keyword.length > 0) {
+      return await paginate(
+        this.prismaService.userAccount,
+        {
+          where: {
+            AND: {
+              role: { name: { equals: UserRole.PATIENT } },
+              OR: [
+                {
+                  code: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  email: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  firstName: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  lastName: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  address: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  socialSecurityNumber: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  patientAccount: {
+                    OR: [
+                      {
+                        phoneNumber: {
+                          contains: keyword,
+                        },
+                      },
+                      {
+                        insuranceNumber: {
+                          contains: keyword,
+                        },
+                      },
+                      {
+                        username: {
+                          contains: keyword,
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          select: patientList,
+          orderBy: {
+            [field]: order,
+          },
+        },
+        { page },
+      );
+    } else
+      return await paginate(
+        this.prismaService.userAccount,
+        {
+          where: {
+            role: { name: { equals: UserRole.PATIENT } },
+          },
+          select: patientList,
+          orderBy: {
+            [field]: order,
+          },
+        },
+        { page },
+      );
   }
 
   async findOne(where: Prisma.PatientAccountWhereUniqueInput) {
@@ -29,7 +115,7 @@ export class PatientsService {
 
     const user = await this.prismaService.userAccount.findUnique({
       where: { id: userAccountId },
-      include: patientIncludeFields,
+      select: patientSelectedFields,
     });
 
     return user;
@@ -46,7 +132,7 @@ export class PatientsService {
           },
         },
       },
-      include: patientIncludeFields,
+      select: patientSelectedFields,
     });
   }
 
@@ -58,7 +144,7 @@ export class PatientsService {
       where: { id: deletePatient.userAccountId },
     });
 
-    return 'Deleted';
+    return 'Patient deleted';
   }
 
   async updateOne(params: {
@@ -66,10 +152,10 @@ export class PatientsService {
     data: Prisma.UserAccountUpdateInput;
   }) {
     const { where, data } = params;
+
     return await this.prismaService.userAccount.update({
       where,
       data,
-      include: patientIncludeFields,
     });
   }
 }

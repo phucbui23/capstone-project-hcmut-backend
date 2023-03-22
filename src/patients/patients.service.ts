@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import { PatientAccount, Prisma, UserRole } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -152,11 +152,10 @@ export class PatientsService {
     data: Prisma.UserAccountUpdateInput;
   }) {
     const { where, data } = params;
-    const updatedPatient = await this.prismaService.userAccount.update({
+
+    return await this.prismaService.userAccount.update({
       where,
       data,
     });
-
-    return 'Patient updated';
   }
 }

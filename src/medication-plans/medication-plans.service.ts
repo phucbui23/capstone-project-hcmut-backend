@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -38,19 +38,10 @@ export class MedicationPlansService {
 
   async findAll(params: { where?: Prisma.MedicationPlanWhereInput }) {
     const { where } = params;
-    let result;
-    try {
-      result = await this.prismaSerivce.medicationPlan.findMany({
-        where,
-        include: medicationPlanIncludeFields,
-      });
-    } catch (error) {
-      throw new BadRequestException({
-        status: HttpStatus.NOT_FOUND,
-        error: 'No patient found.',
-      });
-    }
-    return result;
+    return await this.prismaSerivce.medicationPlan.findMany({
+      where,
+      include: medicationPlanIncludeFields,
+    });
   }
 
   async createOne({

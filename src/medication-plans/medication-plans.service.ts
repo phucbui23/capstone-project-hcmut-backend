@@ -22,12 +22,7 @@ export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
           description: true,
         },
       },
-      reminderPlanTimes: {
-        select: {
-          dosage: true,
-          sentAt: true,
-        },
-      },
+      reminderPlanTimes: true,
     },
   },
 };
@@ -45,7 +40,7 @@ export class MedicationPlansService {
   async createOne({
     name,
     patientId,
-    remindersPlans,
+    reminderPlans,
     doctorId,
     note,
   }: CreateMedicationPlanDto) {
@@ -54,14 +49,21 @@ export class MedicationPlansService {
         name,
         note,
         patientAccount: { connect: { userAccountId: patientId } },
-        doctorAccount: { connect: { operatorAccountId: doctorId } },
+        // doctorAccount: { connect: { operatorAccountId: doctorId } },
+        doctorAccount: doctorId
+          ? {
+              connect: {
+                operatorAccountId: doctorId,
+              },
+            }
+          : undefined,
         reminderPlans: {
-          create: remindersPlans.map((reminderPlan) => {
+          create: reminderPlans.map((reminderPlan) => {
             const {
               startDate,
               endDate,
               stock,
-              reminderPlanTime,
+              reminderPlanTimes,
               interval,
               selectedDays,
               frequency,
@@ -84,7 +86,7 @@ export class MedicationPlansService {
                   d < endDate;
                   d.setDate(d.getDate() + selectedInterval)
                 ) {
-                  reminderPlan.reminderPlanTime.forEach(({ dosage, time }) => {
+                  reminderPlan.reminderPlanTimes.forEach(({ dosage, time }) => {
                     const [hour, minutes] = getDateAndTime(time);
                     const timestamp = new Date(d);
                     timestamp.setHours(hour);
@@ -110,7 +112,7 @@ export class MedicationPlansService {
                   d.setDate(d.getDate() + 1)
                 ) {
                   if (selectedDays.includes(d.getDay())) {
-                    reminderPlan.reminderPlanTime.forEach(
+                    reminderPlan.reminderPlanTimes.forEach(
                       ({ dosage, time }) => {
                         const [hour, minutes] = getDateAndTime(time);
                         const timestamp = new Date(d);
@@ -141,8 +143,10 @@ export class MedicationPlansService {
               const d = new Date(startDate);
 
               if (frequency === 'DAY_INTERVAL') {
-                while (reminderPlanTime.some(({ dosage }) => dosage <= count)) {
-                  reminderPlanTime.forEach(({ dosage, time }) => {
+                while (
+                  reminderPlanTimes.some(({ dosage }) => dosage <= count)
+                ) {
+                  reminderPlanTimes.forEach(({ dosage, time }) => {
                     if (dosage <= count) {
                       const [hour, minutes] = getDateAndTime(time);
                       const timestamp = new Date(d);
@@ -170,7 +174,7 @@ export class MedicationPlansService {
                   // reminderPlanTime.some(({ dosage }) => dosage <= count)
                 ) {
                   if (selectedDays.includes(d.getDay())) {
-                    reminderPlanTime.forEach(({ dosage, time }) => {
+                    reminderPlanTimes.forEach(({ dosage, time }) => {
                       if (dosage <= count) {
                         const [hour, minutes] = getDateAndTime(time);
                         const timestamp = new Date(d);

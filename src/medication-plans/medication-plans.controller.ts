@@ -32,7 +32,6 @@ export class MedicationPlansController {
     @Body()
     createDto: CreateMedicationPlanDto,
   ) {
-    // console.log(JSON.stringify(createDto, null, 2));
     return await this.medicationPlansService.createOne(createDto);
   }
 

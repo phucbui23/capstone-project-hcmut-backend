@@ -108,7 +108,7 @@ class ReminderPlan {
   @Type(() => ReminderPlanTime)
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  reminderPlanTime: ReminderPlanTime[];
+  reminderPlanTimes: ReminderPlanTime[];
 }
 
 export class CreateMedicationPlanDto {
@@ -127,7 +127,7 @@ export class CreateMedicationPlanDto {
   @Type(() => ReminderPlan)
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  remindersPlans: ReminderPlan[];
+  reminderPlans: ReminderPlan[];
 
   @ApiProperty({
     description: 'Medication plan note',

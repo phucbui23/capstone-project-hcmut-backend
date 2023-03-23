@@ -26,13 +26,17 @@ export class MedicationPlansController {
     return this.medicationPlansService.findAll();
   }
 
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.medicationPlansService.findOne({ id });
+  }
+
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async createOne(
     @Body()
     createDto: CreateMedicationPlanDto,
   ) {
-    // console.log(JSON.stringify(createDto, null, 2));
     return await this.medicationPlansService.createOne(createDto);
   }
 

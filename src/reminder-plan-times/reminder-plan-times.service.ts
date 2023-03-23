@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, ReminderPlan, ReminderPlanTime } from '@prisma/client';
 
 import { MedicationPlansService } from 'src/medication-plans/medication-plans.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReminderPlansService } from 'src/reminder-plans/reminder-plans.service';
+import { reminderPlanTimeIncludeFields } from './constants';
 
 @Injectable()
 export class ReminderPlanTimesService {
@@ -13,78 +14,67 @@ export class ReminderPlanTimesService {
     private readonly reminderPlansService: ReminderPlansService,
   ) {}
 
-  async findOne(where: Prisma.ReminderPlanTimeWhereUniqueInput) {
-    return await this.prismaSerivce.reminderPlanTime.findUnique({ where });
+  async findOne(
+    where: Prisma.ReminderPlanTimeWhereUniqueInput,
+  ): Promise<ReminderPlanTime> {
+    return await this.prismaSerivce.reminderPlanTime.findUnique({
+      where,
+      include: reminderPlanTimeIncludeFields,
+    });
   }
 
-  async updateOne({
-    where,
-    data,
-  }: {
-    where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput;
-    data: Prisma.ReminderPlanTimeUpdateWithoutReminderPlanInput;
-  }) {
+  async markOne(
+    where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput,
+  ): Promise<ReminderPlanTime> {
     const updatedReminderPlanTime =
       await this.prismaSerivce.reminderPlanTime.update({
         where: {
           reminderPlanMedicationPlanId_reminderPlanMedicationId_time: where,
         },
-        data,
-        select: {
+        data: {
           isTaken: true,
-          time: true,
-          dosage: true,
-          reminderPlan: {
-            select: {
-              stock: true,
-              medication: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
         },
+        include: reminderPlanTimeIncludeFields,
       });
-
+    const { reminderPlanMedicationId, reminderPlanMedicationPlanId } = where;
     const reminderPlan = await this.reminderPlansService.findOne({
       medicationPlanId_medicationId: {
-        medicationId: where.reminderPlanMedicationId,
-        medicationPlanId: where.reminderPlanMedicationPlanId,
+        medicationPlanId: reminderPlanMedicationPlanId,
+        medicationId: reminderPlanMedicationId,
       },
     });
-
-    // Reduce pill in stock
-
-    if (data.isTaken) {
-      await this.medicationPlansService.updateOne({
-        where: { id: where.reminderPlanMedicationPlanId },
-        data: {
-          reminderPlans: {
-            update: {
-              where: {
-                medicationPlanId_medicationId: {
-                  medicationId: where.reminderPlanMedicationId,
-                  medicationPlanId: where.reminderPlanMedicationPlanId,
-                },
-              },
-              data: {
-                stock: reminderPlan.stock - updatedReminderPlanTime.dosage,
-              },
-            },
-          },
+    await this.reminderPlansService.updateOne({
+      where: {
+        medicationPlanId_medicationId: {
+          medicationPlanId: reminderPlanMedicationPlanId,
+          medicationId: reminderPlanMedicationId,
         },
-      });
-    }
+      },
+      data: {
+        stock: reminderPlan.stock - updatedReminderPlanTime.dosage,
+      },
+    });
 
     return updatedReminderPlanTime;
   }
 
-  async revertOne({
-    where,
-  }: {
-    where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput;
-  }) {
+  async skipOne(
+    where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput,
+  ): Promise<ReminderPlanTime> {
+    return await this.prismaSerivce.reminderPlanTime.update({
+      where: {
+        reminderPlanMedicationPlanId_reminderPlanMedicationId_time: where,
+      },
+      data: {
+        isSkipped: true,
+      },
+      include: reminderPlanTimeIncludeFields,
+    });
+  }
+
+  async revertOne(
+    where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput,
+  ): Promise<ReminderPlanTime> {
     const updatedReminderPlanTime =
       await this.prismaSerivce.reminderPlanTime.update({
         where: {
@@ -92,48 +82,26 @@ export class ReminderPlanTimesService {
         },
         data: {
           isTaken: false,
+          isSkipped: false,
         },
-        select: {
-          isTaken: true,
-          time: true,
-          dosage: true,
-          reminderPlan: {
-            select: {
-              stock: true,
-              medication: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-        },
+        include: reminderPlanTimeIncludeFields,
       });
-
+    const { reminderPlanMedicationId, reminderPlanMedicationPlanId } = where;
     const reminderPlan = await this.reminderPlansService.findOne({
       medicationPlanId_medicationId: {
-        medicationId: where.reminderPlanMedicationId,
-        medicationPlanId: where.reminderPlanMedicationPlanId,
+        medicationPlanId: reminderPlanMedicationPlanId,
+        medicationId: reminderPlanMedicationId,
       },
     });
-
-    // Revert pill in stock
-    await this.medicationPlansService.updateOne({
-      where: { id: where.reminderPlanMedicationPlanId },
-      data: {
-        reminderPlans: {
-          update: {
-            where: {
-              medicationPlanId_medicationId: {
-                medicationId: where.reminderPlanMedicationId,
-                medicationPlanId: where.reminderPlanMedicationPlanId,
-              },
-            },
-            data: {
-              stock: reminderPlan.stock + updatedReminderPlanTime.dosage,
-            },
-          },
+    await this.reminderPlansService.updateOne({
+      where: {
+        medicationPlanId_medicationId: {
+          medicationPlanId: reminderPlanMedicationPlanId,
+          medicationId: reminderPlanMedicationId,
         },
+      },
+      data: {
+        stock: reminderPlan.stock + updatedReminderPlanTime.dosage,
       },
     });
 
@@ -142,7 +110,7 @@ export class ReminderPlanTimesService {
 
   async deleteOne(
     where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput,
-  ) {
+  ): Promise<string> {
     const deleteReminderPlanTime =
       await this.prismaSerivce.reminderPlanTime.delete({
         where: {
@@ -175,5 +143,7 @@ export class ReminderPlanTimesService {
         },
       },
     });
+
+    return 'Deleted';
   }
 }

@@ -3,7 +3,7 @@ import { PatientAccount, Prisma, UserRole } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
 
 import { PrismaService } from 'src/prisma/prisma.service';
-import { patientList, patientSelectedFields } from './constants';
+import { patientIncludeFields, patientList } from './constants';
 
 @Injectable()
 export class PatientsService {
@@ -115,7 +115,7 @@ export class PatientsService {
 
     const user = await this.prismaService.userAccount.findUnique({
       where: { id: userAccountId },
-      select: patientSelectedFields,
+      include: patientIncludeFields,
     });
 
     return user;
@@ -132,7 +132,7 @@ export class PatientsService {
           },
         },
       },
-      select: patientSelectedFields,
+      include: patientIncludeFields,
     });
   }
 
@@ -152,10 +152,10 @@ export class PatientsService {
     data: Prisma.UserAccountUpdateInput;
   }) {
     const { where, data } = params;
-
     return await this.prismaService.userAccount.update({
       where,
       data,
+      include: patientIncludeFields,
     });
   }
 }

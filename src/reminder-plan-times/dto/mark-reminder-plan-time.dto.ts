@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsMilitaryTime, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class MarkReminderPlanTimeDto {
   @ApiProperty({
@@ -21,5 +21,5 @@ export class MarkReminderPlanTimeDto {
   })
   @IsNotEmpty()
   @IsDateString()
-  time: Date;
+  time: string;
 }

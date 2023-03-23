@@ -30,20 +30,19 @@ export class ReminderPlanTimesService {
           reminderPlanMedicationPlanId_reminderPlanMedicationId_time: where,
         },
         data,
-        select: {
-          isTaken: true,
-          time: true,
-          dosage: true,
-          reminderPlan: {
-            select: {
-              stock: true,
-              medication: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
+        // select: {
+        //   isTaken: true,
+        //   time: true,
+        //   dosage: true,
+        //   isSkipped: true,
+        //   patientAccountId: true,
+        //   reminderPlanMedicationId: true,
+        //   reminderPlanMedicationPlanId: true,
+        //   sentAt: true,
+        // },
+        include: {
+          patientAccount: false,
+          reminderPlan: false,
         },
       });
 
@@ -55,7 +54,6 @@ export class ReminderPlanTimesService {
     });
 
     // Reduce pill in stock
-
     if (data.isTaken) {
       await this.medicationPlansService.updateOne({
         where: { id: where.reminderPlanMedicationPlanId },
@@ -93,20 +91,9 @@ export class ReminderPlanTimesService {
         data: {
           isTaken: false,
         },
-        select: {
-          isTaken: true,
-          time: true,
-          dosage: true,
-          reminderPlan: {
-            select: {
-              stock: true,
-              medication: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
+        include: {
+          patientAccount: false,
+          reminderPlan: false,
         },
       });
 

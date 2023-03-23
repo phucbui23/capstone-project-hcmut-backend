@@ -1,7 +1,8 @@
 import * as bcrypt from 'bcrypt';
 import { PrismaClient, Prisma, UserRole, Resource } from '@prisma/client';
 
-import res from './sample_medication.json';
+import medicationsJson from './json/medications.json';
+import articlesJson from './json/articles.json';
 import { HOSPITALS } from './seed-data/hospitals';
 import { PATIENTS } from './seed-data/patients';
 import { RESOURCES, INDEPENDENT_RESOURCE_LIST } from './seed-data/resources';
@@ -9,7 +10,7 @@ import { HOSPITAL_ADMINS } from './seed-data/hospital-admins';
 import { DOCTORS } from './seed-data/doctors';
 
 // Map the data to data array to be used in createMany
-const data = res.drugbank.drug.map((drug) => ({
+const data = medicationsJson.drugbank.drug.map((drug) => ({
   code: drug['drugbank-id'][0],
   name: drug.name,
   description: drug.description,
@@ -25,6 +26,7 @@ async function clearTables(): Promise<void> {
   await prisma.reminderPlanTime.deleteMany({});
   await prisma.reminderPlan.deleteMany({});
   await prisma.medicationPlan.deleteMany({});
+  await prisma.article.deleteMany({});
 
   await prisma.hospitalAdminAccount.deleteMany({});
   await prisma.doctorAccount.deleteMany({});
@@ -470,6 +472,14 @@ async function populateHospitalAdmins() {
   });
 }
 
+async function populateArticles() {
+  const articles = articlesJson as Prisma.ArticleCreateManyInput[];
+  await prisma.article.createMany({
+    data: articles,
+    skipDuplicates: true,
+  });
+}
+
 async function main() {
   await clearTables();
   await resetTableIndex();
@@ -480,6 +490,7 @@ async function main() {
   await populatePatients();
   await populateHospitalAdmins();
   await populateDoctors();
+  await populateArticles();
 }
 
 main()

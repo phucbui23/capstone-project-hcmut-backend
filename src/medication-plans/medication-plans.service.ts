@@ -37,6 +37,13 @@ export class MedicationPlansService {
     });
   }
 
+  async findOne(where: Prisma.MedicationPlanWhereUniqueInput) {
+    return await this.prismaSerivce.medicationPlan.findUnique({
+      where,
+      include: medicationPlanIncludeFields,
+    });
+  }
+
   async createOne({
     name,
     patientId,
@@ -230,6 +237,7 @@ export class MedicationPlansService {
     return await this.prismaSerivce.medicationPlan.update({
       where,
       data,
+      include: medicationPlanIncludeFields,
     });
   }
 

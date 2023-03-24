@@ -34,8 +34,7 @@ async function clearTables(): Promise<void> {
   await prisma.patientAccount.deleteMany({});
   await prisma.userAccount.deleteMany({});
   await prisma.hospital.deleteMany({});
-  await prisma.patientAccount.deleteMany({});
-  await prisma.userAccount.deleteMany({});
+  
   await prisma.roleAccessesResource.deleteMany({});
   await prisma.role.deleteMany();
   await prisma.resource.deleteMany();

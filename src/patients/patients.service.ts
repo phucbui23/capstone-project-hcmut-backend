@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import { PatientAccount, Prisma, UserRole } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
 
 import { PrismaService } from 'src/prisma/prisma.service';

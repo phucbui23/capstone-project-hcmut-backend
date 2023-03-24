@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Query,
   Res,
@@ -20,11 +22,12 @@ export class PatientsController {
 
   @Get()
   async getListPatients(
-    @Query('page') page: number = 1,
-    @Query('perPage') perPage: number = PAGINATION.PERPAGE,
-    @Query('field') field: string = 'updatedAt',
-    @Query('order') order: string = 'desc',
-    @Query('keyword') keyword: string = '',
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE), ParseIntPipe)
+    perPage: number,
+    @Query('field', new DefaultValuePipe('updatedAt')) field: string,
+    @Query('order', new DefaultValuePipe('desc')) order: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword: string,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.patientsService.findAll(

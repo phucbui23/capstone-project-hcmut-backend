@@ -8,6 +8,7 @@ import { PATIENTS_EXAMPLES } from 'prisma/seed-data/patients';
 import { User } from 'src/decorator/user.decorator';
 import { OperatorLocalAuthGuard } from 'src/guard/operator/local-auth.guard';
 import { PatientLocalAuthGuard } from 'src/guard/patient/local-auth.guard';
+import { SkipAuth } from 'src/guard/skip-auth.guard';
 import { AuthService } from './auth.service';
 import { CreateOperatorDto } from './dto/create-operator.dto';
 import { OperatorAuthDto } from './dto/operator-auth.dto';
@@ -19,6 +20,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('operator/register')
+  @SkipAuth()
   async registerOperator(@Body() createOperatorDto: CreateOperatorDto) {
     const { role, username, password, hospitalId } = createOperatorDto;
     if (role === UserRole.DOCTOR) {
@@ -44,12 +46,14 @@ export class AuthController {
     examples: { ...DOCTORS_EXAMPLES, ...HOSPITAL_ADMIN_EXAMPLES },
   })
   @Post('operator/login')
+  @SkipAuth()
   @UseGuards(OperatorLocalAuthGuard)
   async loginOperator(@User() operator: any) {
     return await this.authService.loginOperator(operator);
   }
 
   @Post('patient/register')
+  @SkipAuth()
   async registerPatient(@Body() patientAuthDto: PatientAuthDto) {
     const { password, phoneNumber } = patientAuthDto;
     return await this.authService.registerPatient(phoneNumber, password);
@@ -61,6 +65,7 @@ export class AuthController {
     examples: PATIENTS_EXAMPLES,
   })
   @Post('patient/login')
+  @SkipAuth()
   @UseGuards(PatientLocalAuthGuard)
   async loginPatient(@User() patient: any) {
     return await this.authService.loginPatient(patient);

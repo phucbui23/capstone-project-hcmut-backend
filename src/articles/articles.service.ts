@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Article, Prisma } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { articleIncludeFields } from './constants';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
@@ -20,11 +22,7 @@ export class ArticlesService {
     }
     const newArticle = await this.prismaService.article.create({
       data: createArticleDto,
-      select: {
-        id: true,
-        hospitalId: true,
-        title: true,
-      },
+      include: articleIncludeFields,
     });
     return newArticle;
   }
@@ -38,7 +36,7 @@ export class ArticlesService {
   ) {
     const paginate = createPaginator({ perPage });
     if (keyword.length > 0) {
-      return await paginate(
+      return await paginate<Article, Prisma.ArticleFindManyArgs>(
         this.prismaService.article,
         {
           where: {
@@ -55,12 +53,7 @@ export class ArticlesService {
               },
             ],
           },
-          select: {
-            id: true,
-            title: true,
-            articleIncludesAttachments: true,
-            updatedAt: true,
-          },
+          include: articleIncludeFields,
           orderBy: {
             [field]: order,
           },
@@ -69,18 +62,13 @@ export class ArticlesService {
       );
     }
 
-    return await paginate(
+    return await paginate<Article, Prisma.ArticleFindManyArgs>(
       this.prismaService.article,
       {
-        select: {
-          id: true,
-          title: true,
-          articleIncludesAttachments: true,
-          updatedAt: true,
-        },
         orderBy: {
           [field]: order,
         },
+        include: articleIncludeFields,
       },
       { page },
     );

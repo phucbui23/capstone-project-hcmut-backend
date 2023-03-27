@@ -17,6 +17,7 @@ import { ReminderPlanTimesModule } from './reminder-plan-times/reminder-plan-tim
 import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
 import { ArticlesModule } from './articles/articles.module';
 import { PatientSavesArticlesModule } from './patient-saves-articles/patient-saves-articles.module';
+import { UserAccountsModule } from './user-accounts/user-accounts.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { PatientSavesArticlesModule } from './patient-saves-articles/patient-sav
     ConfigModule.forRoot(),
     ArticlesModule,
     PatientSavesArticlesModule,
+    UserAccountsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

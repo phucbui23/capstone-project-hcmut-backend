@@ -22,8 +22,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const { sub, role, phoneNumber, username } = payload;
     if (role === 'HOSPITAL_ADMIN' || role === 'DOCTOR') {
       return {
-        username,
         role,
+        username,
         userId: sub,
       };
     }

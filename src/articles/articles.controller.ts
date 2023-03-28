@@ -1,20 +1,21 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
+  DefaultValuePipe,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
   Res,
 } from '@nestjs/common';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { ApiTags } from '@nestjs/swagger';
+import { PAGINATION } from 'src/constant';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { PAGINATION } from 'src/constant';
 
 @ApiTags('articles')
 @Controller('articles')
@@ -26,13 +27,53 @@ export class ArticlesController {
     return this.articlesService.create(createArticleDto);
   }
 
+  @ApiQuery({
+    name: 'page',
+    required: true,
+    type: Number,
+    schema: {
+      default: 1,
+    },
+  })
+  @ApiQuery({
+    name: 'perPage',
+    required: true,
+    type: Number,
+    schema: {
+      default: PAGINATION.PERPAGE,
+    },
+  })
+  @ApiQuery({
+    name: 'field',
+    required: true,
+    type: String,
+    schema: {
+      default: 'createdAt',
+    },
+  })
+  @ApiQuery({
+    name: 'order',
+    required: true,
+    type: String,
+    schema: {
+      default: 'desc',
+    },
+  })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    type: String,
+    schema: {
+      default: '',
+    },
+  })
   @Get()
   async getListArticles(
-    @Query('page') page: number = 1,
-    @Query('perPage') perPage: number = PAGINATION.PERPAGE,
-    @Query('field') field: string = 'updatedAt',
-    @Query('order') order: string = 'desc',
-    @Query('keyword') keyword: string = '',
+    @Query('page', new DefaultValuePipe(1)) page: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage: number,
+    @Query('field', new DefaultValuePipe('createdAt')) field: string,
+    @Query('order', new DefaultValuePipe('desc')) order: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword: string,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.articlesService.findAll(

@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { AuthController } from './auth.controller';
 
-import { AuthService } from './auth.service';
-import { PatientsModule } from 'src/patients/patients.module';
 import { DoctorsModule } from 'src/doctors/doctors.module';
-import { PatientLocalStrategy } from 'src/guard/patient/local.strategy';
 import { JwtStrategy } from 'src/guard/jwt/jwt.strategy';
-import { OperatorsModule } from 'src/operators/operators.module';
 import { OperatorLocalStrategy } from 'src/guard/operator/local.strategy';
+import { PatientLocalStrategy } from 'src/guard/patient/local.strategy';
 import { HospitalAdminsModule } from 'src/hospital-admins/hospital-admins.module';
+import { OperatorsModule } from 'src/operators/operators.module';
+import { PatientsModule } from 'src/patients/patients.module';
 import { AuthHelper } from './auth.helper';
+import { AuthService } from './auth.service';
 
 @Module({
   imports: [
@@ -24,7 +24,7 @@ import { AuthHelper } from './auth.helper';
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: {
-        expiresIn: '60s',
+        expiresIn: process.env.TOKEN_EXPIRES_IN || '10 mins',
       },
     }),
   ],

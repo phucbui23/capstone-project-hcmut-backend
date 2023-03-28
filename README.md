@@ -54,3 +54,6 @@ To seed the medication to the database, run:
 ```nodejs
 npx prisma db seed
 ```
+
+## 3. Run api
+To run api, first run register (if don't have an account) and log in to receive access token. Attach this token to header everytime you test an api.

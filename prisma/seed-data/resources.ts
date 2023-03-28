@@ -37,3 +37,7 @@ export const RESOURCES = {
 export const RESOURCE_LIST = Object.values(RESOURCES);
 
 export const DEPENDENT_RESOURCE_LIST = Object.values(DEPENDENT_RESOURCES);
+
+export const INDEPENDENT_RESOURCE_LIST = RESOURCE_LIST.filter(
+  (resource) => !DEPENDENT_RESOURCE_LIST.includes(resource),
+);

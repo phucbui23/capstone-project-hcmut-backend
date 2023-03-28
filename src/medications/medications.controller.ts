@@ -54,6 +54,7 @@ export class MedicationsController {
     type: String,
     description: 'Query keyword',
   })
+  @Roles(UserRole.PATIENT, UserRole.DOCTOR)
   @Get()
   async getListMedications(
     @Query('page') page: number = 1,

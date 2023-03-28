@@ -1,9 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PatientsService } from 'src/patients/patients.service';
 import { DoctorsService } from 'src/doctors/doctors.service';
-import { OperatorAccount, PatientAccount } from '@prisma/client';
-import { OperatorsService } from 'src/operators/operators.service';
 import { HospitalAdminsService } from 'src/hospital-admins/hospital-admins.service';
+import { OperatorsService } from 'src/operators/operators.service';
+import { PatientsService } from 'src/patients/patients.service';
 import { AuthHelper } from './auth.helper';
 
 @Injectable()
@@ -55,6 +54,7 @@ export class AuthService {
     const payload = {
       sub: patient.id,
       phoneNumber: patient.patientAccount.phoneNumber,
+      role: patient.role.name,
     };
     const token = this.authHelper.generateToken(payload);
 
@@ -68,6 +68,7 @@ export class AuthService {
     const payload = {
       sub: operator.id,
       username: operator.operatorAccount.username,
+      role: operator.role.name,
     };
     const token = this.authHelper.generateToken(payload);
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { UserRole } from '@prisma/client';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
@@ -12,10 +13,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: {
+    sub: number;
+    role: UserRole;
+    phoneNumber?: string;
+    username?: string;
+  }) {
+    const { sub, role, phoneNumber, username } = payload;
+    if (role === 'HOSPITAL_ADMIN' || role === 'DOCTOR') {
+      return {
+        role,
+        username,
+        userId: sub,
+      };
+    }
+
     return {
-      userId: payload.sub,
-      username: payload.username,
+      role,
+      phoneNumber,
+      userId: sub,
     };
   }
 }

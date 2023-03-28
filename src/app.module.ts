@@ -8,6 +8,7 @@ import { ArticlesModule } from './articles/articles.module';
 import { AuthModule } from './auth/auth.module';
 import { DoctorsModule } from './doctors/doctors.module';
 import { JwtAuthGuard } from './guard/jwt/jwt-auth.guard';
+import { RolesGuard } from './guard/roles.guard';
 import { HospitalAdminsModule } from './hospital-admins/hospital-admins.module';
 import { HospitalsModule } from './hospitals/hospitals.module';
 import { MedicationPlansModule } from './medication-plans/medication-plans.module';
@@ -37,7 +38,6 @@ import { RolesModule } from './roles/roles.module';
     ConfigModule.forRoot(),
     ArticlesModule,
     PatientSavesArticlesModule,
-    // UserAccountsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -46,10 +46,10 @@ import { RolesModule } from './roles/roles.module';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: RolesGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
   ],
 })
 export class AppModule {}

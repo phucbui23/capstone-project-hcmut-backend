@@ -2,15 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getDateAndTime } from 'src/utils/date';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
-
-function getDateAndTime(str: string): [number, number] {
-  const [hour, minutes, ...rest] = str
-    .split(':')
-    .map((amount) => parseInt(amount));
-
-  return [hour, minutes];
-}
 
 export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
   reminderPlans: {
@@ -31,8 +24,9 @@ export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
 export class MedicationPlansService {
   constructor(private readonly prismaSerivce: PrismaService) {}
 
-  async findAll() {
+  async findAll(params: { where: Prisma.MedicationPlanWhereInput }) {
     return await this.prismaSerivce.medicationPlan.findMany({
+      ...params,
       include: medicationPlanIncludeFields,
     });
   }

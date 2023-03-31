@@ -41,7 +41,7 @@ export class PatientsController {
     return result;
   }
 
-  @Get(':id')
+  @Get(':phoneNumber')
   async findOne(
     @Param('phoneNumber') phoneNumber: string,
   ) {

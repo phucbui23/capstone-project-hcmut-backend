@@ -1,19 +1,16 @@
 import * as bcrypt from 'bcrypt';
-import { PrismaClient, Prisma, UserRole } from '@prisma/client';
+import { PrismaClient, Prisma, UserRole, Resource } from '@prisma/client';
 
-import res from './sample_medication.json';
+import medicationsJson from './json/medications.json';
+import articlesJson from './json/articles.json';
 import { HOSPITALS } from './seed-data/hospitals';
 import { PATIENTS } from './seed-data/patients';
-import {
-  RESOURCES,
-  RESOURCE_LIST,
-  DEPENDENT_RESOURCE_LIST,
-} from './seed-data/resources';
+import { RESOURCES, INDEPENDENT_RESOURCE_LIST } from './seed-data/resources';
 import { HOSPITAL_ADMINS } from './seed-data/hospital-admins';
 import { DOCTORS } from './seed-data/doctors';
 
 // Map the data to data array to be used in createMany
-const data = res.drugbank.drug.map((drug) => ({
+const data = medicationsJson.drugbank.drug.map((drug) => ({
   code: drug['drugbank-id'][0],
   name: drug.name,
   description: drug.description,
@@ -25,26 +22,31 @@ async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, process.env.BCRYPT_SALT);
 }
 
-async function main() {
+async function clearTables(): Promise<void> {
+  await prisma.reminderPlanTime.deleteMany({});
+  await prisma.reminderPlan.deleteMany({});
+  await prisma.medicationPlan.deleteMany({});
+  await prisma.article.deleteMany({});
+
   await prisma.hospitalAdminAccount.deleteMany({});
   await prisma.doctorAccount.deleteMany({});
   await prisma.operatorAccount.deleteMany({});
   await prisma.patientAccount.deleteMany({});
   await prisma.userAccount.deleteMany({});
   await prisma.hospital.deleteMany({});
-  await prisma.patientAccount.deleteMany({});
-  await prisma.userAccount.deleteMany({});
+  
   await prisma.roleAccessesResource.deleteMany({});
   await prisma.role.deleteMany();
   await prisma.resource.deleteMany();
-  // To reset the index of sequence primary keys of entities to 1
-  RESOURCE_LIST.filter(
-    (resource: string) => !DEPENDENT_RESOURCE_LIST.includes(resource),
-  ).forEach(
-    async (resource: string) =>
-      await prisma.$queryRawUnsafe(`ALTER SEQUENCE ${resource}_id_seq RESTART`),
-  );
-  // Initialize resources
+}
+
+async function resetTableIndex(): Promise<void> {
+  for (const resource of INDEPENDENT_RESOURCE_LIST) {
+    await prisma.$queryRawUnsafe(`ALTER SEQUENCE ${resource}_id_seq RESTART`);
+  }
+}
+
+async function populateResources(): Promise<Resource[]> {
   const resourceResource = await prisma.resource.create({
     data: {
       name: RESOURCES.resource,
@@ -171,7 +173,50 @@ async function main() {
     },
   });
 
-  // Initialize RBAC model for specific type of users
+  return [
+    resourceResource,
+    roleAccessesResourceResource,
+    roleResource,
+    userAccountResource,
+    operatorAccountResource,
+    hospitalAdminAccountResource,
+    doctorAccountResource,
+    doctorManagesPatientResource,
+    patientAccountResource,
+    articleResource,
+    patientSavesArticleResource,
+    hospitalResource,
+    medicationPlanResource,
+    reminderPlanResource,
+    reminderPlanIncludesMedicationResource,
+    medicationResource,
+    articleIncludesAttachmentResource,
+    attachmentResource,
+  ];
+}
+
+async function populateUserRoles(resources: Resource[]) {
+  const [
+    resourceResource,
+    roleAccessesResourceResource,
+    roleResource,
+    userAccountResource,
+    operatorAccountResource,
+    hospitalAdminAccountResource,
+    doctorAccountResource,
+    doctorManagesPatientResource,
+    patientAccountResource,
+    articleResource,
+    patientSavesArticleResource,
+    hospitalResource,
+    medicationPlanResource,
+    reminderPlanResource,
+    reminderPlanIncludesMedicationResource,
+    medicationResource,
+    articleIncludesAttachmentResource,
+    attachmentResource,
+  ] = resources;
+
   await prisma.role.create({
     data: {
       name: UserRole.ADMIN,
@@ -348,18 +393,23 @@ async function main() {
       },
     },
   });
+}
 
+async function populateMedications() {
   await prisma.medication.createMany({
     data,
     skipDuplicates: true, // Skip duplicate entries
   });
+}
 
+async function populateHospitals() {
   await prisma.hospital.createMany({
     data: HOSPITALS,
     skipDuplicates: true,
   });
+}
 
-  // Create sample patient accounts
+async function populatePatients() {
   PATIENTS.forEach(async (patient) => {
     await prisma.patientAccount.create({
       data: {
@@ -373,7 +423,30 @@ async function main() {
       },
     });
   });
-  // Create sample hospital admins who administrate one and only one hospital
+}
+
+async function populateDoctors() {
+  DOCTORS.forEach(async (doctor) => {
+    await prisma.doctorAccount.create({
+      data: {
+        operatorAccount: {
+          create: {
+            username: doctor.username,
+            hospital: { connect: { id: doctor.hospitalId } },
+            userAccount: {
+              create: {
+                passwordHash: await hashPassword(doctor.password),
+                role: { connect: { name: doctor.role } },
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+}
+
+async function populateHospitalAdmins() {
   HOSPITAL_ADMINS.forEach(async (hospitalAdmin) => {
     await prisma.hospitalAdminAccount.create({
       data: {
@@ -396,25 +469,27 @@ async function main() {
       },
     });
   });
-  // Create sample doctors who work in one and only one hospital
-  DOCTORS.forEach(async (doctor) => {
-    await prisma.doctorAccount.create({
-      data: {
-        operatorAccount: {
-          create: {
-            username: doctor.username,
-            hospital: { connect: { id: doctor.hospitalId } },
-            userAccount: {
-              create: {
-                passwordHash: await hashPassword(doctor.password),
-                role: { connect: { name: doctor.role } },
-              },
-            },
-          },
-        },
-      },
-    });
+}
+
+async function populateArticles() {
+  const articles = articlesJson as Prisma.ArticleCreateManyInput[];
+  await prisma.article.createMany({
+    data: articles,
+    skipDuplicates: true,
   });
+}
+
+async function main() {
+  await clearTables();
+  await resetTableIndex();
+  const resources = await populateResources();
+  await populateUserRoles(resources);
+  await populateMedications();
+  await populateHospitals();
+  await populatePatients();
+  await populateHospitalAdmins();
+  await populateDoctors();
+  await populateArticles();
 }
 
 main()

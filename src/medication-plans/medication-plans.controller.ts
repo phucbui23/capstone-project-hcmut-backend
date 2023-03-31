@@ -23,26 +23,28 @@ export class MedicationPlansController {
     private readonly medicationPlansService: MedicationPlansService,
   ) {}
 
-  @Get()
   @ApiQuery({
     name: 'patientId',
+    type: Number,
     required: false,
-    description: "Patient's id",
   })
+  @Get()
   async findAll(
     @Query('patientId', new DefaultValuePipe(-1), ParseIntPipe)
-    patientId?: number,
+    patientId: number,
   ) {
-    if (patientId == -1) {
-      return this.medicationPlansService.findAll({});
-    }
     return this.medicationPlansService.findAll({
       where: {
-        patientAccountId: {
-          equals: patientId,
+        AND: {
+          patientAccountId: patientId === -1 ? undefined : patientId,
         },
       },
     });
+  }
+
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.medicationPlansService.findOne({ id });
   }
 
   @Post()
@@ -51,7 +53,6 @@ export class MedicationPlansController {
     @Body()
     createDto: CreateMedicationPlanDto,
   ) {
-    // console.log(JSON.stringify(createDto, null, 2));
     return await this.medicationPlansService.createOne(createDto);
   }
 

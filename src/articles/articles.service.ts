@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Article, Prisma } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { articleIncludeFields } from './constants';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
@@ -20,11 +22,7 @@ export class ArticlesService {
     }
     const newArticle = await this.prismaService.article.create({
       data: createArticleDto,
-      select: {
-        id: true,
-        hospitalId: true,
-        title: true,
-      },
+      include: articleIncludeFields,
     });
     return newArticle;
   }
@@ -37,36 +35,43 @@ export class ArticlesService {
     keyword: string,
   ) {
     const paginate = createPaginator({ perPage });
-    const result = await paginate(
+    if (keyword.length > 0) {
+      return await paginate<Article, Prisma.ArticleFindManyArgs>(
+        this.prismaService.article,
+        {
+          where: {
+            OR: [
+              {
+                title: {
+                  contains: keyword,
+                },
+              },
+              {
+                content: {
+                  contains: keyword,
+                },
+              },
+            ],
+          },
+          include: articleIncludeFields,
+          orderBy: {
+            [field]: order,
+          },
+        },
+        { page },
+      );
+    }
+
+    return await paginate<Article, Prisma.ArticleFindManyArgs>(
       this.prismaService.article,
       {
-        where: {
-          OR: [
-            {
-              title: {
-                contains: keyword,
-              },
-            },
-            {
-              content: {
-                contains: keyword,
-              },
-            },
-          ],
-        },
-        select: {
-          id: true,
-          title: true,
-          articleIncludesAttachments: true,
-          updatedAt: true,
-        },
         orderBy: {
           [field]: order,
         },
+        include: articleIncludeFields,
       },
       { page },
     );
-    return result;
   }
 
   findOne(id: number) {

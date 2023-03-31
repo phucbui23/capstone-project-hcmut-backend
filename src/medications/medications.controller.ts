@@ -6,9 +6,11 @@ import {
   Param,
   Patch,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Medication, Prisma } from '@prisma/client';
+import { Medication, Prisma, UserRole } from '@prisma/client';
+import { Roles, RolesGuard } from 'src/guard/roles.guard';
 
 import { MedicationsService } from './medications.service';
 
@@ -22,6 +24,7 @@ export class MedicationsController {
     required: false,
     type: String,
   })
+  @Roles(UserRole.PATIENT, UserRole.DOCTOR)
   @Get()
   async findAll(@Query('keyword') keyword?: string): Promise<Medication[]> {
     return await this.medicationsService.findAll({

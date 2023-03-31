@@ -166,7 +166,7 @@ export class MedicationPlansService {
                   d.setDate(d.getDate() + selectedInterval);
                 }
               } else if (frequency === 'SELECTED_DAYS') {
-                while (reminderPlanTime.some(({ dosage }) => dosage <= count)) {
+                while (reminderPlanTimes.some(({ dosage }) => dosage <= count)) {
                   if (selectedDays.includes(d.getDay())) {
                     reminderPlanTimes.forEach(({ dosage, time }) => {
                       if (dosage <= count) {

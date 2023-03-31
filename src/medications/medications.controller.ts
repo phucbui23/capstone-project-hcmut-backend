@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
@@ -10,12 +11,13 @@ import {
   Res,
 } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { Response } from 'express';
 import { PAGINATION } from 'src/constant';
 import { CreateMedicationDto } from './dto/medications.dto';
 
 import { MedicationsService } from './medications.service';
+import { Roles } from 'src/guard/roles.guard';
 
 @ApiTags('medications')
 @Controller('medications')
@@ -57,11 +59,11 @@ export class MedicationsController {
   @Roles(UserRole.PATIENT, UserRole.DOCTOR)
   @Get()
   async getListMedications(
-    @Query('page') page: number = 1,
-    @Query('perPage') perPage: number = PAGINATION.PERPAGE,
-    @Query('field') field: string = 'updatedAt',
-    @Query('order') order: string = 'desc',
-    @Query('keyword') keyword: string = '',
+    @Query('page', new DefaultValuePipe(1)) page: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage: number,
+    @Query('field', new DefaultValuePipe('updatedAt')) field: string,
+    @Query('order', new DefaultValuePipe('desc')) order: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword: string,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.medicationsService.findAll(

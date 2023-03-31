@@ -7,17 +7,13 @@ import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 
 export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
   reminderPlans: {
-    select: {
-      medication: {
-        select: {
-          code: true,
-          name: true,
-          description: true,
-        },
-      },
+    include: {
+      medication: true,
       reminderPlanTimes: true,
     },
   },
+  doctorAccount: false,
+  patientAccount: false,
 };
 
 @Injectable()

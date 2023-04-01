@@ -16,6 +16,8 @@ import { PAGINATION } from 'src/constant';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { Roles } from 'src/guard/roles.guard';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('articles')
 @Controller('articles')
@@ -67,6 +69,7 @@ export class ArticlesController {
       default: '',
     },
   })
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
   @Get()
   async getListArticles(
     @Query('page', new DefaultValuePipe(1)) page: number,
@@ -87,11 +90,13 @@ export class ArticlesController {
     return result;
   }
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.articlesService.findOne(+id);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Patch(':id')
   async updateArticle(
     @Param('id') id: string,
@@ -100,14 +105,17 @@ export class ArticlesController {
     return this.articlesService.update(+id, updateArticleDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
   async removeArticle(@Param('id') id: string) {
     return this.articlesService.remove(+id);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
   @Patch()
   async saveArticle() {}
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
   @Patch()
   async unsaveArticle() {}
 }

@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
+import { UserRole } from '@prisma/client';
+import { Roles } from 'src/guard/roles.guard';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 import { MedicationPlansService } from './medication-plans.service';
 
@@ -29,6 +31,12 @@ export class MedicationPlansController {
     required: false,
   })
   @Get()
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   async findAll(
     @Query('patientId', new DefaultValuePipe(-1), ParseIntPipe)
     patientId: number,
@@ -42,11 +50,23 @@ export class MedicationPlansController {
     });
   }
 
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.medicationPlansService.findOne({ id });
   }
 
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async createOne(
@@ -56,6 +76,12 @@ export class MedicationPlansController {
     return await this.medicationPlansService.createOne(createDto);
   }
 
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Delete(':id')
   async deleteOne(@Param('id', ParseIntPipe) id: number) {
     return await this.medicationPlansService.deleteOne({ id });

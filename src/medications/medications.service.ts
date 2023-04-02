@@ -16,7 +16,7 @@ export class MedicationsService {
     keyword: string,
   ) {
     const paginate = createPaginator({ perPage });
-    const result = await paginate(
+    const result = await paginate<Medication, Prisma.MedicationFindManyArgs>(
       this.prismaService.medication,
       {
         where: {
@@ -24,11 +24,13 @@ export class MedicationsService {
             {
               code: {
                 contains: keyword,
+                mode: 'insensitive',
               },
             },
             {
               name: {
                 contains: keyword,
+                mode: 'insensitive',
               },
             },
           ],

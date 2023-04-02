@@ -56,7 +56,7 @@ export class MedicationsController {
     type: String,
     description: 'Query keyword',
   })
-  @Roles(UserRole.PATIENT, UserRole.DOCTOR)
+  @Roles(UserRole.PATIENT, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get()
   async getListMedications(
     @Query('page', new DefaultValuePipe(1)) page: number,

@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
+import { AttachmentsModule } from './attachments/attachments.module';
 import { AuthModule } from './auth/auth.module';
 import { DoctorsModule } from './doctors/doctors.module';
 import { JwtAuthGuard } from './guard/jwt/jwt-auth.guard';
@@ -20,6 +21,7 @@ import { ReminderPlanTimesModule } from './reminder-plan-times/reminder-plan-tim
 import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
 import { ResourcesModule } from './resources/resources.module';
 import { RolesModule } from './roles/roles.module';
+import { FirebaseService } from './firebase/firebase.service';
 
 @Module({
   imports: [
@@ -38,6 +40,7 @@ import { RolesModule } from './roles/roles.module';
     ConfigModule.forRoot(),
     ArticlesModule,
     PatientSavesArticlesModule,
+    AttachmentsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -50,6 +53,7 @@ import { RolesModule } from './roles/roles.module';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    FirebaseService,
   ],
 })
 export class AppModule {}

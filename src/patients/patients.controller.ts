@@ -41,9 +41,13 @@ export class PatientsController {
     return result;
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.patientsService.findOne({ userAccountId: +id });
+  @Get(':phoneNumber')
+  async findOne(
+    @Param('phoneNumber') phoneNumber: string,
+  ) {
+    return await this.patientsService.findOne({
+      phoneNumber,
+    });
   }
 
   @Delete(':id')

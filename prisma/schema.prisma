@@ -118,7 +118,6 @@ model HospitalAdminAccount {
 
 model DoctorAccount {
   operatorAccountId Int     @unique @map("operator_account_id")
-  // hospitalAdminAccountId Int     @map("hospital_admin_account_id")
   faculty           String? @db.VarChar(255)
   yearOfExperience  Float?  @map("year_of_experience")
 

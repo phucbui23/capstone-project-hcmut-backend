@@ -14,14 +14,25 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Roles } from 'src/guard/roles.guard';
 import { AttachmentsService } from './attachments.service';
 import { UpdateAttachmentDto } from './dto/update-attachment.dto';
+@ApiTags('attchments')
 @Controller('attachments')
 export class AttachmentsController {
   constructor(private readonly attachmentsService: AttachmentsService) {}
 
+  @ApiProperty({
+    name: 'userAccountId',
+    description: 'user account id',
+  })
+  @ApiParam({
+    name: 'file',
+    description: 'File to upload',
+    type: 'file',
+  })
   @Roles(
     UserRole.ADMIN,
     UserRole.DOCTOR,

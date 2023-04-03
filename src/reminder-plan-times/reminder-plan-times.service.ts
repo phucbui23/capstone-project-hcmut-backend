@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, ReminderPlan, ReminderPlanTime } from '@prisma/client';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { Prisma, ReminderPlanTime } from '@prisma/client';
 
 import { MedicationPlansService } from 'src/medication-plans/medication-plans.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -26,6 +26,22 @@ export class ReminderPlanTimesService {
   async markOne(
     where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput,
   ): Promise<ReminderPlanTime> {
+    const matchedReminderPlanTime =
+      await this.prismaSerivce.reminderPlanTime.findUnique({
+        where: {
+          reminderPlanMedicationPlanId_reminderPlanMedicationId_time: where,
+        },
+      });
+    if (
+      Date.now() - matchedReminderPlanTime.sentAt.getTime() >
+      60 * 60 * 24 * 1000
+    ) {
+      throw new BadRequestException({
+        status: HttpStatus.FORBIDDEN,
+        error: 'Can not modify after 24 hours',
+      });
+    }
+
     const updatedReminderPlanTime =
       await this.prismaSerivce.reminderPlanTime.update({
         where: {
@@ -75,6 +91,22 @@ export class ReminderPlanTimesService {
   async revertOne(
     where: Prisma.ReminderPlanTimeReminderPlanMedicationPlanIdReminderPlanMedicationIdTimeCompoundUniqueInput,
   ): Promise<ReminderPlanTime> {
+    const matchedReminderPlanTime =
+      await this.prismaSerivce.reminderPlanTime.findUnique({
+        where: {
+          reminderPlanMedicationPlanId_reminderPlanMedicationId_time: where,
+        },
+      });
+    if (
+      Date.now() - matchedReminderPlanTime.sentAt.getTime() >
+      60 * 60 * 24 * 1000
+    ) {
+      throw new BadRequestException({
+        status: HttpStatus.FORBIDDEN,
+        error: 'Can not revert action after 24 hours',
+      });
+    }
+
     const updatedReminderPlanTime =
       await this.prismaSerivce.reminderPlanTime.update({
         where: {

@@ -1,13 +1,13 @@
+import { Prisma, PrismaClient, Resource, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { PrismaClient, Prisma, UserRole, Resource } from '@prisma/client';
 
-import medicationsJson from './json/medications.json';
 import articlesJson from './json/articles.json';
+import medicationsJson from './json/medications.json';
+import { DOCTORS } from './seed-data/doctors';
+import { HOSPITAL_ADMINS } from './seed-data/hospital-admins';
 import { HOSPITALS } from './seed-data/hospitals';
 import { PATIENTS } from './seed-data/patients';
-import { RESOURCES, INDEPENDENT_RESOURCE_LIST } from './seed-data/resources';
-import { HOSPITAL_ADMINS } from './seed-data/hospital-admins';
-import { DOCTORS } from './seed-data/doctors';
+import { INDEPENDENT_RESOURCE_LIST, RESOURCES } from './seed-data/resources';
 
 // Map the data to data array to be used in createMany
 const data = medicationsJson.drugbank.drug.map((drug) => ({
@@ -415,16 +415,24 @@ async function populatePatients() {
 }
 
 async function populateDoctors() {
-  DOCTORS.forEach(async (doctor) => {
+  for (const doctor of DOCTORS) {
+    const numOfUser = (await prisma.userAccount.count({})) + 1;
+    const username =
+      `${doctor.firstName}` + '.' + `${doctor.lastName}` + '.' + `${numOfUser}`;
+
     await prisma.doctorAccount.create({
       data: {
         operatorAccount: {
           create: {
-            username: doctor.username,
+            username,
             hospital: { connect: { id: doctor.hospitalId } },
             userAccount: {
               create: {
-                passwordHash: await hashPassword(doctor.password),
+                firstName: doctor.firstName,
+                lastName: doctor.lastName,
+                passwordHash: await hashPassword(
+                  process.env.DOCTOR_PASSWORD || '123456',
+                ),
                 role: { connect: { name: doctor.role } },
               },
             },
@@ -432,22 +440,34 @@ async function populateDoctors() {
         },
       },
     });
-  });
+  }
 }
 
 async function populateHospitalAdmins() {
-  HOSPITAL_ADMINS.forEach(async (hospitalAdmin) => {
+  for (const hospitalAdmin of HOSPITAL_ADMINS) {
+    const numOfUser = (await prisma.userAccount.count({})) + 1;
+    const username =
+      `${hospitalAdmin.firstName}` +
+      '.' +
+      `${hospitalAdmin.lastName}` +
+      '.' +
+      `${numOfUser}`;
+
     await prisma.hospitalAdminAccount.create({
       data: {
         operatorAccount: {
           create: {
-            username: hospitalAdmin.username,
+            username,
             hospital: {
               connect: { id: hospitalAdmin.hospitalId },
             },
             userAccount: {
               create: {
-                passwordHash: await hashPassword(hospitalAdmin.password),
+                firstName: hospitalAdmin.firstName,
+                lastName: hospitalAdmin.lastName,
+                passwordHash: await hashPassword(
+                  process.env.HOSPITAL_ADMIN_PASSWORD || '123456',
+                ),
                 role: {
                   connect: { name: hospitalAdmin.role },
                 },
@@ -457,7 +477,7 @@ async function populateHospitalAdmins() {
         },
       },
     });
-  });
+  }
 }
 
 async function populateArticles() {

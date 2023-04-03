@@ -15,15 +15,26 @@ export type DoctorResponse = Prisma.UserAccountGetPayload<
 export class DoctorsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createOne(username: string, password: string, hospitalId: number) {
+  async createOne(
+    firstName: string,
+    lastName: string,
+    username: string,
+    password: string,
+    hospitalId: number,
+  ) {
     return await this.prismaService.userAccount.create({
       data: {
+        firstName,
+        lastName,
         passwordHash: password,
         role: { connect: { name: UserRole.DOCTOR } },
         operatorAccount: {
           create: {
             username,
             hospital: { connect: { id: hospitalId } },
+            doctorAccount: {
+              create: {},
+            },
           },
         },
       },

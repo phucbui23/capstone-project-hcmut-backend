@@ -3,11 +3,13 @@ import { DoctorsService } from 'src/doctors/doctors.service';
 import { HospitalAdminsService } from 'src/hospital-admins/hospital-admins.service';
 import { OperatorsService } from 'src/operators/operators.service';
 import { PatientsService } from 'src/patients/patients.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthHelper } from './auth.helper';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly prismaService: PrismaService,
     private readonly patientsService: PatientsService,
     private readonly doctorsService: DoctorsService,
     private readonly operatorsService: OperatorsService,
@@ -90,33 +92,59 @@ export class AuthService {
     );
   }
 
-  async registerDoctor(username: string, password: string, hospitalId: number) {
+  async registerDoctor(
+    firstName: string,
+    lastName: string,
+    hospitalId: number,
+  ) {
+    const username =
+      `${firstName}` +
+      '.' +
+      `${lastName}` +
+      '.' +
+      `${(await this.prismaService.userAccount.count({})) + 1}`;
     const existingDoctor = await this.doctorsService.findOne({ username });
+
     if (existingDoctor) {
       throw new BadRequestException('Doctor already exists');
     }
 
     return await this.doctorsService.createOne(
-      username,
-      await this.authHelper.encodePassword(password),
+      firstName,
+      lastName,
+      username.replace(/\s+/g, ''),
+      await this.authHelper.encodePassword(
+        process.env.DOCTOR_PASSWORD || 'default',
+      ),
       hospitalId,
     );
   }
 
   async registerHospitalAdmin(
-    username: string,
-    password: string,
+    firstName: string,
+    lastName: string,
     hospitalId: number,
   ) {
+    const username =
+      `${firstName}` +
+      '.' +
+      `${lastName}` +
+      '.' +
+      `${(await this.prismaService.userAccount.count({})) + 1}`;
     const existingHospitalAdmin = await this.hospitalAdminsService.findOne({
       username,
     });
+
     if (existingHospitalAdmin) {
       throw new BadRequestException('Hospital admin already exists');
     }
     return await this.hospitalAdminsService.createOne(
-      username,
-      await this.authHelper.encodePassword(password),
+      firstName,
+      lastName,
+      username.replace(/\s+/g, ''),
+      await this.authHelper.encodePassword(
+        process.env.HOSPITAL_ADMIN_PASSWORD || 'default',
+      ),
       hospitalId,
     );
   }

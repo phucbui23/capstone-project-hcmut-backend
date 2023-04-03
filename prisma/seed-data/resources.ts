@@ -8,7 +8,6 @@ export const DEPENDENT_RESOURCES = {
   patientAccount: 'patient_account',
   patientSavesArticle: 'patient_saves_article',
   reminderPlanIncludesMedication: 'reminder_plan_includes_medication',
-  articleIncludesAttachment: 'article_includes_attachment',
   reminderPlan: 'reminder_plan',
 };
 
@@ -30,7 +29,6 @@ export const RESOURCES = {
   medicationPlan: 'medication_plan',
   reminderPlanIncludesMedication: 'reminder_plan_includes_medication',
   medication: 'medication',
-  articleIncludesAttachment: 'article_includes_attachment',
   attachment: 'attachment',
 };
 

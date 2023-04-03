@@ -34,7 +34,7 @@ async function clearTables(): Promise<void> {
   await prisma.patientAccount.deleteMany({});
   await prisma.userAccount.deleteMany({});
   await prisma.hospital.deleteMany({});
-  
+
   await prisma.roleAccessesResource.deleteMany({});
   await prisma.role.deleteMany();
   await prisma.resource.deleteMany();
@@ -159,13 +159,6 @@ async function populateResources(): Promise<Resource[]> {
     },
   });
 
-  const articleIncludesAttachmentResource = await prisma.resource.create({
-    data: {
-      name: RESOURCES.articleIncludesAttachment,
-      description: RESOURCES.articleIncludesAttachment,
-    },
-  });
-
   const attachmentResource = await prisma.resource.create({
     data: {
       name: RESOURCES.attachment,
@@ -190,7 +183,6 @@ async function populateResources(): Promise<Resource[]> {
     reminderPlanResource,
     reminderPlanIncludesMedicationResource,
     medicationResource,
-    articleIncludesAttachmentResource,
     attachmentResource,
   ];
 }
@@ -213,7 +205,6 @@ async function populateUserRoles(resources: Resource[]) {
     reminderPlanResource,
     reminderPlanIncludesMedicationResource,
     medicationResource,
-    articleIncludesAttachmentResource,
     attachmentResource,
   ] = resources;
 
@@ -240,7 +231,6 @@ async function populateUserRoles(resources: Resource[]) {
             reminderPlanResource,
             reminderPlanIncludesMedicationResource,
             medicationResource,
-            articleIncludesAttachmentResource,
             attachmentResource,
           ].map(
             (resource): Prisma.RoleAccessesResourceCreateWithoutRoleInput => ({
@@ -275,7 +265,6 @@ async function populateUserRoles(resources: Resource[]) {
             medicationPlanResource,
             reminderPlanResource,
             reminderPlanIncludesMedicationResource,
-            articleIncludesAttachmentResource,
           ].map(
             (resource): Prisma.RoleAccessesResourceCreateWithoutRoleInput => ({
               canAdd: true,

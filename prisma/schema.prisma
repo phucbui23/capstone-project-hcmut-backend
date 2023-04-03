@@ -17,11 +17,8 @@ enum Gender {
 }
 
 enum Frequency {
-  // AS_NEEDED
-  // DAILY
   SELECTED_DAYS
   DAY_INTERVAL
-  // MONTH_INTERVAL
 }
 
 enum UserRole {
@@ -53,8 +50,8 @@ model RoleAccessesResource {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  resource Resource @relation(fields: [resourceId], references: [id])
-  role     Role     @relation(fields: [roleId], references: [id])
+  resource Resource @relation(fields: [resourceId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  role     Role     @relation(fields: [roleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([resourceId, roleId])
   @@map("role_accesses_resource")
@@ -89,11 +86,11 @@ model UserAccount {
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
   roleId               Int       @map("role_id")
-  role                 Role      @relation(fields: [roleId], references: [id])
+  role                 Role      @relation(fields: [roleId], references: [id], onUpdate: Cascade)
 
   patientAccount  PatientAccount?
   operatorAccount OperatorAccount?
-  attachments     Attachment[]
+  attachment      Attachment?
 
   @@map("user_account")
 }
@@ -104,8 +101,8 @@ model OperatorAccount {
   phoneNumber   String? @unique @map("phone_number") @db.VarChar(255)
   hospitalId    Int     @map("hospital_id")
 
-  userAccount          UserAccount           @relation(fields: [userAccountId], references: [id])
-  hospital             Hospital              @relation(fields: [hospitalId], references: [id])
+  userAccount          UserAccount           @relation(fields: [userAccountId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  hospital             Hospital              @relation(fields: [hospitalId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   hospitalAdminAccount HospitalAdminAccount?
   doctorAccount        DoctorAccount?
 
@@ -114,18 +111,17 @@ model OperatorAccount {
 
 model HospitalAdminAccount {
   operatorAccountId Int             @unique @map("operator_account_id")
-  operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId])
+  operatorAccount   OperatorAccount @relation(fields: [operatorAccountId], references: [userAccountId], onUpdate: Cascade, onDelete: Cascade)
 
   @@map("hospital_admin_account")
 }
 
 model DoctorAccount {
   operatorAccountId Int     @unique @map("operator_account_id")
-  // hospitalAdminAccountId Int     @map("hospital_admin_account_id")
   faculty           String? @db.VarChar(255)
   yearOfExperience  Float?  @map("year_of_experience")
 
-  operatorAccount       OperatorAccount        @relation(fields: [operatorAccountId], references: [userAccountId])
+  operatorAccount       OperatorAccount        @relation(fields: [operatorAccountId], references: [userAccountId], onUpdate: Cascade, onDelete: Cascade)
   qualifications        Qualification[]
   doctorManagesPatients DoctorManagesPatient[]
   medicationPlans       MedicationPlan[]
@@ -137,8 +133,8 @@ model DoctorManagesPatient {
   doctorAccountId  Int @map("doctor_account_id")
   patientAccountId Int @map("patient_account_id")
 
-  doctorAccount  DoctorAccount  @relation(fields: [doctorAccountId], references: [operatorAccountId])
-  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+  doctorAccount  DoctorAccount  @relation(fields: [doctorAccountId], references: [operatorAccountId], onUpdate: Cascade, onDelete: Cascade)
+  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([doctorAccountId, patientAccountId])
   @@map("doctor_manages_patient")
@@ -149,7 +145,7 @@ model Qualification {
   name            String   @db.VarChar(255)
   expireDay       DateTime @map("expire_day")
 
-  doctorAccount DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId])
+  doctorAccount DoctorAccount @relation(fields: [doctorAccountId], references: [operatorAccountId], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([doctorAccountId, name])
   @@map("qualification")
@@ -162,7 +158,7 @@ model PatientAccount {
   phoneNumber     String  @unique @map("phone_number") @db.VarChar(255)
   username        String? @unique @db.VarChar(255)
 
-  userAccount           UserAccount            @relation(fields: [userAccountId], references: [id])
+  userAccount           UserAccount            @relation(fields: [userAccountId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   doctorManagesPatients DoctorManagesPatient[]
   medicationPlans       MedicationPlan[]
   patientSavesArticles  PatientSavesArticle[]
@@ -179,10 +175,10 @@ model Article {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  hospital                   Hospital                    @relation(fields: [hospitalId], references: [id])
-  patientSavesArticles       PatientSavesArticle[]
-  articleIncludesAttachments ArticleIncludesAttachment[]
-  articleIncludesTags        ArticleIncludesTag[]
+  hospital             Hospital              @relation(fields: [hospitalId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  patientSavesArticles PatientSavesArticle[]
+  articleIncludesTags  ArticleIncludesTag[]
+  Attachment           Attachment?
 
   @@map("article")
 }
@@ -192,8 +188,8 @@ model PatientSavesArticle {
   articleId        Int      @map("article_id")
   createdAt        DateTime @default(now()) @map("created_at")
 
-  article        Article        @relation(fields: [articleId], references: [id])
-  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+  article        Article        @relation(fields: [articleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([patientAccountId, articleId])
   @@map("patient_saves_article")
@@ -215,15 +211,16 @@ model Hospital {
 model MedicationPlan {
   id               Int      @id @default(autoincrement())
   doctorAccountId  Int?     @map("doctor_account_id")
-  patientAccountId Int      @map("patient_account_id")
+  patientAccountId Int?     @map("patient_account_id")
   name             String?  @db.VarChar(255)
   note             String?  @db.Text
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   reminderPlans  ReminderPlan[]
-  doctorAccount  DoctorAccount? @relation(fields: [doctorAccountId], references: [operatorAccountId])
-  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+  doctorAccount  DoctorAccount?  @relation(fields: [doctorAccountId], references: [operatorAccountId], onUpdate: Cascade, onDelete: Cascade)
+  patientAccount PatientAccount? @relation(fields: [patientAccountId], references: [userAccountId], onUpdate: Cascade, onDelete: Cascade)
+  attachment     Attachment?
 
   @@map("medication_plan")
 }
@@ -241,23 +238,23 @@ model ReminderPlan {
   medicationId        Int       @map("medication_id")
 
   reminderPlanTimes ReminderPlanTime[]
-  medication        Medication         @relation(fields: [medicationId], references: [id])
-  medicationPlan    MedicationPlan     @relation(fields: [medicationPlanId], references: [id])
+  medication        Medication         @relation(fields: [medicationId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  medicationPlan    MedicationPlan     @relation(fields: [medicationPlanId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([medicationPlanId, medicationId])
   @@map("reminder_plan")
 }
 
 model ReminderPlanTime {
-  isTaken          Boolean  @default(false) @map("is_taken")
-  isSkipped        Boolean  @default(false) @map("is_skipped")
+  isTaken          Boolean   @default(false) @map("is_taken")
+  isSkipped        Boolean   @default(false) @map("is_skipped")
   time             DateTime
-  dosage           Int      @default(1)
+  dosage           Int       @default(1)
   sentAt           DateTime? @map("sent_at")
-  patientAccountId Int      @map("patient_account_id")
+  patientAccountId Int       @map("patient_account_id")
 
-  reminderPlan                 ReminderPlan   @relation(references: [medicationPlanId, medicationId], fields: [reminderPlanMedicationPlanId, reminderPlanMedicationId])
-  patientAccount               PatientAccount @relation(fields: [patientAccountId], references: [userAccountId])
+  reminderPlan                 ReminderPlan   @relation(references: [medicationPlanId, medicationId], fields: [reminderPlanMedicationPlanId, reminderPlanMedicationId], onUpdate: Cascade, onDelete: Cascade)
+  patientAccount               PatientAccount @relation(fields: [patientAccountId], references: [userAccountId], onUpdate: Cascade, onDelete: Cascade)
   reminderPlanMedicationPlanId Int
   reminderPlanMedicationId     Int
 
@@ -278,28 +275,20 @@ model Medication {
   @@map("medication")
 }
 
-model ArticleIncludesAttachment {
-  articleId    Int @map("article_id")
-  attachmentId Int @map("attachment_id")
-
-  article    Article    @relation(fields: [articleId], references: [id])
-  attachment Attachment @relation(fields: [attachmentId], references: [id])
-
-  @@id([articleId, attachmentId])
-  @@map("article_includes_attachment")
-}
-
 model Attachment {
-  id            Int      @id @default(autoincrement())
-  userAccountId Int?     @map("user_account_id")
-  fileName      String?  @map("file_name")
-  filePath      String?  @map("file_path")
-  fileSize      BigInt?  @map("file_size")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id               Int      @id @default(autoincrement())
+  userAccountId    Int?     @unique @map("user_account_id")
+  fileName         String?  @map("file_name")
+  filePath         String?  @map("file_path")
+  fileSize         BigInt?  @map("file_size")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  medicationPlanId Int?     @unique @map("medication_plan_id")
+  articleId        Int?     @unique() @map("article_id")
 
-  userAccount                UserAccount?                @relation(fields: [userAccountId], references: [id])
-  articleIncludesAttachments ArticleIncludesAttachment[]
+  userAccount    UserAccount?    @relation(fields: [userAccountId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  medicationPlan MedicationPlan? @relation(fields: [medicationPlanId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  article        Article?        @relation(fields: [articleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@map("attachment")
 }
@@ -308,8 +297,8 @@ model ArticleIncludesTag {
   articleId Int @map("article_id")
   tagId     Int @map("tag_id")
 
-  article Article @relation(fields: [articleId], references: [id])
-  tag     Tag     @relation(fields: [tagId], references: [id])
+  article Article @relation(fields: [articleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([articleId, tagId])
   @@map("article_includes_tag")

@@ -2,37 +2,27 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getDateAndTime } from 'src/utils/date';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
-
-function getDateAndTime(str: string): [number, number] {
-  const [hour, minutes, ...rest] = str
-    .split(':')
-    .map((amount) => parseInt(amount));
-
-  return [hour, minutes];
-}
 
 export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
   reminderPlans: {
-    select: {
-      medication: {
-        select: {
-          code: true,
-          name: true,
-          description: true,
-        },
-      },
+    include: {
+      medication: true,
       reminderPlanTimes: true,
     },
   },
+  doctorAccount: false,
+  patientAccount: false,
 };
 
 @Injectable()
 export class MedicationPlansService {
   constructor(private readonly prismaSerivce: PrismaService) {}
 
-  async findAll() {
+  async findAll(params: { where: Prisma.MedicationPlanWhereInput }) {
     return await this.prismaSerivce.medicationPlan.findMany({
+      ...params,
       include: medicationPlanIncludeFields,
     });
   }
@@ -176,7 +166,7 @@ export class MedicationPlansService {
                   d.setDate(d.getDate() + selectedInterval);
                 }
               } else if (frequency === 'SELECTED_DAYS') {
-                while (count > 1) {
+                while (reminderPlanTimes.some(({ dosage }) => dosage <= count)) {
                   if (selectedDays.includes(d.getDay())) {
                     reminderPlanTimes.forEach(({ dosage, time }) => {
                       if (dosage <= count) {

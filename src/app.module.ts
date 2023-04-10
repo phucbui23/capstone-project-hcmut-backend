@@ -7,7 +7,11 @@ import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { AuthModule } from './auth/auth.module';
+import { ChatController } from './chat/chat.controller';
+import { ChatModule } from './chat/chat.module';
+import { DoctorManagesPatientsModule } from './doctor-manages-patients/doctor-manages-patients.module';
 import { DoctorsModule } from './doctors/doctors.module';
+import { FirebaseService } from './firebase/firebase.service';
 import { JwtAuthGuard } from './guard/jwt/jwt-auth.guard';
 import { RolesGuard } from './guard/roles.guard';
 import { HospitalAdminsModule } from './hospital-admins/hospital-admins.module';
@@ -21,7 +25,6 @@ import { ReminderPlanTimesModule } from './reminder-plan-times/reminder-plan-tim
 import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
 import { ResourcesModule } from './resources/resources.module';
 import { RolesModule } from './roles/roles.module';
-import { FirebaseService } from './firebase/firebase.service';
 
 @Module({
   imports: [
@@ -41,8 +44,10 @@ import { FirebaseService } from './firebase/firebase.service';
     ArticlesModule,
     PatientSavesArticlesModule,
     AttachmentsModule,
+    DoctorManagesPatientsModule,
+    ChatModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, ChatController],
   providers: [
     AppService,
     {

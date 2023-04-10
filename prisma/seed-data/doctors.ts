@@ -6,27 +6,26 @@ import { OperatorAuthDto } from 'src/auth/dto/operator-auth.dto';
 // The hospitalId must be valid
 export const DOCTORS: CreateOperatorDto[] = [
   {
-    username: 'sample.doctor.1',
-    password: '123456',
+    firstName: 'sample',
+    lastName: 'doctor',
     role: UserRole.DOCTOR,
     hospitalId: 1,
   },
   {
-    username: 'sample.doctor.2',
-    password: '123456',
+    firstName: 'sample',
+    lastName: 'doctor',
     role: UserRole.DOCTOR,
     hospitalId: 2,
   },
 ];
 
 export const DOCTORS_EXAMPLES = Object.fromEntries(
-  DOCTORS.map(({ username, password }, index) => [
+  DOCTORS.map(({ firstName, lastName }, index) => [
     `Doctor ${index + 1}`,
     {
       description: `An example account of doctor ${index + 1}`,
       value: {
-        username,
-        password,
+        username: `${firstName}+'.'+${lastName}+'.'+${index + 1}`,
       } as OperatorAuthDto,
     } as ExampleObject,
   ]),

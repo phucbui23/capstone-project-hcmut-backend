@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { FirebaseApp, initializeApp } from 'firebase/app';
+import { Firestore, getFirestore } from 'firebase/firestore';
 import {
   FirebaseStorage,
+  StorageReference,
   getStorage,
   ref,
-  StorageReference,
 } from 'firebase/storage';
 
 @Injectable()
@@ -12,6 +13,7 @@ export class FirebaseService {
   public app: FirebaseApp;
   public storage: FirebaseStorage;
   public storageRef: StorageReference;
+  public firestoreRef: Firestore;
 
   firebaseConfig = {
     apiKey: process.env.API_KEY,
@@ -29,5 +31,6 @@ export class FirebaseService {
     this.app = initializeApp(this.firebaseConfig);
     this.storage = getStorage(this.app);
     this.storageRef = ref(this.storage);
+    this.firestoreRef = getFirestore(this.app);
   }
 }

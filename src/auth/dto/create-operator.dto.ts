@@ -1,11 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
-import { IsNotEmpty } from 'class-validator';
-import { OperatorAuthDto } from './operator-auth.dto';
-
+import { IsNotEmpty, IsString } from 'class-validator';
 type OperatorRole = Extract<UserRole, 'DOCTOR' | 'HOSPITAL_ADMIN'>;
 
-export class CreateOperatorDto extends OperatorAuthDto {
+export class CreateOperatorDto {
+  @ApiProperty({
+    description: 'Operator first name',
+  })
+  @IsString()
+  @IsNotEmpty()
+  firstName: string;
+
+  @ApiProperty({
+    description: 'Operator last name',
+  })
+  @IsString()
+  @IsNotEmpty()
+  lastName: string;
+
   @ApiProperty({
     description: 'The hospital name in which the operator works in',
   })

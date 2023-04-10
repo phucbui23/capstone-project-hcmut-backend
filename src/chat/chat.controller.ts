@@ -8,7 +8,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { SkipAuth } from 'src/guard/skip-auth.guard';
+import { UserRole } from '@prisma/client';
+import { Roles } from 'src/guard/roles.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChatService } from './chat.service';
 import { InitConversationDto, SendMsgDto } from './dto/chat.dto';
@@ -22,7 +23,7 @@ export class ChatController {
   ) {}
 
   @Post('conversation/init')
-  @SkipAuth()
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   async initConversation(@Body() initConversationDto: InitConversationDto) {
     // check if doctor manage that patient
     const { patientCode, doctorCode } = initConversationDto;
@@ -82,21 +83,36 @@ export class ChatController {
   }
 
   @Post('send')
-  @SkipAuth()
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   async sendMsg(@Body() sendMsgDto: SendMsgDto) {
     const { content, senderId, roomId } = sendMsgDto;
     return await this.chatService.sendMsg(content, senderId, roomId);
   }
 
   @Get('conversations/:userCode')
-  @SkipAuth()
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   async getConversations(@Param('userCode') userCode: string) {
     const result = await this.chatService.getRooms(userCode);
     return result;
   }
 
   @Get('messages/:roomId')
-  @SkipAuth()
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   async getMsg(@Param('roomId') roomId: string) {
     return await this.chatService.getRoomMsg(roomId);
   }

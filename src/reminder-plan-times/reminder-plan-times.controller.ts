@@ -1,6 +1,7 @@
 import { BadRequestException, Body, Controller, Patch } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ReminderPlanTime } from '@prisma/client';
+import { ReminderPlanTime, UserRole } from '@prisma/client';
+import { Roles } from 'src/guard/roles.guard';
 import { MarkReminderPlanTimeDto } from './dto/mark-reminder-plan-time.dto';
 import { ReminderPlanTimesService } from './reminder-plan-times.service';
 
@@ -11,6 +12,7 @@ export class ReminderPlanTimesController {
     private readonly reminderPlanTimesService: ReminderPlanTimesService,
   ) {}
 
+  @Roles(UserRole.PATIENT, UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Patch('mark')
   async markOne(
     @Body()
@@ -40,6 +42,7 @@ export class ReminderPlanTimesController {
     return await this.reminderPlanTimesService.markOne(where);
   }
 
+  @Roles(UserRole.PATIENT, UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Patch('skip')
   async skipOne(
     @Body()
@@ -69,6 +72,7 @@ export class ReminderPlanTimesController {
     return await this.reminderPlanTimesService.skipOne(where);
   }
 
+  @Roles(UserRole.PATIENT, UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Patch('revert')
   async revertOne(
     @Body()

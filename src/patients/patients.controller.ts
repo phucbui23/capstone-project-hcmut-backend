@@ -14,12 +14,15 @@ import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { PAGINATION } from 'src/constant';
 import { PatientsService } from './patients.service';
+import { Roles } from 'src/guard/roles.guard';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('patients')
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get()
   async getListPatients(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -41,6 +44,7 @@ export class PatientsController {
     return result;
   }
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get(':phoneNumber')
   async findOne(
     @Param('phoneNumber') phoneNumber: string,
@@ -50,11 +54,13 @@ export class PatientsController {
     });
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
   async deleteOne(@Param('id') id: string) {
     return this.patientsService.deleteOne({ userAccountId: +id });
   }
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Patch(':id')
   async updateOne(
     @Param('id') id: string,

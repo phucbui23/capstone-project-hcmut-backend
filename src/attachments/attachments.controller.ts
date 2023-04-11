@@ -39,9 +39,9 @@ export class AttachmentsController {
     UserRole.HOSPITAL_ADMIN,
     UserRole.PATIENT,
   )
-  @Post('avatar/upload/:userAccountId')
+  @Post('/upload/:userAccountId')
   @UseInterceptors(FileInterceptor('file'))
-  uploadProfilePicture(
+  async uploadImage(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -53,19 +53,22 @@ export class AttachmentsController {
     file: Express.Multer.File,
     @Param('userAccountId', ParseIntPipe) userAccountId: number,
   ) {
-    return this.attachmentsService.uploadImage(file, userAccountId);
+    return await this.attachmentsService.uploadImage(file, userAccountId);
   }
 
+  @Roles(UserRole.ADMIN)
   @Get()
   findAll() {
     return this.attachmentsService.findAll();
   }
 
+  @Roles(UserRole.ADMIN)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.attachmentsService.findOne(+id);
   }
 
+  @Roles(UserRole.ADMIN)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -74,6 +77,7 @@ export class AttachmentsController {
     return this.attachmentsService.update(+id, updateAttachmentDto);
   }
 
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.attachmentsService.remove(+id);

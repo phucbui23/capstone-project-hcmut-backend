@@ -8,16 +8,14 @@ import {
   Patch,
   Post,
   Query,
-  Res,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { UserRole } from '@prisma/client';
 import { PAGINATION } from 'src/constant';
+import { Roles } from 'src/guard/roles.guard';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { Roles } from 'src/guard/roles.guard';
-import { UserRole } from '@prisma/client';
 
 @ApiTags('articles')
 @Controller('articles')
@@ -82,7 +80,6 @@ export class ArticlesController {
     @Query('field', new DefaultValuePipe('createdAt')) field: string,
     @Query('order', new DefaultValuePipe('desc')) order: string,
     @Query('keyword', new DefaultValuePipe('')) keyword: string,
-    @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.articlesService.findAll(
       page,
@@ -91,7 +88,6 @@ export class ArticlesController {
       order,
       keyword,
     );
-    res.set('X-Total-Count', String(result.meta.total));
     return result;
   }
 

@@ -36,31 +36,15 @@ export class MedicationPlansService {
       this.prismaSerivce.medicationPlan,
       {
         ...params,
-        // include: medicationPlanIncludeFields,
-        select: {
-          id: true,
-          doctorAccountId: true,
-          patientAccountId: true,
-          name: true,
-          updatedAt: true,
-          createdAt: true,
-          reminderPlans: {
-            include: {
-              medication: true,
-              reminderPlanTimes: true,
-            },
-          },
-          doctorAccount: false,
-          patientAccount: false,
-        },
+        include: medicationPlanIncludeFields,
         orderBy: {
           [field]: order,
         },
       },
       /** I dont know what cause the page index to be -1, uncomment this and check it out! */
-      // {
-      //   page,
-      // },
+      {
+        page,
+      },
     );
     // return await this.prismaSerivce.medicationPlan.findMany({
     //   ...params,

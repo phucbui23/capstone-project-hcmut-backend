@@ -8,16 +8,14 @@ import {
   Patch,
   Post,
   Query,
-  Res,
 } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Prisma, UserRole } from '@prisma/client';
-import { Response } from 'express';
 import { PAGINATION } from 'src/constant';
 import { CreateMedicationDto } from './dto/medications.dto';
 
-import { MedicationsService } from './medications.service';
 import { Roles } from 'src/guard/roles.guard';
+import { MedicationsService } from './medications.service';
 
 @ApiTags('medications')
 @Controller('medications')
@@ -69,7 +67,6 @@ export class MedicationsController {
     @Query('field', new DefaultValuePipe('updatedAt')) field: string,
     @Query('order', new DefaultValuePipe('desc')) order: string,
     @Query('keyword', new DefaultValuePipe('')) keyword: string,
-    @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.medicationsService.findAll(
       page,
@@ -78,8 +75,6 @@ export class MedicationsController {
       order,
       keyword,
     );
-
-    res.set('X-Total-Count', String(result.meta.total));
     return result;
   }
 

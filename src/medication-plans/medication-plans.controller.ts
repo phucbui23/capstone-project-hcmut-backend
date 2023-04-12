@@ -13,11 +13,15 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
+import { MedicationPlan, UserRole } from '@prisma/client';
+import { Roles } from 'src/guard/roles.guard';
 import { ChatService } from 'src/chat/chat.service';
 import { DoctorManagesPatientsService } from 'src/doctor-manages-patients/doctor-manages-patients.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 import { MedicationPlansService } from './medication-plans.service';
+import { PAGINATION } from 'src/constant';
+import { PaginatedResult } from 'prisma-pagination';
 
 @ApiTags('medication plans')
 @Controller('medication-plans')
@@ -34,12 +38,56 @@ export class MedicationPlansController {
     type: Number,
     required: false,
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: String,
+    description: 'Page of list',
+  })
+  @ApiQuery({
+    name: 'perPage',
+    required: false,
+    type: Number,
+    description: 'Number of record per page',
+  })
+  @ApiQuery({
+    name: 'field',
+    required: false,
+    enum: [
+      'id',
+      'name',
+      'doctorAccountId',
+      'patientAccountId',
+      'updatedAt',
+      'createdAt',
+    ],
+    type: String,
+    description: 'Sorting field',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    enum: ['desc', 'asc'],
+    type: String,
+    description: 'Sorting order',
+  })
   @Get()
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   async findAll(
     @Query('patientId', new DefaultValuePipe(-1), ParseIntPipe)
+    @Query('page', new DefaultValuePipe(1))
+    page: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage: number,
+    @Query('field', new DefaultValuePipe('id')) field: string,
+    @Query('order', new DefaultValuePipe('desc')) order: string,
     patientId: number,
-  ) {
-    return this.medicationPlansService.findAll({
+  ): Promise<PaginatedResult<MedicationPlan>> {
+    return this.medicationPlansService.findAll(page, perPage, field, order, {
       where: {
         AND: {
           patientAccountId: patientId === -1 ? undefined : patientId,
@@ -48,11 +96,23 @@ export class MedicationPlansController {
     });
   }
 
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.medicationPlansService.findOne({ id });
   }
 
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async createOne(
@@ -84,6 +144,12 @@ export class MedicationPlansController {
     return medicationPlan;
   }
 
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Delete(':id')
   async deleteOne(@Param('id', ParseIntPipe) id: number) {
     return await this.medicationPlansService.deleteOne({ id });

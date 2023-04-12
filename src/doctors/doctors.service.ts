@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import { Prisma, UserRole, DoctorAccount } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { doctorFieldIncludes } from './constants';
+import { createPaginator } from 'prisma-pagination';
+import { roleIncludeFields } from '../roles/constants';
+import { patientList } from '../patients/constants';
 
 const doctorResponse = Prisma.validator<Prisma.UserAccountArgs>()({
   include: doctorFieldIncludes as object,
@@ -49,13 +52,32 @@ export class DoctorsService {
     return user;
   }
 
-  async findAll() {
-    return await this.prismaService.userAccount.findMany({
-      where: {
-        role: { name: { equals: UserRole.DOCTOR } },
+  async findAll(page: number, perPage: number, field: string, order: string) {
+    const paginate = createPaginator({ perPage });
+
+    return await paginate(
+      this.prismaService.userAccount,
+      {
+        where: {
+          role: { name: { equals: UserRole.DOCTOR } },
+        },
+        include: doctorFieldIncludes,
+        orderBy: {
+          [field]: order,
+        },
       },
-      include: doctorFieldIncludes,
-    });
+      { page },
+    );
+
+    // return await this.prismaService.userAccount.findMany({
+    //   where: {
+    //     role: { name: { equals: UserRole.DOCTOR } },
+    //   },
+    //   include: doctorFieldIncludes,
+    //   orderBy: {
+    //     [field]: order,
+    //   },
+    // });
   }
 
   async deleteOne(where: Prisma.DoctorAccountWhereUniqueInput) {

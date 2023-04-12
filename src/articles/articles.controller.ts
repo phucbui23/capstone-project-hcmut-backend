@@ -24,7 +24,7 @@ import { UserRole } from '@prisma/client';
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
-  @Post('create')
+  @Post()
   async createArticle(@Body() createArticleDto: CreateArticleDto) {
     return this.articlesService.create(createArticleDto);
   }
@@ -69,7 +69,12 @@ export class ArticlesController {
       default: '',
     },
   })
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Get()
   async getListArticles(
     @Query('page', new DefaultValuePipe(1)) page: number,
@@ -90,7 +95,12 @@ export class ArticlesController {
     return result;
   }
 
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.articlesService.findOne(+id);

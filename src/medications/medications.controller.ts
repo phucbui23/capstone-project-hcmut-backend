@@ -56,7 +56,12 @@ export class MedicationsController {
     type: String,
     description: 'Query keyword',
   })
-  @Roles(UserRole.PATIENT, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
+  @Roles(
+    UserRole.PATIENT,
+    UserRole.DOCTOR,
+    UserRole.ADMIN,
+    UserRole.HOSPITAL_ADMIN,
+  )
   @Get()
   async getListMedications(
     @Query('page', new DefaultValuePipe(1)) page: number,
@@ -79,7 +84,7 @@ export class MedicationsController {
   }
 
   @ApiBody({ type: CreateMedicationDto })
-  @Post('create')
+  @Post()
   async createOne(@Body() data: Prisma.MedicationCreateInput) {
     return await this.medicationsService.createOne(data);
   }

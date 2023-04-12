@@ -14,14 +14,14 @@ import {
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { MedicationPlan, UserRole } from '@prisma/client';
-import { Roles } from 'src/guard/roles.guard';
+import { PaginatedResult } from 'prisma-pagination';
 import { ChatService } from 'src/chat/chat.service';
+import { PAGINATION } from 'src/constant';
 import { DoctorManagesPatientsService } from 'src/doctor-manages-patients/doctor-manages-patients.service';
+import { Roles } from 'src/guard/roles.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 import { MedicationPlansService } from './medication-plans.service';
-import { PAGINATION } from 'src/constant';
-import { PaginatedResult } from 'prisma-pagination';
 
 @ApiTags('medication plans')
 @Controller('medication-plans')

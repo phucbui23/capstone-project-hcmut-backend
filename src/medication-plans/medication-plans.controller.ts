@@ -14,17 +14,23 @@ import {
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { MedicationPlan, UserRole } from '@prisma/client';
+import { PaginatedResult } from 'prisma-pagination';
+import { ChatService } from 'src/chat/chat.service';
+import { PAGINATION } from 'src/constant';
+import { DoctorManagesPatientsService } from 'src/doctor-manages-patients/doctor-manages-patients.service';
 import { Roles } from 'src/guard/roles.guard';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 import { MedicationPlansService } from './medication-plans.service';
-import { PAGINATION } from 'src/constant';
-import { PaginatedResult } from 'prisma-pagination';
 
 @ApiTags('medication plans')
 @Controller('medication-plans')
 export class MedicationPlansController {
   constructor(
     private readonly medicationPlansService: MedicationPlansService,
+    private readonly doctorManagesPatientsService: DoctorManagesPatientsService,
+    private readonly chatService: ChatService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   @ApiQuery({
@@ -113,7 +119,29 @@ export class MedicationPlansController {
     @Body()
     createDto: CreateMedicationPlanDto,
   ) {
-    return await this.medicationPlansService.createOne(createDto);
+    // pre-process: check and create management
+    const { doctorId, patientId } = createDto;
+    await this.doctorManagesPatientsService.create({ doctorId, patientId });
+
+    const medicationPlan = await this.medicationPlansService.createOne(
+      createDto,
+    );
+
+    // post: create conversation between doctor and patient about this medication plan
+    const doctor = await this.prismaService.userAccount.findUnique({
+      where: { id: doctorId },
+    });
+    const patient = await this.prismaService.userAccount.findUnique({
+      where: { id: patientId },
+    });
+    const conversation = await this.chatService.createRoom(
+      patient.code,
+      doctor.code,
+    );
+
+    medicationPlan['roomId'] = conversation.roomId;
+
+    return medicationPlan;
   }
 
   @Roles(

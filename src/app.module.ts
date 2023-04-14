@@ -5,8 +5,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
+import { AttachmentsModule } from './attachments/attachments.module';
 import { AuthModule } from './auth/auth.module';
+import { ChatController } from './chat/chat.controller';
+import { ChatModule } from './chat/chat.module';
+import { DoctorManagesPatientsModule } from './doctor-manages-patients/doctor-manages-patients.module';
 import { DoctorsModule } from './doctors/doctors.module';
+import { FirebaseService } from './firebase/firebase.service';
 import { JwtAuthGuard } from './guard/jwt/jwt-auth.guard';
 import { RolesGuard } from './guard/roles.guard';
 import { HospitalAdminsModule } from './hospital-admins/hospital-admins.module';
@@ -38,8 +43,11 @@ import { RolesModule } from './roles/roles.module';
     ConfigModule.forRoot(),
     ArticlesModule,
     PatientSavesArticlesModule,
+    AttachmentsModule,
+    DoctorManagesPatientsModule,
+    ChatModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, ChatController],
   providers: [
     AppService,
     {
@@ -50,6 +58,7 @@ import { RolesModule } from './roles/roles.module';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    FirebaseService,
   ],
 })
 export class AppModule {}

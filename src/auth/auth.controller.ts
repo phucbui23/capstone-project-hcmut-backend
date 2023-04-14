@@ -23,19 +23,19 @@ export class AuthController {
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Post('operator/register')
   async registerOperator(@Body() createOperatorDto: CreateOperatorDto) {
-    const { role, username, password, hospitalId } = createOperatorDto;
+    const { role, firstName, lastName, hospitalId } = createOperatorDto;
     if (role === UserRole.DOCTOR) {
       return await this.authService.registerDoctor(
-        username,
-        password,
+        firstName,
+        lastName,
         hospitalId,
       );
     }
 
     if (role === UserRole.HOSPITAL_ADMIN) {
       return await this.authService.registerHospitalAdmin(
-        username,
-        password,
+        firstName,
+        lastName,
         hospitalId,
       );
     }

@@ -20,7 +20,10 @@ export class ChatService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  async createRoom(patientCode: string, doctorCode: string) {
+  async createRoom(
+    patientCode: string,
+    doctorCode: string,
+  ): Promise<{ roomId: string }> {
     const timestamp = new Date().toISOString();
     const roomData = {
       createdAt: timestamp,

@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   DefaultValuePipe,
   Delete,
   Get,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -119,29 +121,42 @@ export class MedicationPlansController {
     @Body()
     createDto: CreateMedicationPlanDto,
   ) {
-    // pre-process: check and create management
-    const { doctorId, patientId } = createDto;
-    await this.doctorManagesPatientsService.create({ doctorId, patientId });
+    try {
+      const { doctorId, patientId } = createDto;
 
-    const medicationPlan = await this.medicationPlansService.createOne(
-      createDto,
-    );
+      if (doctorId) {
+        // pre-process: check and create management
+        await this.doctorManagesPatientsService.create({ doctorId, patientId });
 
-    // post: create conversation between doctor and patient about this medication plan
-    const doctor = await this.prismaService.userAccount.findUnique({
-      where: { id: doctorId },
-    });
-    const patient = await this.prismaService.userAccount.findUnique({
-      where: { id: patientId },
-    });
-    const conversation = await this.chatService.createRoom(
-      patient.code,
-      doctor.code,
-    );
+        const medicationPlan = await this.medicationPlansService.createOne(
+          createDto,
+        );
 
-    medicationPlan['roomId'] = conversation.roomId;
+        // post: create conversation between doctor and patient about this medication plan
+        const doctor = await this.prismaService.userAccount.findUnique({
+          where: { id: doctorId },
+        });
 
-    return medicationPlan;
+        const patient = await this.prismaService.userAccount.findUnique({
+          where: { id: patientId },
+        });
+
+        const conversation = await this.chatService.createRoom(
+          patient.code,
+          doctor.code,
+        );
+
+        const ret = { ...medicationPlan, roomId: conversation.roomId };
+        return ret;
+      } else {
+        return await this.medicationPlansService.createOne(createDto);
+      }
+    } catch (error) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: error.message,
+      });
+    }
   }
 
   @Roles(

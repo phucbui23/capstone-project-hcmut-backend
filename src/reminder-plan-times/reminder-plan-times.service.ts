@@ -1,5 +1,6 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma, ReminderPlanTime } from '@prisma/client';
+import { MILLISECONDS_PER_DAY } from 'src/constant';
 
 import { MedicationPlansService } from 'src/medication-plans/medication-plans.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -34,7 +35,7 @@ export class ReminderPlanTimesService {
       });
     if (
       Date.now() - matchedReminderPlanTime.sentAt.getTime() >
-      60 * 60 * 24 * 1000
+      MILLISECONDS_PER_DAY
     ) {
       throw new BadRequestException({
         status: HttpStatus.FORBIDDEN,
@@ -99,7 +100,7 @@ export class ReminderPlanTimesService {
       });
     if (
       Date.now() - matchedReminderPlanTime.sentAt.getTime() >
-      60 * 60 * 24 * 1000
+      MILLISECONDS_PER_DAY
     ) {
       throw new BadRequestException({
         status: HttpStatus.FORBIDDEN,

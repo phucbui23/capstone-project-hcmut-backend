@@ -118,8 +118,8 @@ export class PatientsService {
     }
     const { userAccountId } = patient;
 
-    const user = await this.prismaService.userAccount.findUnique({
-      where: { id: userAccountId },
+    const user = await this.prismaService.userAccount.findFirst({
+      where: { roleId: 4, id: userAccountId },
       include: patientIncludeFields,
     });
 

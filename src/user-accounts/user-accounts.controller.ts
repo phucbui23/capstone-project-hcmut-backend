@@ -94,7 +94,7 @@ export class UserAccountsController {
     return result;
   }
 
-  @Get(':id')
+  @Get('profile/:id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userAccountsService.findOne({ id });
   }

@@ -45,8 +45,8 @@ export class HospitalAdminsService {
     }
     const { userAccountId } = operator;
 
-    const user = await this.prismaService.userAccount.findUnique({
-      where: { id: userAccountId },
+    const user = await this.prismaService.userAccount.findFirst({
+      where: { roleId: 2, id: userAccountId },
       include: hospitalAdminIncludeFields,
     });
 

@@ -13,28 +13,29 @@ import { AuthService } from './auth.service';
 import { CreateOperatorDto } from './dto/create-operator.dto';
 import { OperatorAuthDto } from './dto/operator-auth.dto';
 import { PatientAuthDto } from './dto/patient-auth.dto';
+import { Roles } from 'src/guard/roles.guard';
 
 @ApiTags('authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Post('operator/register')
-  @SkipAuth()
   async registerOperator(@Body() createOperatorDto: CreateOperatorDto) {
-    const { role, username, password, hospitalId } = createOperatorDto;
+    const { role, firstName, lastName, hospitalId } = createOperatorDto;
     if (role === UserRole.DOCTOR) {
       return await this.authService.registerDoctor(
-        username,
-        password,
+        firstName,
+        lastName,
         hospitalId,
       );
     }
 
     if (role === UserRole.HOSPITAL_ADMIN) {
       return await this.authService.registerHospitalAdmin(
-        username,
-        password,
+        firstName,
+        lastName,
         hospitalId,
       );
     }

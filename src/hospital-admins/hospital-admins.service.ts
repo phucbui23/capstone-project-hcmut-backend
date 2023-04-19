@@ -8,15 +8,26 @@ import { hospitalAdminIncludeFields } from './constants';
 export class HospitalAdminsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createOne(username: string, password: string, hospitalId: number) {
+  async createOne(
+    firstName: string,
+    lastName: string,
+    username: string,
+    password: string,
+    hospitalId: number,
+  ) {
     return await this.prismaService.userAccount.create({
       data: {
+        firstName,
+        lastName,
         passwordHash: password,
         role: { connect: { name: UserRole.HOSPITAL_ADMIN } },
         operatorAccount: {
           create: {
             username,
             hospital: { connect: { id: hospitalId } },
+            hospitalAdminAccount: {
+              create: {},
+            },
           },
         },
       },

@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { PatientAccount, Prisma, UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
 
+import { collection, doc, setDoc } from 'firebase/firestore';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { patientIncludeFields, patientList } from './constants';
 
 @Injectable()
 export class PatientsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
   async findAll(
     page: number,
@@ -122,7 +127,7 @@ export class PatientsService {
   }
 
   async createOne(phoneNumber: string, password: string) {
-    return await this.prismaService.userAccount.create({
+    const patient = await this.prismaService.userAccount.create({
       data: {
         passwordHash: password,
         role: { connect: { name: UserRole.PATIENT } },
@@ -134,6 +139,28 @@ export class PatientsService {
       },
       include: patientIncludeFields,
     });
+
+    // create user on firestore
+    const { code, firstName, lastName } = patient;
+    const displayName = `${firstName}` + ' ' + `${lastName}`;
+
+    const userData = {
+      id: code,
+      displayName: displayName,
+      phoneNumber: phoneNumber,
+      photoUrl: '',
+      username: '',
+      rooms: [],
+      role: 'PATIENT',
+    };
+
+    const newUserRef = await doc(
+      collection(this.firebaseService.firestoreRef, 'users'),
+      code,
+    );
+    await setDoc(newUserRef, userData);
+
+    return patient;
   }
 
   async deleteOne(where: Prisma.PatientAccountWhereUniqueInput) {

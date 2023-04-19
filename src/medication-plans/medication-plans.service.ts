@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, MedicationPlan } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getDateAndTime } from 'src/utils/date';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
+import { PaginatedResult, createPaginator } from 'prisma-pagination';
 
 export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
   reminderPlans: {
@@ -20,11 +21,36 @@ export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
 export class MedicationPlansService {
   constructor(private readonly prismaSerivce: PrismaService) {}
 
-  async findAll(params: { where: Prisma.MedicationPlanWhereInput }) {
-    return await this.prismaSerivce.medicationPlan.findMany({
-      ...params,
-      include: medicationPlanIncludeFields,
-    });
+  async findAll(
+    page: number,
+    perPage: number,
+    field: string,
+    order: string,
+    params: { where: Prisma.MedicationPlanWhereInput },
+  ): Promise<PaginatedResult<MedicationPlan>> {
+    const paginate = createPaginator({ perPage });
+    const result = await paginate<
+      MedicationPlan,
+      Prisma.MedicationPlanFindManyArgs
+    >(
+      this.prismaSerivce.medicationPlan,
+      {
+        ...params,
+        include: medicationPlanIncludeFields,
+        orderBy: {
+          [field]: order,
+        },
+      },
+      /** I dont know what cause the page index to be -1, uncomment this and check it out! */
+      {
+        page,
+      },
+    );
+    // return await this.prismaSerivce.medicationPlan.findMany({
+    //   ...params,
+    //   include: medicationPlanIncludeFields,
+    // });
+    return result;
   }
 
   async findOne(where: Prisma.MedicationPlanWhereUniqueInput) {
@@ -166,7 +192,9 @@ export class MedicationPlansService {
                   d.setDate(d.getDate() + selectedInterval);
                 }
               } else if (frequency === 'SELECTED_DAYS') {
-                while (reminderPlanTimes.some(({ dosage }) => dosage <= count)) {
+                while (
+                  reminderPlanTimes.some(({ dosage }) => dosage <= count)
+                ) {
                   if (selectedDays.includes(d.getDay())) {
                     reminderPlanTimes.forEach(({ dosage, time }) => {
                       if (dosage <= count) {

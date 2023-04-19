@@ -8,11 +8,11 @@ import {
   ParseIntPipe,
   Patch,
   Query,
-  Res,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { UserRole } from '@prisma/client';
 import { PAGINATION } from 'src/constant';
+import { Roles } from 'src/guard/roles.guard';
 import { PatientsService } from './patients.service';
 
 @ApiTags('patients')
@@ -20,6 +20,7 @@ import { PatientsService } from './patients.service';
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get()
   async getListPatients(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -28,7 +29,6 @@ export class PatientsController {
     @Query('field', new DefaultValuePipe('updatedAt')) field: string,
     @Query('order', new DefaultValuePipe('desc')) order: string,
     @Query('keyword', new DefaultValuePipe('')) keyword: string,
-    @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.patientsService.findAll(
       page,
@@ -37,24 +37,24 @@ export class PatientsController {
       order,
       keyword,
     );
-    res.set('X-Total-Count', String(result.meta.total));
     return result;
   }
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get(':phoneNumber')
-  async findOne(
-    @Param('phoneNumber') phoneNumber: string,
-  ) {
+  async findOne(@Param('phoneNumber') phoneNumber: string) {
     return await this.patientsService.findOne({
       phoneNumber,
     });
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
   async deleteOne(@Param('id') id: string) {
     return this.patientsService.deleteOne({ userAccountId: +id });
   }
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Patch(':id')
   async updateOne(
     @Param('id') id: string,

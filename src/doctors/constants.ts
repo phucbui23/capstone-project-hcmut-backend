@@ -8,7 +8,11 @@ export const doctorBaseFieldIncludes: Prisma.DoctorAccountInclude = {
 };
 
 export const doctorFieldIncludes: Prisma.UserAccountInclude = {
-  attachments: true,
+  attachment: {
+    select: {
+      filePath: true,
+    },
+  },
   role: {
     include: roleIncludeFields,
   },

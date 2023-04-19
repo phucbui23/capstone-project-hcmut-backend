@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import { Prisma, UserRole, DoctorAccount } from '@prisma/client';
 
+import { collection, doc, setDoc } from 'firebase/firestore';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { doctorFieldIncludes } from './constants';
+import { createPaginator } from 'prisma-pagination';
+import { roleIncludeFields } from '../roles/constants';
+import { patientList } from '../patients/constants';
 
 const doctorResponse = Prisma.validator<Prisma.UserAccountArgs>()({
   include: doctorFieldIncludes as object,
@@ -13,22 +18,58 @@ export type DoctorResponse = Prisma.UserAccountGetPayload<
 >;
 @Injectable()
 export class DoctorsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
-  async createOne(username: string, password: string, hospitalId: number) {
-    return await this.prismaService.userAccount.create({
+  async createOne(
+    firstName: string,
+    lastName: string,
+    username: string,
+    password: string,
+    hospitalId: number,
+  ) {
+    const doctor = await this.prismaService.userAccount.create({
       data: {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         passwordHash: password,
         role: { connect: { name: UserRole.DOCTOR } },
         operatorAccount: {
           create: {
             username,
             hospital: { connect: { id: hospitalId } },
+            doctorAccount: {
+              create: {},
+            },
           },
         },
       },
       include: doctorFieldIncludes,
     });
+
+    // create user on firestore
+    const { code } = doctor;
+    const displayName = `${firstName.trim()}` + ' ' + `${lastName.trim()}`;
+
+    const userData = {
+      id: code,
+      displayName: displayName,
+      phoneNumber: '',
+      photoUrl: '',
+      username: username,
+      rooms: [],
+      role: 'DOCTOR',
+    };
+
+    const newUserRef = await doc(
+      collection(this.firebaseService.firestoreRef, 'users'),
+      code,
+    );
+    await setDoc(newUserRef, userData);
+
+    return doctor;
   }
 
   async findOne(where: Prisma.OperatorAccountWhereUniqueInput) {
@@ -49,13 +90,32 @@ export class DoctorsService {
     return user;
   }
 
-  async findAll() {
-    return await this.prismaService.userAccount.findMany({
-      where: {
-        role: { name: { equals: UserRole.DOCTOR } },
+  async findAll(page: number, perPage: number, field: string, order: string) {
+    const paginate = createPaginator({ perPage });
+
+    return await paginate(
+      this.prismaService.userAccount,
+      {
+        where: {
+          role: { name: { equals: UserRole.DOCTOR } },
+        },
+        include: doctorFieldIncludes,
+        orderBy: {
+          [field]: order,
+        },
       },
-      include: doctorFieldIncludes,
-    });
+      { page },
+    );
+
+    // return await this.prismaService.userAccount.findMany({
+    //   where: {
+    //     role: { name: { equals: UserRole.DOCTOR } },
+    //   },
+    //   include: doctorFieldIncludes,
+    //   orderBy: {
+    //     [field]: order,
+    //   },
+    // });
   }
 
   async deleteOne(where: Prisma.DoctorAccountWhereUniqueInput) {

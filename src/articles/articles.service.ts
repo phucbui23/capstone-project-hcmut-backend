@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Article, Prisma } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
+import { AttachmentsService } from 'src/attachments/attachments.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { articleIncludeFields } from './constants';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -8,23 +9,87 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 
 @Injectable()
 export class ArticlesService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly attachmentsService: AttachmentsService,
+  ) {}
 
-  async create(createArticleDto: CreateArticleDto) {
-    const existArticle = await this.prismaService.article.findUnique({
-      where: {
-        title: createArticleDto.title,
-      },
-    });
+  async create(file: Express.Multer.File, createArticleDto: CreateArticleDto) {
+    const { content, hospitalId, tags, title } = createArticleDto;
+    const articleTags = [];
+    const newArticleIncludesTag = [];
 
-    if (existArticle) {
+    if (
+      await this.prismaService.article.findFirst({
+        where: {
+          title: {
+            equals: title,
+            mode: 'insensitive',
+          },
+        },
+      })
+    ) {
       throw new BadRequestException('Article title already existed');
+    } else {
+      // Create article tags
+      for (const tag of tags) {
+        const existedTag = await this.prismaService.tag.findFirst({
+          where: {
+            name: {
+              contains: tag,
+              mode: 'insensitive',
+            },
+          },
+        });
+        if (existedTag) {
+          articleTags.push(existedTag);
+        } else {
+          articleTags.push(
+            await this.prismaService.tag.create({
+              data: {
+                name: tag,
+              },
+            }),
+          );
+        }
+      }
+
+      const articleAttachment =
+        await this.attachmentsService.uploadArticleAttachment(file);
+
+      // Create new article
+      const newArticle = await this.prismaService.article.create({
+        data: {
+          title,
+          content,
+          hospitalId,
+          attachment: {
+            connect: {
+              id: articleAttachment.id,
+            },
+          },
+        },
+      });
+
+      // create articleIncludesTag for each tags and newArticle
+      for (const articleTag of articleTags) {
+        newArticleIncludesTag.push(
+          await this.prismaService.articleIncludesTag.create({
+            data: {
+              articleId: newArticle.id,
+              tagId: articleTag.id,
+            },
+          }),
+        );
+      }
+
+      return await this.prismaService.article.findUnique({
+        where: {
+          id: newArticle.id,
+        },
+        include: articleIncludeFields,
+      });
     }
-    const newArticle = await this.prismaService.article.create({
-      data: createArticleDto,
-      include: articleIncludeFields,
-    });
-    return newArticle;
   }
 
   async findAll(

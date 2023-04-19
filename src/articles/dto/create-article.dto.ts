@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateArticleDto {
   @IsString()
@@ -11,4 +17,8 @@ export class CreateArticleDto {
   @IsNumber()
   @IsNotEmpty()
   hospitalId: number;
+
+  @IsArray()
+  @IsOptional()
+  tags: string[];
 }

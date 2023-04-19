@@ -1,16 +1,25 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   DefaultValuePipe,
   Delete,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
 import { PAGINATION } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { ArticlesService } from './articles.service';
@@ -23,8 +32,28 @@ export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
   @Post()
-  async createArticle(@Body() createArticleDto: CreateArticleDto) {
-    return this.articlesService.create(createArticleDto);
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @UseInterceptors(FileInterceptor('file'))
+  async createArticle(
+    @Body('data') data: any,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 1024000 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const jsonField = JSON.parse(data);
+    const createArticleDto = plainToClass(CreateArticleDto, jsonField);
+    const errors = await validate(createArticleDto);
+
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
+    }
+    return this.articlesService.create(file, createArticleDto);
   }
 
   @ApiQuery({

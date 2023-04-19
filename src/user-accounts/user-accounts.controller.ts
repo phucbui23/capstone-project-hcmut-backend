@@ -18,6 +18,7 @@ import { Response } from 'express';
 import { AuthHelper } from 'src/auth/auth.helper';
 import { PAGINATION } from 'src/constant';
 
+import { Roles } from 'src/guard/roles.guard';
 import {
   UpdateDoctorAccountDto,
   UpdateOperatorAccountDto,
@@ -73,6 +74,7 @@ export class UserAccountsController {
       default: '',
     },
   })
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Get()
   async getListUserAccounts(
     @Query('page', new DefaultValuePipe(1)) page: number,
@@ -103,6 +105,7 @@ export class UserAccountsController {
     description: 'Update field',
     type: UpdateOperatorAccountDto,
   })
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Patch('update-operator/:id')
   async updateOperatorAccountInfo(
     @Param('id', ParseIntPipe) id: number,
@@ -116,6 +119,7 @@ export class UserAccountsController {
     type: UpdatePatientAccountDto,
   })
   @Patch('update-patient/:id')
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
   async updatePatientAccountInfo(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: UpdatePatientAccountDto,
@@ -127,6 +131,7 @@ export class UserAccountsController {
     description: 'Update field',
     type: UpdateDoctorAccountDto,
   })
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR)
   @Patch('update-doctor/:id')
   async updateDoctorAccountInfo(
     @Param('id', ParseIntPipe) id: number,
@@ -135,11 +140,13 @@ export class UserAccountsController {
     return this.userAccountsService.updateDoctor(id, data);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.userAccountsService.remove(+id);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Patch('reset-pwd/:id')
   async resetPassword(@Param('id', ParseIntPipe) id: number) {
     return this.userAccountsService.update(id, {
@@ -149,6 +156,7 @@ export class UserAccountsController {
     });
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Patch('update-role/:id')
   async updateUserRole(
     @Param('id', ParseIntPipe) id: number,

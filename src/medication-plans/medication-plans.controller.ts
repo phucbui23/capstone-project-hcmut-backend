@@ -82,12 +82,12 @@ export class MedicationPlansController {
   )
   async findAll(
     @Query('patientId', new DefaultValuePipe(-1), ParseIntPipe)
+    patientId: number,
     @Query('page', new DefaultValuePipe(1))
     page: number,
     @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage: number,
     @Query('field', new DefaultValuePipe('id')) field: string,
     @Query('order', new DefaultValuePipe('desc')) order: string,
-    patientId: number,
   ): Promise<PaginatedResult<MedicationPlan>> {
     return this.medicationPlansService.findAll(page, perPage, field, order, {
       where: {

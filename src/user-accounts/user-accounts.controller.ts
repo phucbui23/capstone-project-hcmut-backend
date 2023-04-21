@@ -22,6 +22,7 @@ import { Roles } from 'src/guard/roles.guard';
 import {
   UpdateDoctorAccountDto,
   UpdateOperatorAccountDto,
+  UpdatePasswordDto,
   UpdatePatientAccountDto,
 } from './dto/user-account.dto';
 import { UserAccountsService } from './user-accounts.service';
@@ -96,9 +97,38 @@ export class UserAccountsController {
     return result;
   }
 
-  @Get('profile/:id')
+  @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userAccountsService.findOne({ id });
+  }
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @Get('profile/:code')
+  async getProfile(@Param('code') code: string) {
+    return this.userAccountsService.getProfile(code);
+  }
+
+  @ApiBody({
+    description: 'Update field',
+    type: UpdatePasswordDto,
+  })
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @Patch('update-password/:code')
+  async updatePassword(
+    @Param('code') code: string,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    return this.userAccountsService.updatePassword(code, updatePasswordDto);
   }
 
   @ApiBody({

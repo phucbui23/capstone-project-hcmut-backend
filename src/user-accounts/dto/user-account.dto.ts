@@ -1,6 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
-import { IsDate, IsEmail, IsOptional, IsPhoneNumber } from 'class-validator';
+import {
+  IsDate,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  Length,
+} from 'class-validator';
+import { PROPERTY } from 'src/constant';
 
 export class UpdateUserAccountDto {
   @ApiProperty({
@@ -102,4 +110,24 @@ export class UpdatePatientAccountDto extends UpdateUserAccountDto {
   })
   @IsOptional()
   occupation: string;
+}
+
+export class UpdatePasswordDto {
+  @ApiProperty({
+    description: 'Patient account password',
+    minLength: PROPERTY.PASSWORD.MIN_LENGTH,
+    maxLength: PROPERTY.PASSWORD.MAX_LENGTH,
+  })
+  @IsNotEmpty()
+  @Length(PROPERTY.PASSWORD.MIN_LENGTH, PROPERTY.PASSWORD.MAX_LENGTH)
+  oldPassword: string;
+
+  @ApiProperty({
+    description: 'Patient account password',
+    minLength: PROPERTY.PASSWORD.MIN_LENGTH,
+    maxLength: PROPERTY.PASSWORD.MAX_LENGTH,
+  })
+  @IsNotEmpty()
+  @Length(PROPERTY.PASSWORD.MIN_LENGTH, PROPERTY.PASSWORD.MAX_LENGTH)
+  newPassword: string;
 }

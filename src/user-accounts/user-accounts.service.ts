@@ -1,17 +1,22 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
+import { AuthHelper } from 'src/auth/auth.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserAccountIncludeFields } from './constants';
 import {
   UpdateDoctorAccountDto,
   UpdateOperatorAccountDto,
+  UpdatePasswordDto,
   UpdatePatientAccountDto,
 } from './dto/user-account.dto';
 
 @Injectable()
 export class UserAccountsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly authHelper: AuthHelper,
+  ) {}
 
   async findAll(
     page: number,
@@ -76,6 +81,71 @@ export class UserAccountsService {
         error: 'No user found',
       });
     }
+  }
+
+  async getProfile(code: string) {
+    try {
+      return await this.prismaService.userAccount.findUniqueOrThrow({
+        where: {
+          code,
+        },
+        include: UserAccountIncludeFields,
+      });
+    } catch (error) {
+      throw new BadRequestException({
+        status: HttpStatus.NOT_FOUND,
+        error: 'No user found',
+      });
+    }
+  }
+
+  async updatePassword(code: string, updatePasswordDto: UpdatePasswordDto) {
+    const { newPassword, oldPassword } = updatePasswordDto;
+
+    const user = await this.prismaService.userAccount.findUnique({
+      where: {
+        code,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException({
+        status: HttpStatus.NOT_FOUND,
+        error: 'No user found',
+      });
+    }
+
+    const validPassword = await this.authHelper.isPasswordValid(
+      oldPassword,
+      user.passwordHash,
+    );
+
+    if (!validPassword) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: 'Wrong password',
+      });
+    }
+
+    const newPasswordHashed = await this.authHelper.encodePassword(newPassword);
+
+    if (user.passwordHash === newPasswordHashed) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: "New password can't be the same as old password",
+      });
+    }
+    await this.prismaService.userAccount.update({
+      where: {
+        code,
+      },
+      data: {
+        passwordHash: newPasswordHashed,
+      },
+    });
+    return {
+      message: 'Password update successfully',
+    };
   }
 
   async update(id: number, data: Prisma.UserAccountUpdateInput) {

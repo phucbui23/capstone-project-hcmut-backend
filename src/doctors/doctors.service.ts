@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserRole, DoctorAccount } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 
 import { collection, doc, setDoc } from 'firebase/firestore';
+import { createPaginator } from 'prisma-pagination';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { doctorFieldIncludes } from './constants';
-import { createPaginator } from 'prisma-pagination';
-import { roleIncludeFields } from '../roles/constants';
-import { patientList } from '../patients/constants';
 
 const doctorResponse = Prisma.validator<Prisma.UserAccountArgs>()({
   include: doctorFieldIncludes as object,
@@ -82,8 +80,8 @@ export class DoctorsService {
     }
     const { userAccountId } = operator;
 
-    const user = await this.prismaService.userAccount.findUnique({
-      where: { id: userAccountId },
+    const user = await this.prismaService.userAccount.findFirst({
+      where: { roleId: 3, id: userAccountId },
       include: doctorFieldIncludes,
     });
 

@@ -69,9 +69,7 @@ export class MedicationPlansController {
       medicationCodeList,
     );
 
-    if (reactions.length !== 0) {
-      return { reactions };
-    } else return { message: 'No interaction(s) found.' };
+    return { reactions };
   }
 
   @ApiQuery({
@@ -183,9 +181,7 @@ export class MedicationPlansController {
           medicationCodeList,
         );
 
-        if (reactions.length !== 0) {
-          return { reactions };
-        }
+        return { reactions };
       }
 
       if (doctorId) {

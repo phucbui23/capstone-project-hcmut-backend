@@ -13,9 +13,10 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { MedicationPlan, UserRole } from '@prisma/client';
+import { ArrayMinSize, IsNotEmpty } from 'class-validator';
 import { PaginatedResult } from 'prisma-pagination';
 import { ChatService } from 'src/chat/chat.service';
 import { PAGINATION } from 'src/constant';
@@ -24,6 +25,13 @@ import { Roles } from 'src/guard/roles.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
 import { MedicationPlansService } from './medication-plans.service';
+
+export class CheckInteractionDto {
+  @ApiProperty({})
+  @IsNotEmpty()
+  @ArrayMinSize(2)
+  medicationIdList: number[];
+}
 
 @ApiTags('medication plans')
 @Controller('medication-plans')
@@ -34,6 +42,37 @@ export class MedicationPlansController {
     private readonly chatService: ChatService,
     private readonly prismaService: PrismaService,
   ) {}
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @Get('check-interaction')
+  async checkInteraction(@Body() data: CheckInteractionDto) {
+    const medicationCodeList = [];
+    for (const medicationId of data.medicationIdList) {
+      const medication = await this.prismaService.medication.findUnique({
+        where: { id: medicationId },
+      });
+      if (!medication) {
+        throw new BadRequestException({
+          status: HttpStatus.BAD_REQUEST,
+          message: `Error with finding medication id ${medicationId}`,
+        });
+      }
+      medicationCodeList.push(medication.code);
+    }
+
+    const reactions = await this.medicationPlansService.checkInteractions(
+      medicationCodeList,
+    );
+
+    if (reactions.length !== 0) {
+      return { reactions };
+    } else return { message: 'No interaction(s) found.' };
+  }
 
   @ApiQuery({
     name: 'patientId',

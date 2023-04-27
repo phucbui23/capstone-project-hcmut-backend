@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { Article, Prisma } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
 import { AttachmentsService } from 'src/attachments/attachments.service';
@@ -139,15 +139,128 @@ export class ArticlesService {
     );
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return `This action returns a #${id} article`;
   }
 
-  update(id: number, updateArticleDto: UpdateArticleDto) {
+  async recommendArticles(patientAccountId: number) {
+    const medicationPlan = await this.prismaService.medicationPlan.findFirst({
+      where: {
+        patientAccountId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (!medicationPlan) {
+      return {
+        message: 'No medication plan prescribed by doctor',
+      };
+    }
+
+    const reminders = await this.prismaService.reminderPlan.findMany({
+      where: {
+        medicationPlanId: medicationPlan.id,
+      },
+      select: {
+        medication: true,
+      },
+    });
+
+    const retArticles = [];
+
+    reminders.forEach(async (reminder) => {
+      console.log(reminder);
+      const articles = await this.prismaService.article.findMany({
+        where: {
+          articleIncludesTags: {
+            every: {
+              tag: {
+                id: reminder.medication.id,
+              },
+            },
+          },
+        },
+        include: articleIncludeFields,
+      });
+      console.log(articles);
+    });
+
+    return { retArticles };
+  }
+
+  async update(id: number, updateArticleDto: UpdateArticleDto) {
     return `This action updates a #${id} article`;
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return `This action removes a #${id} article`;
+  }
+
+  async saveArticle(articleId: number, patientAccountId: number) {
+    try {
+      const article = await this.prismaService.article.findFirst({
+        where: {
+          id: articleId,
+        },
+      });
+
+      const patient = await this.prismaService.patientAccount.findFirst({
+        where: {
+          userAccountId: patientAccountId,
+        },
+      });
+
+      if (!article || !patient) {
+        return {
+          message: 'Save article unsuccessfully',
+        };
+      }
+      await this.prismaService.patientSavesArticle.create({
+        data: {
+          article: {
+            connect: {
+              id: article.id,
+            },
+          },
+          patientAccount: {
+            connect: {
+              userAccountId: patient.userAccountId,
+            },
+          },
+        },
+      });
+
+      return {
+        message: 'Save article successfully',
+      };
+    } catch (error) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: 'Save article unsuccessfully.',
+      });
+    }
+  }
+
+  async unsaveArticle(articleId: number, patientAccountId: number) {
+    try {
+      await this.prismaService.patientSavesArticle.delete({
+        where: {
+          patientAccountId_articleId: {
+            articleId,
+            patientAccountId,
+          },
+        },
+      });
+      return {
+        message: 'Unsave article successfully',
+      };
+    } catch (error) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: 'Unsave article unsuccessfully.',
+      });
+    }
   }
 }

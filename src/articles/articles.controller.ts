@@ -9,6 +9,7 @@ import {
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -16,15 +17,25 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { plainToClass } from 'class-transformer';
-import { validate } from 'class-validator';
+import { IsNotEmpty, validate } from 'class-validator';
 import { PAGINATION } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+
+export class SaveArticleDto {
+  @ApiProperty({})
+  @IsNotEmpty()
+  articleId: number;
+
+  @ApiProperty({})
+  @IsNotEmpty()
+  patientAccountId: number;
+}
 
 @ApiTags('articles')
 @Controller('articles')
@@ -127,8 +138,34 @@ export class ArticlesController {
     UserRole.PATIENT,
   )
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.articlesService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return await this.articlesService.findOne(+id);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Get('recommend/:patientAccountId')
+  async recommendArticles(
+    @Param('patientAccountId', ParseIntPipe) patientAccountId: number,
+  ) {
+    return await this.articlesService.recommendArticles(patientAccountId);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Patch('save')
+  async saveArticle(@Body() saveArticleDto: SaveArticleDto) {
+    return this.articlesService.saveArticle(
+      saveArticleDto.articleId,
+      saveArticleDto.patientAccountId,
+    );
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Patch('unsave')
+  async unsaveArticle(@Body() saveArticleDto: SaveArticleDto) {
+    return this.articlesService.unsaveArticle(
+      saveArticleDto.articleId,
+      saveArticleDto.patientAccountId,
+    );
   }
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
@@ -145,12 +182,4 @@ export class ArticlesController {
   async removeArticle(@Param('id') id: string) {
     return this.articlesService.remove(+id);
   }
-
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
-  @Patch()
-  async saveArticle() {}
-
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
-  @Patch()
-  async unsaveArticle() {}
 }

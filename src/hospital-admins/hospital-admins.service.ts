@@ -3,6 +3,7 @@ import { Prisma, UserRole } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hospitalAdminIncludeFields } from './constants';
+import { SystemReportDto } from './hospital-admins.controller';
 
 @Injectable()
 export class HospitalAdminsService {
@@ -60,6 +61,45 @@ export class HospitalAdminsService {
       },
       include: hospitalAdminIncludeFields,
     });
+  }
+
+  async getSystemReport(systemReportDto: SystemReportDto) {
+    const doctorsAvailable = await this.prismaService.doctorAccount.count({
+      where: {
+        operatorAccount: {
+          hospitalId: systemReportDto.hospitalId,
+        },
+      },
+    });
+
+    const patientsAvailable = await this.prismaService.patientAccount.count({
+      where: {
+        doctorManagesPatients: {
+          every: {
+            doctorAccount: {
+              operatorAccount: {
+                hospitalId: systemReportDto.hospitalId,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const medicinesAvailable = await this.prismaService.medication.count({});
+
+    const articlesAvailable = await this.prismaService.article.count({
+      where: {
+        hospitalId: systemReportDto.hospitalId,
+      },
+    });
+
+    return {
+      patientsAvailable,
+      doctorsAvailable,
+      medicinesAvailable,
+      articlesAvailable,
+    };
   }
 
   async deleteOne(where: Prisma.DoctorAccountWhereUniqueInput) {

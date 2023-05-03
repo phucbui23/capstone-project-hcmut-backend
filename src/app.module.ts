@@ -25,6 +25,7 @@ import { ReminderPlanTimesModule } from './reminder-plan-times/reminder-plan-tim
 import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
 import { ResourcesModule } from './resources/resources.module';
 import { RolesModule } from './roles/roles.module';
+import { UserAccountsModule } from './user-accounts/user-accounts.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { RolesModule } from './roles/roles.module';
     ConfigModule.forRoot(),
     ArticlesModule,
     PatientSavesArticlesModule,
+    UserAccountsModule,
     AttachmentsModule,
     DoctorManagesPatientsModule,
     ChatModule,

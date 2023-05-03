@@ -104,9 +104,33 @@ export class MedicationPlansController {
     UserRole.HOSPITAL_ADMIN,
     UserRole.PATIENT,
   )
+  @Get('associated-med-plans/:doctorCode')
+  async getAssociatedMedicationPlans(
+    @Param('doctorCode') doctorCode: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE), ParseIntPipe)
+    perPage: number,
+    @Query('field', new DefaultValuePipe('updatedAt')) field: string,
+    @Query('order', new DefaultValuePipe('desc')) order: string,
+  ) {
+    return await this.medicationPlansService.getAssociatedMedicationPlans(
+      doctorCode,
+      page,
+      perPage,
+      field,
+      order,
+    );
+  }
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.medicationPlansService.findOne({ id });
+    return await this.medicationPlansService.findOne({ id });
   }
 
   @Roles(

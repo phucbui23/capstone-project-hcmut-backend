@@ -55,5 +55,19 @@ To seed the medication to the database, run:
 npx prisma db seed
 ```
 
+### Note:
+
+Since seeding will create system users in **local database** (not on firebase). So in oder to use firebase services for doctors and patients, you have to log into admin with the following creadential and manually create those 2 users using provided APIs.
+
+**username**: hospital.admin.1  
+**password**: hospitaladmin
+
 ## 3. Run api
+
 To run api, first run register (if don't have an account) and log in to receive access token. Attach this token to header everytime you test an api.
+
+List of provided [APIs](http://localhost:3000/api#/), first run:.
+
+```nodejs
+npm run:start dev
+```

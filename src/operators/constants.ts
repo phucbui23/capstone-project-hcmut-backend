@@ -3,7 +3,11 @@ import { Prisma } from '@prisma/client';
 import { roleIncludeFields } from 'src/roles/constants';
 
 export const operatorIncludeFields: Prisma.UserAccountInclude = {
-  attachment: true,
+  attachment: {
+    select: {
+      filePath: true,
+    },
+  },
   role: {
     include: roleIncludeFields,
   },

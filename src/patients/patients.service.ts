@@ -5,7 +5,11 @@ import { createPaginator } from 'prisma-pagination';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { patientIncludeFields, patientList } from './constants';
+import {
+  patientIncludeFields,
+  patientList,
+  patientSelectedFields,
+} from './constants';
 
 @Injectable()
 export class PatientsService {
@@ -118,8 +122,8 @@ export class PatientsService {
     }
     const { userAccountId } = patient;
 
-    const user = await this.prismaService.userAccount.findUnique({
-      where: { id: userAccountId },
+    const user = await this.prismaService.userAccount.findFirst({
+      where: { roleId: 4, id: userAccountId },
       include: patientIncludeFields,
     });
 
@@ -184,5 +188,45 @@ export class PatientsService {
       data,
       include: patientIncludeFields,
     });
+  }
+
+  async getAssociatedPatients(
+    doctorCode: string,
+    page: number,
+    perPage: number,
+    field: string,
+    order: string,
+  ) {
+    const paginate = createPaginator({ perPage });
+    return await paginate(
+      this.prismaService.userAccount,
+      {
+        where: {
+          AND: [
+            { roleId: 4 },
+            {
+              patientAccount: {
+                doctorManagesPatients: {
+                  every: {
+                    doctorAccount: {
+                      operatorAccount: {
+                        userAccount: {
+                          code: doctorCode,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        select: patientSelectedFields,
+        orderBy: {
+          [field]: order,
+        },
+      },
+      { page },
+    );
   }
 }

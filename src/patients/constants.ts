@@ -12,7 +12,11 @@ export const patientBaseIncludeFields: Prisma.PatientAccountInclude = {
 };
 
 export const patientIncludeFields: Prisma.UserAccountInclude = {
-  attachment: true,
+  attachment: {
+    select: {
+      filePath: true,
+    },
+  },
   role: {
     include: roleIncludeFields,
   },
@@ -45,10 +49,24 @@ export const patientSelectedFields: Prisma.UserAccountSelect = {
   createdAt: true,
   updatedAt: true,
   roleId: true,
-  attachment: true,
+  attachment: {
+    select: {
+      filePath: true,
+    },
+  },
   operatorAccount: true,
   patientAccount: {
-    include: patientBaseIncludeFields,
+    select: {
+      insuranceNumber: true,
+      occupation: true,
+      phoneNumber: true,
+      medicationPlans: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
   },
 };
 

@@ -1,4 +1,5 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { doc, updateDoc } from 'firebase/firestore';
 import {
   deleteObject,
   getDownloadURL,
@@ -42,30 +43,31 @@ export class AttachmentsService {
         const { fileName } = currentProfilePicture;
         const desrtRef = ref(this.firebaseService.storage, fileName);
 
-        deleteObject(desrtRef).catch((error) => {
+        try {
+          deleteObject(desrtRef);
+        } catch (error) {
           throw new BadRequestException({
             status: HttpStatus.BAD_REQUEST,
             error: error.message,
           });
-        });
+        }
 
         // replace
-        const updatedProfilePicture =
-          await this.prismaService.attachment.update({
-            where: { userAccountId },
-            data: {
-              fileName: fileRef,
-              fileSize: file.size,
-              filePath: downloadUrl,
-            },
-            select: {
-              fileName: true,
-              filePath: true,
-            },
-          });
+        await this.prismaService.attachment.update({
+          where: { userAccountId },
+          data: {
+            fileName: fileRef,
+            fileSize: file.size,
+            filePath: downloadUrl,
+          },
+          select: {
+            fileName: true,
+            filePath: true,
+          },
+        });
       } else {
         // Create a new profile pic for user
-        const user = await this.prismaService.userAccount.update({
+        await this.prismaService.userAccount.update({
           where: {
             id: userAccountId,
           },
@@ -80,6 +82,20 @@ export class AttachmentsService {
           },
         });
       }
+
+      // update on user firestore
+      const user = await this.prismaService.userAccount.findUnique({
+        where: {
+          id: userAccountId,
+        },
+      });
+
+      await updateDoc(
+        doc(this.firebaseService.firestoreRef, 'users', user.code),
+        {
+          photoUrl: downloadUrl,
+        },
+      );
 
       return {
         message: 'Image upload sucessfully!',

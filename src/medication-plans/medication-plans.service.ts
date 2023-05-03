@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { MedicationPlan, Prisma } from '@prisma/client';
 
+import { child, get, ref } from 'firebase/database';
 import { PaginatedResult, createPaginator } from 'prisma-pagination';
+import { FirebaseService } from 'src/firebase/firebase.service';
+
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getDateAndTime } from 'src/utils/date';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
@@ -19,7 +22,10 @@ export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
 
 @Injectable()
 export class MedicationPlansService {
-  constructor(private readonly prismaSerivce: PrismaService) {}
+  constructor(
+    private readonly prismaSerivce: PrismaService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
   async findAll(
     page: number,
@@ -283,6 +289,45 @@ export class MedicationPlansService {
     return 'Deleted';
   }
 
+  async checkInteractions(medicationCodeList: string[]) {
+    const ret = [];
+    for (const medicationCode of medicationCodeList) {
+      await get(
+        child(
+          ref(this.firebaseService.realtimeDatabase, 'medications'),
+          `${medicationCode}`,
+        ),
+      )
+        .then((snapshot) => {
+          if (snapshot.exists() && snapshot.val().medicationInteractions) {
+            const interactionsArr = [];
+            medicationCodeList.forEach((code) => {
+              if (snapshot.val().medicationInteractions[code]) {
+                interactionsArr.push({
+                  reagentId:
+                    snapshot.val().medicationInteractions[code].reagentId,
+                  name: snapshot.val().medicationInteractions[code].name,
+                  description:
+                    snapshot.val().medicationInteractions[code].description,
+                });
+              }
+            });
+            ret.push({
+              id: snapshot.val().id,
+              name: snapshot.val().name,
+              interactions: interactionsArr,
+            });
+          } else {
+            console.log('No medication found');
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+    return ret;
+  }
+  
   async getAssociatedMedicationPlans(
     doctorCode: string,
     page: number,

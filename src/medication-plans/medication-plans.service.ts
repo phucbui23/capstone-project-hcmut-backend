@@ -4,6 +4,7 @@ import { MedicationPlan, Prisma } from '@prisma/client';
 import { child, get, ref } from 'firebase/database';
 import { PaginatedResult, createPaginator } from 'prisma-pagination';
 import { FirebaseService } from 'src/firebase/firebase.service';
+
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getDateAndTime } from 'src/utils/date';
 import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
@@ -325,5 +326,34 @@ export class MedicationPlansService {
         });
     }
     return ret;
+  }
+  
+  async getAssociatedMedicationPlans(
+    doctorCode: string,
+    page: number,
+    perPage: number,
+    field: string,
+    order: string,
+  ) {
+    const paginate = createPaginator({ perPage });
+
+    return await paginate(
+      this.prismaSerivce.medicationPlan,
+      {
+        where: {
+          doctorAccount: {
+            operatorAccount: {
+              userAccount: {
+                code: doctorCode,
+              },
+            },
+          },
+        },
+        orderBy: {
+          [field]: order,
+        },
+      },
+      { page },
+    );
   }
 }

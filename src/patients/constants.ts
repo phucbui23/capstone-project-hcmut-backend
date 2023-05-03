@@ -56,7 +56,17 @@ export const patientSelectedFields: Prisma.UserAccountSelect = {
   },
   operatorAccount: true,
   patientAccount: {
-    include: patientBaseIncludeFields,
+    select: {
+      insuranceNumber: true,
+      occupation: true,
+      phoneNumber: true,
+      medicationPlans: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
   },
 };
 

@@ -41,6 +41,25 @@ export class PatientsController {
   }
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
+  @Get('associated-patients/:doctorCode')
+  async getAssociatedPatients(
+    @Param('doctorCode') doctorCode: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE), ParseIntPipe)
+    perPage: number,
+    @Query('field', new DefaultValuePipe('updatedAt')) field: string,
+    @Query('order', new DefaultValuePipe('desc')) order: string,
+  ) {
+    return await this.patientsService.getAssociatedPatients(
+      doctorCode,
+      page,
+      perPage,
+      field,
+      order,
+    );
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get(':phoneNumber')
   async findOne(@Param('phoneNumber') phoneNumber: string) {
     return await this.patientsService.findOne({

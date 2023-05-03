@@ -102,7 +102,6 @@ export class MedicationPlansController {
     UserRole.ADMIN,
     UserRole.DOCTOR,
     UserRole.HOSPITAL_ADMIN,
-    UserRole.PATIENT,
   )
   @Get('associated-med-plans/:doctorCode')
   async getAssociatedMedicationPlans(

@@ -182,30 +182,31 @@ export class MedicationPlansController {
     createDto: CreateMedicationPlanDto,
   ) {
     try {
-      const { doctorId, patientId, reminderPlans, skipInteraction } = createDto;
-      const medicationCodeList = [];
+      const { doctorId, patientId } = createDto;
+      // const medicationCodeList = [];
 
       // Check for drug interactions
-      if (!skipInteraction) {
-        for (const reminderPlan of reminderPlans) {
-          const medication = await this.prismaService.medication.findUnique({
-            where: { id: reminderPlan.medicationId },
-          });
-          if (!medication) {
-            throw new BadRequestException({
-              status: HttpStatus.BAD_REQUEST,
-              message: `Error with finding medication id ${reminderPlan.medicationId}`,
-            });
-          }
-          medicationCodeList.push(medication.code);
-        }
 
-        const reactions = await this.medicationPlansService.checkInteractions(
-          medicationCodeList,
-        );
+      // if (!skipInteraction) {
+      //   for (const reminderPlan of reminderPlans) {
+      //     const medication = await this.prismaService.medication.findUnique({
+      //       where: { id: reminderPlan.medicationId },
+      //     });
+      //     if (!medication) {
+      //       throw new BadRequestException({
+      //         status: HttpStatus.BAD_REQUEST,
+      //         message: `Error with finding medication id ${reminderPlan.medicationId}`,
+      //       });
+      //     }
+      //     medicationCodeList.push(medication.code);
+      //   }
 
-        return { reactions };
-      }
+      //   const reactions = await this.medicationPlansService.checkInteractions(
+      //     medicationCodeList,
+      //   );
+
+      //   return { reactions };
+      // }
 
       if (doctorId) {
         // pre-process: check and create management

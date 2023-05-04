@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 
+import { patientList } from 'src/patients/constants';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hospitalAdminIncludeFields } from './constants';
 import { SystemReportDto } from './hospital-admins.controller';
@@ -94,11 +95,75 @@ export class HospitalAdminsService {
       },
     });
 
+    const today = new Date();
+    const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const activeUsersWeekly = await this.prismaService.userAccount.groupBy({
+      by: ['lastActive'],
+      where: {
+        OR: [
+          {
+            role: {
+              name: {
+                equals: UserRole.DOCTOR,
+              },
+            },
+          },
+          {
+            role: {
+              name: {
+                equals: UserRole.PATIENT,
+              },
+            },
+          },
+        ],
+        lastActive: {
+          gte: lastWeek,
+          lte: today,
+        },
+      },
+      _count: { lastActive: true },
+    });
+
+    const newlyRegisteredPatients =
+      await this.prismaService.userAccount.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+          ...patientList,
+          createdAt: true,
+          patientAccount: {
+            select: {
+              doctorManagesPatients: {
+                select: {
+                  doctorAccount: {
+                    select: {
+                      operatorAccount: {
+                        select: {
+                          userAccount: {
+                            select: {
+                              firstName: true,
+                              lastName: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        take: 5,
+      });
+
     return {
       patientsAvailable,
       doctorsAvailable,
       medicinesAvailable,
       articlesAvailable,
+      activeUsersWeekly,
+      newlyRegisteredPatients,
     };
   }
 

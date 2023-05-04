@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { APP_GUARD } from '@nestjs/core';
@@ -25,6 +25,7 @@ import { ReminderPlanTimesModule } from './reminder-plan-times/reminder-plan-tim
 import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
 import { ResourcesModule } from './resources/resources.module';
 import { RolesModule } from './roles/roles.module';
+import { LastActiveMiddleware } from './middleware/LastActiveMiddleware';
 
 @Module({
   imports: [
@@ -61,4 +62,9 @@ import { RolesModule } from './roles/roles.module';
     FirebaseService,
   ],
 })
-export class AppModule {}
+// export class AppModule {}
+export class AppModule implements NestModule{
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LastActiveMiddleware).forRoutes('*');
+  }
+}

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 
-import { patientList } from 'src/patients/constants';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hospitalAdminIncludeFields } from './constants';
 import { SystemReportDto } from './hospital-admins.controller';
@@ -126,27 +125,39 @@ export class HospitalAdminsService {
     });
 
     const newlyRegisteredPatients =
-      await this.prismaService.userAccount.findMany({
-        orderBy: { createdAt: 'desc' },
+      await this.prismaService.doctorManagesPatient.findMany({
+        orderBy: {
+          patientAccount: {
+            userAccount: {
+              createdAt: 'desc',
+            },
+          },
+        },
         select: {
-          ...patientList,
-          createdAt: true,
+          patientAccountId: true,
           patientAccount: {
             select: {
-              doctorManagesPatients: {
+              userAccount: {
                 select: {
-                  doctorAccount: {
+                  code: true,
+                  firstName: true,
+                  lastName: true,
+                  createdAt: true,
+                },
+              },
+            },
+          },
+          doctorAccountId: true,
+          doctorAccount: {
+            select: {
+              operatorAccount: {
+                select: {
+                  userAccount: {
                     select: {
-                      operatorAccount: {
-                        select: {
-                          userAccount: {
-                            select: {
-                              firstName: true,
-                              lastName: true,
-                            },
-                          },
-                        },
-                      },
+                      code: true,
+                      firstName: true,
+                      lastName: true,
+                      createdAt: true,
                     },
                   },
                 },

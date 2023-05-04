@@ -26,6 +26,7 @@ import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
 import { ResourcesModule } from './resources/resources.module';
 import { RolesModule } from './roles/roles.module';
 import { LastActiveMiddleware } from './middleware/LastActiveMiddleware';
+import { UserAccountsModule } from './user-accounts/user-accounts.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { LastActiveMiddleware } from './middleware/LastActiveMiddleware';
     ConfigModule.forRoot(),
     ArticlesModule,
     PatientSavesArticlesModule,
+    UserAccountsModule,
     AttachmentsModule,
     DoctorManagesPatientsModule,
     ChatModule,

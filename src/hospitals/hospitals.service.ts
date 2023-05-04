@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Hospital, Prisma } from '@prisma/client';
+import { Hospital, Prisma, UserRole } from '@prisma/client';
 
+import { PaginatedResult, createPaginator } from 'prisma-pagination';
+import { doctorFieldIncludes } from 'src/doctors/constants';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hospitalIncludeFields } from './constants';
-import { PaginatedResult, createPaginator } from 'prisma-pagination';
 
 @Injectable()
 export class HospitalsService {
@@ -46,5 +47,42 @@ export class HospitalsService {
       where,
       include: hospitalIncludeFields,
     });
+  }
+
+  async getHospitalDoctors(
+    hospitalId: string,
+    page: number,
+    perPage: number,
+    field: string,
+    order: string,
+  ) {
+    const paginate = createPaginator({ perPage });
+
+    return await paginate(
+      this.prismaService.userAccount,
+      {
+        where: {
+          AND: [
+            {
+              role: {
+                name: {
+                  equals: UserRole.DOCTOR,
+                },
+              },
+            },
+            {
+              operatorAccount: {
+                hospitalId,
+              },
+            },
+          ],
+        },
+        orderBy: {
+          [field]: order,
+        },
+        include: doctorFieldIncludes,
+      },
+      { page },
+    );
   }
 }

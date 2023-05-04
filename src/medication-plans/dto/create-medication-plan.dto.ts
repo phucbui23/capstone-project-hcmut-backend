@@ -139,4 +139,10 @@ export class CreateMedicationPlanDto {
   @ApiProperty({})
   @IsOptional()
   doctorId?: number;
+
+  // @ApiProperty({
+  //   default: false,
+  // })
+  // @IsOptional()
+  // skipInteraction: boolean;
 }

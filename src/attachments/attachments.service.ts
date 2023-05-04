@@ -111,6 +111,37 @@ export class AttachmentsService {
     }
   }
 
+  async uploadArticleAttachment(file: Express.Multer.File) {
+    try {
+      const fileRef = `images/${file.originalname + ' ' + Date.now()}`;
+
+      const imagesRef = ref(this.firebaseService.storage, fileRef);
+      const metadata = {
+        contentType: file.mimetype,
+      };
+
+      const snapshot = await uploadBytesResumable(
+        imagesRef,
+        file.buffer,
+        metadata,
+      );
+      const downloadUrl = await getDownloadURL(snapshot.ref);
+
+      return await this.prismaService.attachment.create({
+        data: {
+          fileName: fileRef,
+          fileSize: file.size,
+          filePath: downloadUrl,
+        },
+      });
+    } catch (error) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: error.message,
+      });
+    }
+  }
+
   findAll() {
     return `This action returns all attachments`;
   }

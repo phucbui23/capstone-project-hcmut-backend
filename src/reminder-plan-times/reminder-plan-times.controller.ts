@@ -1,7 +1,17 @@
-import { BadRequestException, Body, Controller, Patch } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ReminderPlanTime, UserRole } from '@prisma/client';
 import { Roles } from 'src/guard/roles.guard';
+import { toDate } from 'src/utils/date';
 import { MarkReminderPlanTimeDto } from './dto/mark-reminder-plan-time.dto';
 import { ReminderPlanTimesService } from './reminder-plan-times.service';
 
@@ -95,5 +105,45 @@ export class ReminderPlanTimesController {
     }
 
     return await this.reminderPlanTimesService.revertOne(where);
+  }
+
+  @ApiQuery({
+    type: String,
+    name: 'start',
+    required: true,
+    description: 'To query reminder plan times after this date',
+  })
+  @ApiQuery({
+    type: String,
+    name: 'end',
+    required: true,
+    description: 'To query reminder plan times before this date',
+  })
+  @ApiQuery({
+    type: Number,
+    name: 'patientAccountId',
+    required: true,
+    description: 'To query reminders belonging to this patient account id',
+  })
+  @Get()
+  @Roles(UserRole.PATIENT)
+  async findAll(
+    @Query('start') start: string,
+    @Query('end') end: string,
+    @Query('patientAccountId', ParseIntPipe) patientAccountId: number,
+  ) {
+    return await this.reminderPlanTimesService.findAll({
+      AND: [
+        {
+          patientAccountId: { equals: patientAccountId },
+        },
+        {
+          time: { gte: toDate(start) },
+        },
+        {
+          time: { lte: toDate(end) },
+        },
+      ],
+    });
   }
 }

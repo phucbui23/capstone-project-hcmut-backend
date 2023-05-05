@@ -5,8 +5,10 @@ import { MILLISECONDS_PER_DAY } from 'src/constant';
 import { MedicationPlansService } from 'src/medication-plans/medication-plans.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReminderPlansService } from 'src/reminder-plans/reminder-plans.service';
-import { reminderPlanTimeIncludeFields } from './constants';
-
+import {
+  reminderPlanTimeIncludeFields,
+  reminderPlanTimeSelectFields,
+} from './constants';
 @Injectable()
 export class ReminderPlanTimesService {
   constructor(
@@ -22,6 +24,29 @@ export class ReminderPlanTimesService {
       where,
       include: reminderPlanTimeIncludeFields,
     });
+  }
+
+  // TODO: Unnest object
+  async findAll(where: Prisma.ReminderPlanTimeWhereInput) {
+    const reminderPlanTimes =
+      await this.prismaSerivce.reminderPlanTime.findMany({
+        where,
+        select: reminderPlanTimeSelectFields,
+      });
+
+    const results = reminderPlanTimes.map((reminderPlanTime) => {
+      const { reminderPlan, ...restReminderPlanTime } = reminderPlanTime;
+      const { medication, ...restReminderPlan } = reminderPlan;
+      const { name } = medication;
+
+      return {
+        ...restReminderPlanTime,
+        ...restReminderPlan,
+        name,
+      };
+    });
+
+    return results;
   }
 
   async markOne(

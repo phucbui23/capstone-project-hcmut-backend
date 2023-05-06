@@ -5,16 +5,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class LastActiveMiddleware implements NestMiddleware {
-  private excludeRoutes: string[] = [
-    'operator/login',
-    'patient/login',
-    'patient/register',
-  ];
   constructor(private readonly prismaService: PrismaService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token || this.isExcludedRoute(req.path)) return next;
+    if (!token) return next;
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET) as {
@@ -34,9 +29,5 @@ export class LastActiveMiddleware implements NestMiddleware {
       console.log(error);
     }
     next();
-  }
-
-  private isExcludedRoute(path: string) {
-    return this.excludeRoutes.includes(path);
   }
 }

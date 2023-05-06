@@ -16,9 +16,8 @@ export class SystemReportDto {
 export class HospitalAdminsController {
   constructor(private readonly hospitalAdminsService: HospitalAdminsService) {}
 
-  @SkipAuth()
-  // @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
-  @Get('system-report')
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @Get('report')
   async systemReport(@Body() systemReportDto: SystemReportDto) {
     return await this.hospitalAdminsService.getSystemReport(systemReportDto);
   }

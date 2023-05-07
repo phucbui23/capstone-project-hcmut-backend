@@ -154,7 +154,7 @@ export class PatientsService {
       role: 'PATIENT',
     };
 
-    const newUserRef = await doc(
+    const newUserRef = doc(
       collection(this.firebaseService.firestoreRef, 'users'),
       code,
     );

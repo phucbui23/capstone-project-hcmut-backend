@@ -45,11 +45,14 @@ export class ChatService {
     let patientDocId: string;
     let doctorDocId: string;
 
-    await addDoc(newRoomRef, roomData).then((doc) => {
-      roomId = doc.id;
-    });
+    const docRef = await addDoc(newRoomRef, roomData);
+    roomId = docRef.id;
 
-    updateDoc(doc(this.firebaseService.firestoreRef, 'rooms', roomId), {
+    // await addDoc(newRoomRef, roomData).then((doc) => {
+    //   roomId = doc.id;
+    // });
+
+    await updateDoc(doc(this.firebaseService.firestoreRef, 'rooms', roomId), {
       id: roomId,
     });
 

@@ -147,9 +147,11 @@ export class MedicationPlansController {
   ): Promise<PaginatedResult<MedicationPlan>> {
     return this.medicationPlansService.findAll(page, perPage, field, order, {
       where: {
-        AND: {
-          patientAccountId: patientId === -1 ? undefined : patientId,
-        },
+        AND: [
+          {
+            patientAccountId: patientId === -1 ? undefined : patientId,
+          },
+        ],
       },
     });
   }

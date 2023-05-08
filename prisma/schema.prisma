@@ -178,7 +178,7 @@ model Article {
   hospital             Hospital              @relation(fields: [hospitalId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   patientSavesArticles PatientSavesArticle[]
   articleIncludesTags  ArticleIncludesTag[]
-  Attachment           Attachment?
+  attachment           Attachment?
 
   @@map("article")
 }

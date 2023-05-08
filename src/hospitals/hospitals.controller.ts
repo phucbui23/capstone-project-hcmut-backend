@@ -3,15 +3,16 @@ import {
   DefaultValuePipe,
   Get,
   Param,
+  ParseIntPipe,
   Query,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Hospital, UserRole } from '@prisma/client';
 
+import { PaginatedResult } from 'prisma-pagination';
+import { PAGINATION } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { HospitalsService } from './hospitals.service';
-import { PAGINATION } from 'src/constant';
-import { PaginatedResult } from 'prisma-pagination';
 
 @ApiTags('hospitals')
 @Controller('hospitals')
@@ -79,5 +80,24 @@ export class HospitalsController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Hospital> {
     return await this.hospitalsService.findOne({ id: +id });
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @Get('doctors/:hospitalId')
+  async getHospitalDoctors(
+    @Param('hospitalId', ParseIntPipe) hospitalId: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE), ParseIntPipe)
+    perPage: number,
+    @Query('field', new DefaultValuePipe('createdAt')) field: string,
+    @Query('order', new DefaultValuePipe('desc')) order: string,
+  ) {
+    return await this.hospitalsService.getHospitalDoctors(
+      hospitalId,
+      page,
+      perPage,
+      field,
+      order,
+    );
   }
 }

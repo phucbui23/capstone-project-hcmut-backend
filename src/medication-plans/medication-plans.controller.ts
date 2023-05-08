@@ -4,17 +4,23 @@ import {
   Controller,
   DefaultValuePipe,
   Delete,
+  FileTypeValidator,
   Get,
   HttpStatus,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   ParseIntPipe,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 
+import { FileInterceptor } from '@nestjs/platform-express';
 import { MedicationPlan, UserRole } from '@prisma/client';
 import { ArrayMinSize, IsNotEmpty } from 'class-validator';
 import { PaginatedResult } from 'prisma-pagination';
@@ -70,6 +76,19 @@ export class MedicationPlansController {
     );
 
     return { reactions };
+  }
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @Get('report/:patientCode')
+  async medicationPlanReport(@Param('patientCode') patientCode: string) {
+    return await this.medicationPlansService.getMedicationPlanReport(
+      patientCode,
+    );
   }
 
   @ApiQuery({
@@ -135,11 +154,7 @@ export class MedicationPlansController {
     });
   }
 
-  @Roles(
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.HOSPITAL_ADMIN,
-  )
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get('associated-med-plans/:doctorCode')
   async getAssociatedMedicationPlans(
     @Param('doctorCode') doctorCode: string,
@@ -175,6 +190,32 @@ export class MedicationPlansController {
     UserRole.HOSPITAL_ADMIN,
     UserRole.PATIENT,
   )
+  @Post('/upload/:medicationPlanId')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadBill(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10240000 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|pdf)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Param('medicationPlanId', ParseIntPipe) medicationPlanId: number,
+  ) {
+    return await this.medicationPlansService.uploadMedicationPlanBill(
+      file,
+      medicationPlanId,
+    );
+  }
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async createOne(
@@ -183,30 +224,6 @@ export class MedicationPlansController {
   ) {
     try {
       const { doctorId, patientId } = createDto;
-      // const medicationCodeList = [];
-
-      // Check for drug interactions
-
-      // if (!skipInteraction) {
-      //   for (const reminderPlan of reminderPlans) {
-      //     const medication = await this.prismaService.medication.findUnique({
-      //       where: { id: reminderPlan.medicationId },
-      //     });
-      //     if (!medication) {
-      //       throw new BadRequestException({
-      //         status: HttpStatus.BAD_REQUEST,
-      //         message: `Error with finding medication id ${reminderPlan.medicationId}`,
-      //       });
-      //     }
-      //     medicationCodeList.push(medication.code);
-      //   }
-
-      //   const reactions = await this.medicationPlansService.checkInteractions(
-      //     medicationCodeList,
-      //   );
-
-      //   return { reactions };
-      // }
 
       if (doctorId) {
         // pre-process: check and create management
@@ -230,11 +247,115 @@ export class MedicationPlansController {
           doctor.code,
         );
 
+        // Update room id and countTotal
+        let total: number = 0;
+        const { reminderPlans, id } = medicationPlan;
+
+        for (const reminderPlan of reminderPlans) {
+          total += reminderPlan.stock;
+        }
+
+        await this.prismaService.medicationPlan.update({
+          where: {
+            id,
+          },
+          data: {
+            roomId: conversation.roomId,
+            countTotal: total,
+          },
+        });
+
         const ret = { ...medicationPlan, roomId: conversation.roomId };
         return ret;
       } else {
-        return await this.medicationPlansService.createOne(createDto);
+        const medicationPlan = await this.medicationPlansService.createOne(
+          createDto,
+        );
+
+        // Update countTotal
+        const { reminderPlans, id } = medicationPlan;
+        let total: number = 0;
+
+        for (const reminderPlan of reminderPlans) {
+          total += reminderPlan.stock;
+        }
+
+        await this.prismaService.medicationPlan.update({
+          where: {
+            id,
+          },
+          data: {
+            countTotal: total,
+          },
+        });
+
+        return medicationPlan;
       }
+    } catch (error) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: error.message,
+      });
+    }
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT)
+  @Post('local/:patientCode')
+  async addLocalMed(
+    @Param('patientCode') patientCode: string,
+    @Body()
+    createDto: CreateMedicationPlanDto,
+  ) {
+    try {
+      const { localReminderPlans, patientId } = createDto;
+
+      // get patient uncompleted medication plans prescribed by doctor
+      const uncompletedMedicationPlans =
+        await this.prismaService.medicationPlan.findMany({
+          where: {
+            patientAccountId: patientId,
+            doctorAccountId: {
+              not: null,
+            },
+            completed: false,
+          },
+          select: {
+            id: true,
+            doctorAccountId: true,
+            roomId: true,
+          },
+        });
+
+      // Alert all doctors prescribes unfinished medication plan
+      for (const medicationPlan of uncompletedMedicationPlans) {
+        await this.chatService.sendMsg(
+          `I'm adding a new drug called ${localReminderPlans[0].localMedicationName} into medication plan ${medicationPlan.id}.\n
+          Could you please check if this has any reactions with my current medicines.`,
+          patientCode,
+          medicationPlan.roomId,
+        );
+      }
+      const medicationPlan = await this.medicationPlansService.createOne(
+        createDto,
+      );
+
+      // Update countTotal
+      const { reminderPlans, id } = medicationPlan;
+      let total: number = 0;
+
+      for (const reminderPlan of reminderPlans) {
+        total += reminderPlan.stock;
+      }
+
+      await this.prismaService.medicationPlan.update({
+        where: {
+          id,
+        },
+        data: {
+          countTotal: total,
+        },
+      });
+      return medicationPlan;
     } catch (error) {
       throw new BadRequestException({
         status: HttpStatus.BAD_REQUEST,

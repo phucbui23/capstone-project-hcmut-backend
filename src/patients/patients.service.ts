@@ -158,7 +158,7 @@ export class PatientsService {
       role: 'PATIENT',
     };
 
-    const newUserRef = await doc(
+    const newUserRef = doc(
       collection(this.firebaseService.firestoreRef, 'users'),
       code,
     );
@@ -171,7 +171,8 @@ export class PatientsService {
     const deletePatient = await this.prismaService.patientAccount.delete({
       where,
     });
-    const deleteUser = await this.prismaService.userAccount.delete({
+
+    await this.prismaService.userAccount.delete({
       where: { id: deletePatient.userAccountId },
     });
 

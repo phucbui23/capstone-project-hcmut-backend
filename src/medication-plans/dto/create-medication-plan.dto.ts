@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Frequency } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsDate,
@@ -35,6 +36,76 @@ class ReminderPlanTime {
   @IsDate()
   @IsOptional()
   sentAt?: Date;
+}
+
+class LocalReminderPlan {
+  @ApiProperty({
+    default: 1,
+    required: false,
+  })
+  @IsNumber()
+  @Min(1)
+  @Max(30)
+  @IsOptional()
+  interval: number = 1;
+
+  @ApiProperty({
+    default: [Array.from(Array(7).keys())],
+    required: false,
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsOptional()
+  selectedDays?: number[] = Array.from(Array(7).keys());
+
+  @ApiProperty({
+    enum: Frequency,
+  })
+  @IsNotEmpty()
+  @IsEnum(Frequency)
+  frequency: Frequency;
+
+  @ApiProperty({})
+  @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
+  startDate: Date;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  note?: string;
+
+  @ApiProperty({
+    required: true,
+  })
+  @IsNotEmpty()
+  localMedicationName: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  stock?: number;
+
+  @ApiProperty({
+    required: false,
+  })
+  @Type(() => Date)
+  @IsOptional()
+  @IsDate()
+  endDate?: Date;
+
+  @ApiProperty({
+    type: [ReminderPlanTime],
+  })
+  @IsNotEmpty()
+  @IsArray()
+  @Type(() => ReminderPlanTime)
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  reminderPlanTimes: ReminderPlanTime[];
 }
 
 class ReminderPlan {
@@ -71,7 +142,7 @@ class ReminderPlan {
   startDate: Date;
 
   @ApiProperty({})
-  @IsNotEmpty()
+  @IsOptional() // TODO: change medicationId to optional
   medicationId: number;
 
   @ApiProperty({
@@ -123,11 +194,21 @@ export class CreateMedicationPlanDto {
   @ApiProperty({
     type: [ReminderPlan],
   })
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => ReminderPlan)
-  @ArrayMinSize(1)
+  @ArrayMinSize(0)
   @ValidateNested({ each: true })
   reminderPlans: ReminderPlan[];
+
+  @ApiProperty({
+    type: [LocalReminderPlan],
+  })
+  @IsOptional()
+  @Type(() => LocalReminderPlan)
+  @ArrayMinSize(0)
+  @ArrayMaxSize(1)
+  @ValidateNested({ each: true })
+  localReminderPlans: LocalReminderPlan[];
 
   @ApiProperty({
     description: 'Medication plan note',
@@ -139,10 +220,4 @@ export class CreateMedicationPlanDto {
   @ApiProperty({})
   @IsOptional()
   doctorId?: number;
-
-  // @ApiProperty({
-  //   default: false,
-  // })
-  // @IsOptional()
-  // skipInteraction: boolean;
 }

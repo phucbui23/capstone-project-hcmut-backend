@@ -3,6 +3,7 @@ import { Prisma, UserRole } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hospitalAdminIncludeFields } from './constants';
+import { SystemReportDto } from './hospital-admins.controller';
 
 @Injectable()
 export class HospitalAdminsService {
@@ -60,6 +61,121 @@ export class HospitalAdminsService {
       },
       include: hospitalAdminIncludeFields,
     });
+  }
+
+  async getSystemReport(systemReportDto: SystemReportDto) {
+    const doctorsAvailable = await this.prismaService.doctorAccount.count({
+      where: {
+        operatorAccount: {
+          hospitalId: systemReportDto.hospitalId,
+        },
+      },
+    });
+
+    const patientsAvailable = await this.prismaService.patientAccount.count({
+      where: {
+        doctorManagesPatients: {
+          every: {
+            doctorAccount: {
+              operatorAccount: {
+                hospitalId: systemReportDto.hospitalId,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const medicinesAvailable = await this.prismaService.medication.count({});
+
+    const articlesAvailable = await this.prismaService.article.count({
+      where: {
+        hospitalId: systemReportDto.hospitalId,
+      },
+    });
+
+    const today = new Date();
+    const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const activeUsersWeekly = await this.prismaService.userAccount.groupBy({
+      by: ['lastActive'],
+      where: {
+        OR: [
+          {
+            role: {
+              name: {
+                equals: UserRole.DOCTOR,
+              },
+            },
+          },
+          {
+            role: {
+              name: {
+                equals: UserRole.PATIENT,
+              },
+            },
+          },
+        ],
+        lastActive: {
+          gte: lastWeek,
+          lte: today,
+        },
+      },
+      _count: { lastActive: true },
+    });
+
+    const newlyRegisteredPatients =
+      await this.prismaService.doctorManagesPatient.findMany({
+        orderBy: {
+          patientAccount: {
+            userAccount: {
+              createdAt: 'desc',
+            },
+          },
+        },
+        select: {
+          patientAccountId: true,
+          patientAccount: {
+            select: {
+              userAccount: {
+                select: {
+                  code: true,
+                  firstName: true,
+                  lastName: true,
+                  createdAt: true,
+                },
+              },
+            },
+          },
+          doctorAccountId: true,
+          doctorAccount: {
+            select: {
+              operatorAccount: {
+                select: {
+                  userAccount: {
+                    select: {
+                      code: true,
+                      firstName: true,
+                      lastName: true,
+                      createdAt: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        take: 5,
+      });
+
+    return {
+      patientsAvailable,
+      doctorsAvailable,
+      medicinesAvailable,
+      articlesAvailable,
+      activeUsersWeekly,
+      newlyRegisteredPatients,
+    };
   }
 
   async deleteOne(where: Prisma.DoctorAccountWhereUniqueInput) {

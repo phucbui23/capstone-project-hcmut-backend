@@ -1,14 +1,26 @@
-import { Controller, Delete, Get, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { HospitalAdminsService } from './hospital-admins.service';
-import { Roles } from 'src/guard/roles.guard';
 import { UserRole } from '@prisma/client';
+import { IsNotEmpty } from 'class-validator';
+import { Roles } from 'src/guard/roles.guard';
+import { SkipAuth } from 'src/guard/skip-auth.guard';
+import { HospitalAdminsService } from './hospital-admins.service';
 
+export class SystemReportDto {
+  @IsNotEmpty()
+  hospitalId: number;
+}
 @ApiTags('hospital admins')
 @Controller('hospital-admins')
 export class HospitalAdminsController {
   constructor(private readonly hospitalAdminsService: HospitalAdminsService) {}
+
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @Get('report')
+  async systemReport(@Body() systemReportDto: SystemReportDto) {
+    return await this.hospitalAdminsService.getSystemReport(systemReportDto);
+  }
 
   @Roles(UserRole.ADMIN)
   @Get()

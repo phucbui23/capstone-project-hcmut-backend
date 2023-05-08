@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { APP_GUARD } from '@nestjs/core';
@@ -18,6 +23,7 @@ import { HospitalAdminsModule } from './hospital-admins/hospital-admins.module';
 import { HospitalsModule } from './hospitals/hospitals.module';
 import { MedicationPlansModule } from './medication-plans/medication-plans.module';
 import { MedicationsModule } from './medications/medications.module';
+import { LastActiveMiddleware } from './middleware/LastActiveMiddleware';
 import { OperatorsModule } from './operators/operators.module';
 import { PatientSavesArticlesModule } from './patient-saves-articles/patient-saves-articles.module';
 import { PatientsModule } from './patients/patients.module';
@@ -63,4 +69,25 @@ import { UserAccountsModule } from './user-accounts/user-accounts.module';
     FirebaseService,
   ],
 })
-export class AppModule {}
+// export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LastActiveMiddleware)
+      .exclude(
+        {
+          method: RequestMethod.POST,
+          path: '/auth/operator/login',
+        },
+        {
+          method: RequestMethod.POST,
+          path: '/auth/patient/login',
+        },
+        {
+          method: RequestMethod.POST,
+          path: '/auth/patient/register',
+        },
+      )
+      .forRoutes('*');
+  }
+}

@@ -98,7 +98,7 @@ export class HospitalAdminsService {
     const today = new Date();
     const lastWeek = new Date(today.getTime() - MILLISECONDS_LAST_WEEK);
 
-    const activeUsersWeekly = await this.prismaService.userAccount.groupBy({
+    const lastActiveCounts = await this.prismaService.userAccount.groupBy({
       by: ['lastActive'],
       where: {
         OR: [
@@ -123,6 +123,22 @@ export class HospitalAdminsService {
         },
       },
       _count: { lastActive: true },
+    });
+
+    const daysOfWeek = []; // Array to store the past 7 days
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      daysOfWeek.push(date.toISOString().split('T')[0]);
+    }
+
+    // Loop through the past 7 days and find the corresponding count in the result array
+    const activeUsersWeekly = daysOfWeek.map((day) => {
+      const found = lastActiveCounts.find((obj) => obj.lastActive === day);
+      if (found) {
+        return { lastActive: found.lastActive, count: found._count.lastActive };
+      } else {
+        return { lastActive: day, count: 0 };
+      }
     });
 
     const newlyRegisteredPatients =

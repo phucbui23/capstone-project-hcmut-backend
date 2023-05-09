@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 
+import { MILLISECONDS_LAST_WEEK } from 'src/constant';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hospitalAdminIncludeFields } from './constants';
 import { SystemReportDto } from './hospital-admins.controller';
@@ -95,7 +96,7 @@ export class HospitalAdminsService {
     });
 
     const today = new Date();
-    const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const lastWeek = new Date(today.getTime() - MILLISECONDS_LAST_WEEK);
 
     const activeUsersWeekly = await this.prismaService.userAccount.groupBy({
       by: ['lastActive'],

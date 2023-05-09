@@ -35,3 +35,9 @@ export const reminderPlanTimeSelectFields = {
     },
   },
 };
+
+export const localReminderPlanTimeIncludeFields: Prisma.LocalReminderPlanTimeInclude =
+  {
+    patientAccount: true,
+    LocalReminderPlan: true,
+  };

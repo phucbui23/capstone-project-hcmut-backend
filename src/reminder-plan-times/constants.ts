@@ -4,7 +4,6 @@ export const reminderPlanTimeIncludeFields: Prisma.ReminderPlanTimeInclude = {
   patientAccount: false,
   reminderPlan: {
     select: {
-      localMedicationName: true,
       medication: {
         select: {
           name: true,

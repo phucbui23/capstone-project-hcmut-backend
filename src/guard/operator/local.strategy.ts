@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
+import { AuthHelper } from 'src/auth/auth.helper';
 import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
@@ -8,7 +9,10 @@ export class OperatorLocalStrategy extends PassportStrategy(
   Strategy,
   'operator',
 ) {
-  constructor(private readonly authSerivce: AuthService) {
+  constructor(
+    private readonly authSerivce: AuthService,
+    private readonly authHelper: AuthHelper,
+  ) {
     super({
       usernameField: 'username',
       passwordField: 'password',
@@ -20,10 +24,6 @@ export class OperatorLocalStrategy extends PassportStrategy(
       username,
       password,
     );
-    if (!operator) {
-      throw new BadRequestException('Patient account not exists');
-    }
-
     return operator;
   }
 }

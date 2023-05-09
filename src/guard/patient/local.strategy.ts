@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from 'src/auth/auth.service';
@@ -20,10 +20,6 @@ export class PatientLocalStrategy extends PassportStrategy(
       phoneNumber,
       password,
     );
-    if (!patient) {
-      throw new BadRequestException('Patient account not exists');
-    }
-
     return patient;
   }
 }

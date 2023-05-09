@@ -20,15 +20,13 @@ export class AuthService {
   async validatePatient(phoneNumber: string, password: string) {
     const patient = await this.patientsService.findOne({ phoneNumber });
     if (!patient) {
-      return null;
+      throw new BadRequestException('Patient account not exist');
     }
 
-    const validPassword = await this.authHelper.isPasswordValid(
-      password,
-      patient.passwordHash,
-    );
-    if (!validPassword) {
-      return null;
+    if (
+      !(await this.authHelper.isPasswordValid(password, patient.passwordHash))
+    ) {
+      throw new BadRequestException('Wrong password');
     }
 
     const { passwordHash, ...restPatient } = patient;
@@ -38,13 +36,13 @@ export class AuthService {
   async validateOperator(username: string, password: string) {
     const operator = await this.operatorsService.findOne({ username });
     if (!operator) {
-      return null;
+      throw new BadRequestException('Operator account not exist');
     }
 
     if (
       !(await this.authHelper.isPasswordValid(password, operator.passwordHash))
     ) {
-      return null;
+      throw new BadRequestException('Wrong password');
     }
 
     const { passwordHash, ...restOperator } = operator;

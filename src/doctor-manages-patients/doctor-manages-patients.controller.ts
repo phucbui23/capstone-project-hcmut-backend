@@ -1,16 +1,9 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { UserRole } from '@prisma/client';
+import { Roles } from 'src/guard/roles.guard';
 import { DoctorManagesPatientsService } from './doctor-manages-patients.service';
 import { CreateDoctorManagesPatientDto } from './dto/create-doctor-manages-patient.dto';
-import { UpdateDoctorManagesPatientDto } from './dto/update-doctor-manages-patient.dto';
 
 @ApiTags('doctor-manages-patients')
 @Controller('doctor-manages-patients')
@@ -20,6 +13,7 @@ export class DoctorManagesPatientsController {
   ) {}
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   async create(
     @Body() createDoctorManagesPatientDto: CreateDoctorManagesPatientDto,
   ) {
@@ -28,29 +22,29 @@ export class DoctorManagesPatientsController {
     );
   }
 
-  @Get()
-  findAll() {
-    return this.doctorManagesPatientsService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.doctorManagesPatientsService.findAll();
+  // }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.doctorManagesPatientsService.findOne(+id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.doctorManagesPatientsService.findOne(+id);
+  // }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateDoctorManagesPatientDto: UpdateDoctorManagesPatientDto,
-  ) {
-    return this.doctorManagesPatientsService.update(
-      +id,
-      updateDoctorManagesPatientDto,
-    );
-  }
+  // @Patch(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateDoctorManagesPatientDto: UpdateDoctorManagesPatientDto,
+  // ) {
+  //   return this.doctorManagesPatientsService.update(
+  //     +id,
+  //     updateDoctorManagesPatientDto,
+  //   );
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.doctorManagesPatientsService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.doctorManagesPatientsService.remove(+id);
+  // }
 }

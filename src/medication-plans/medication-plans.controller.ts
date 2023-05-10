@@ -196,12 +196,7 @@ export class MedicationPlansController {
     return await this.medicationPlansService.findOne({ id });
   }
 
-  @Roles(
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.HOSPITAL_ADMIN,
-    UserRole.PATIENT,
-  )
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Post('/upload/:medicationPlanId')
   @UseInterceptors(FileInterceptor('file'))
   async uploadBill(
@@ -311,7 +306,7 @@ export class MedicationPlansController {
     }
   }
 
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT)
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
   @Post('local/:patientCode')
   async addLocalMed(
     @Param('patientCode') patientCode: string,

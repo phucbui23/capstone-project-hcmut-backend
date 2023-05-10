@@ -79,6 +79,7 @@ export class MedicationsController {
   }
 
   @ApiBody({ type: CreateMedicationDto })
+  @Roles(UserRole.ADMIN)
   @Post()
   async createOne(@Body() data: Prisma.MedicationCreateInput) {
     return await this.medicationsService.createOne(data);
@@ -90,6 +91,7 @@ export class MedicationsController {
     description: 'Medication id',
   })
   @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR)
   async findOne(@Param('id') id: string) {
     return await this.medicationsService.findOne({ id: +id });
   }
@@ -101,6 +103,7 @@ export class MedicationsController {
   })
   @ApiBody({ type: CreateMedicationDto })
   @Patch(':id')
+  @Roles(UserRole.ADMIN)
   async updateOne(
     @Param('id') id: string,
     @Body() data: Prisma.MedicationUpdateInput,
@@ -116,6 +119,7 @@ export class MedicationsController {
     type: Number,
     description: 'Medication id',
   })
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   async deleteOne(@Param('id') id: string) {
     return await this.medicationsService.deleteOne({ id: +id });

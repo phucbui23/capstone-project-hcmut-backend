@@ -61,9 +61,17 @@ export class PatientsController {
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get(':phoneNumber')
-  async findOne(@Param('phoneNumber') phoneNumber: string) {
+  async findOneByPhoneNum(@Param('phoneNumber') phoneNumber: string) {
     return await this.patientsService.findOne({
       phoneNumber,
+    });
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.patientsService.findOne({
+      userAccountId: +id,
     });
   }
 

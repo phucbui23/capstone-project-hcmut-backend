@@ -37,8 +37,16 @@ export class PatientSavesArticlesService {
     });
   }
 
-  findAll() {
-    return `This action returns all patientSavesArticles`;
+  async findAll(patientCode: string) {
+    return await this.prismaService.patientSavesArticle.findMany({
+      where: {
+        patientAccount: {
+          userAccount: {
+            code: patientCode,
+          },
+        },
+      },
+    });
   }
 
   findOne(id: number) {

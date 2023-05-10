@@ -49,7 +49,7 @@ export class ReminderPlanTimesController {
     return await this.reminderPlanTimesService.markOne(where);
   }
 
-  @Roles(UserRole.PATIENT, UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @Roles(UserRole.PATIENT, UserRole.ADMIN)
   @Patch('local/mark')
   async localMarkOne(
     @Body()
@@ -110,7 +110,7 @@ export class ReminderPlanTimesController {
     return await this.reminderPlanTimesService.skipOne(where);
   }
 
-  @Roles(UserRole.PATIENT, UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @Roles(UserRole.PATIENT, UserRole.ADMIN)
   @Patch('local/skip')
   async localSkipOne(
     @Body()
@@ -166,7 +166,7 @@ export class ReminderPlanTimesController {
     return await this.reminderPlanTimesService.revertOne(where);
   }
 
-  @Roles(UserRole.PATIENT, UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @Roles(UserRole.PATIENT, UserRole.ADMIN)
   @Patch('local/revert')
   async localRevertOne(
     @Body()

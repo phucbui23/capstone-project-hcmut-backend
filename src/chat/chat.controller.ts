@@ -39,7 +39,7 @@ export class ChatController {
       });
 
       if (!user || !doctor) {
-        throw 'wrongCode';
+        throw 'Wrong Code';
       }
     } catch (wrongCode) {
       throw new BadRequestException({

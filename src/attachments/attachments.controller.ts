@@ -1,14 +1,10 @@
 import {
-  Body,
   Controller,
-  Delete,
   FileTypeValidator,
-  Get,
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
   ParseIntPipe,
-  Patch,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -18,7 +14,6 @@ import { ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Roles } from 'src/guard/roles.guard';
 import { AttachmentsService } from './attachments.service';
-import { UpdateAttachmentDto } from './dto/update-attachment.dto';
 @ApiTags('attchments')
 @Controller('attachments')
 export class AttachmentsController {
@@ -56,30 +51,30 @@ export class AttachmentsController {
     return await this.attachmentsService.uploadImage(file, userAccountId);
   }
 
-  @Roles(UserRole.ADMIN)
-  @Get()
-  findAll() {
-    return this.attachmentsService.findAll();
-  }
+  // @Roles(UserRole.ADMIN)
+  // @Get()
+  // findAll() {
+  //   return this.attachmentsService.findAll();
+  // }
 
-  @Roles(UserRole.ADMIN)
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.attachmentsService.findOne(+id);
-  }
+  // @Roles(UserRole.ADMIN)
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.attachmentsService.findOne(+id);
+  // }
 
-  @Roles(UserRole.ADMIN)
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateAttachmentDto: UpdateAttachmentDto,
-  ) {
-    return this.attachmentsService.update(+id, updateAttachmentDto);
-  }
+  // @Roles(UserRole.ADMIN)
+  // @Patch(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateAttachmentDto: UpdateAttachmentDto,
+  // ) {
+  //   return this.attachmentsService.update(+id, updateAttachmentDto);
+  // }
 
-  @Roles(UserRole.ADMIN)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.attachmentsService.remove(+id);
-  }
+  // @Roles(UserRole.ADMIN)
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.attachmentsService.remove(+id);
+  // }
 }

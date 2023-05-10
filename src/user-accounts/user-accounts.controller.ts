@@ -98,6 +98,7 @@ export class UserAccountsController {
   }
 
   @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userAccountsService.findOne({ id });
   }

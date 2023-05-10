@@ -19,7 +19,7 @@ import { HospitalsService } from './hospitals.service';
 export class HospitalsController {
   constructor(private readonly hospitalsService: HospitalsService) {}
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @Roles(UserRole.ADMIN)
   @ApiQuery({
     name: 'page',
     required: false,
@@ -76,7 +76,7 @@ export class HospitalsController {
     });
   }
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
+  @Roles(UserRole.ADMIN)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Hospital> {
     return await this.hospitalsService.findOne({ id: +id });

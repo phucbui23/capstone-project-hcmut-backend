@@ -28,11 +28,15 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
 export class SaveArticleDto {
-  @ApiProperty({})
+  @ApiProperty({
+    description: "Article's id",
+  })
   @IsNotEmpty()
   articleId: number;
 
-  @ApiProperty({})
+  @ApiProperty({
+    description: "Patient's id",
+  })
   @IsNotEmpty()
   patientAccountId: number;
 }

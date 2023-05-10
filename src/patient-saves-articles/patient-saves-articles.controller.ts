@@ -1,17 +1,20 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { PatientSavesArticlesService } from './patient-saves-articles.service';
+import { ApiTags } from '@nestjs/swagger';
+import { UserRole } from '@prisma/client';
+import { Roles } from 'src/guard/roles.guard';
 import { PatientSavesArticleDto } from './dto/patient-saves-article.dto';
 import { UpdatePatientSavesArticleDto } from './dto/update-patient-saves-article.dto';
-import { Roles } from 'src/guard/roles.guard';
-import { UserRole } from '@prisma/client';
+import { PatientSavesArticlesService } from './patient-saves-articles.service';
+
+@ApiTags('patient-saves-articles')
 @Controller('patient-saves-articles')
 export class PatientSavesArticlesController {
   constructor(
@@ -30,19 +33,34 @@ export class PatientSavesArticlesController {
     return this.patientSavesArticlesService.remove(patientSavesArticleDto);
   }
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.PATIENT)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.PATIENT,
+  )
   @Get()
   findAll() {
     return this.patientSavesArticlesService.findAll();
   }
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.PATIENT)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.PATIENT,
+  )
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.patientSavesArticlesService.findOne(+id);
   }
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR, UserRole.PATIENT)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.DOCTOR,
+    UserRole.PATIENT,
+  )
   @Patch(':id')
   update(
     @Param('id') id: string,

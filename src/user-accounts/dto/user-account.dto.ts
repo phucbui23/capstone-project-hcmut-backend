@@ -21,12 +21,14 @@ export class UpdateUserAccountDto {
 
   @ApiProperty({
     required: false,
+    description: 'First name',
   })
   @IsOptional()
   firstName: string;
 
   @ApiProperty({
     required: false,
+    description: 'Last name',
   })
   @IsOptional()
   lastName: string;
@@ -34,30 +36,35 @@ export class UpdateUserAccountDto {
   @ApiProperty({
     required: false,
     enum: [Gender],
+    description: 'Gender',
   })
   @IsOptional()
   gender: Gender;
 
   @ApiProperty({
     required: false,
+    description: 'Address',
   })
   @IsOptional()
   address: string;
 
   @ApiProperty({
     required: false,
+    description: 'Social security number',
   })
   @IsOptional()
   socialSecurityNumber: string;
 
   @ApiProperty({
     required: false,
+    description: 'Nationality',
   })
   @IsOptional()
   nationality: string;
 
   @ApiProperty({
     required: false,
+    description: 'Date of birth',
   })
   @IsDate()
   @IsOptional()
@@ -65,10 +72,10 @@ export class UpdateUserAccountDto {
 }
 
 export class UpdateOperatorAccountDto extends UpdateUserAccountDto {
-  @ApiProperty({
-    required: false,
-  })
-  username: string;
+  // @ApiProperty({
+  //   required: false,
+  // })
+  // username: string;
 
   @ApiProperty({
     required: false,
@@ -87,12 +94,14 @@ export class UpdateOperatorAccountDto extends UpdateUserAccountDto {
 export class UpdateDoctorAccountDto extends UpdateUserAccountDto {
   @ApiProperty({
     required: false,
+    description: 'Faculty',
   })
   @IsOptional()
   faculty: string;
 
   @ApiProperty({
     required: false,
+    description: 'Year of experience',
   })
   @IsOptional()
   yearOfExperience: number;
@@ -101,11 +110,13 @@ export class UpdateDoctorAccountDto extends UpdateUserAccountDto {
 export class UpdatePatientAccountDto extends UpdateUserAccountDto {
   @ApiProperty({
     required: false,
+    description: 'Insurance number',
   })
   @IsOptional()
   insuranceNumber: string;
 
   @ApiProperty({
+    description: 'Occupation',
     required: false,
   })
   @IsOptional()
@@ -114,7 +125,7 @@ export class UpdatePatientAccountDto extends UpdateUserAccountDto {
 
 export class UpdatePasswordDto {
   @ApiProperty({
-    description: 'Patient account password',
+    description: 'Old account password',
     minLength: PROPERTY.PASSWORD.MIN_LENGTH,
     maxLength: PROPERTY.PASSWORD.MAX_LENGTH,
   })
@@ -123,7 +134,7 @@ export class UpdatePasswordDto {
   oldPassword: string;
 
   @ApiProperty({
-    description: 'Patient account password',
+    description: 'New account password',
     minLength: PROPERTY.PASSWORD.MIN_LENGTH,
     maxLength: PROPERTY.PASSWORD.MAX_LENGTH,
   })

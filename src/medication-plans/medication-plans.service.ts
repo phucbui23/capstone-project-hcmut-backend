@@ -8,7 +8,10 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 import * as firebaseStorage from 'firebase/storage';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getDateAndTime } from 'src/utils/date';
-import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
+import {
+  CreateLocalMedicationPlanDto,
+  CreateMedicationPlanDto,
+} from './dto/create-medication-plan.dto';
 
 export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
   reminderPlans: {
@@ -75,7 +78,6 @@ export class MedicationPlansService {
     name,
     patientId,
     reminderPlans,
-    localReminderPlans,
     doctorId,
     note,
   }: CreateMedicationPlanDto) {
@@ -248,8 +250,7 @@ export class MedicationPlansService {
                     startDate,
                     endDate,
                     note,
-                    medication: { connect: { id: medicationId } }, // TODO: if have medicationId
-                    // localMedicationName: localMedicationName, TODO: if have localMedicationName
+                    medication: { connect: { id: medicationId } },
                     stock: totalStock,
                     reminderPlanTimes: {
                       create: createdReminderPlanTimes,
@@ -259,6 +260,22 @@ export class MedicationPlansService {
               }),
             }
           : undefined,
+      },
+      include: medicationPlanIncludeFields,
+    });
+  }
+
+  async createLocalOne({
+    patientId,
+    name,
+    localReminderPlans,
+    note,
+  }: CreateLocalMedicationPlanDto) {
+    return await this.prismaSerivce.medicationPlan.create({
+      data: {
+        name,
+        note,
+        patientAccount: { connect: { userAccountId: patientId } },
         localReminderPlans: localReminderPlans
           ? {
               create: localReminderPlans.map((localReminderPlan) => {

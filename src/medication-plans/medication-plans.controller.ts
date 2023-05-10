@@ -29,11 +29,21 @@ import { PAGINATION } from 'src/constant';
 import { DoctorManagesPatientsService } from 'src/doctor-manages-patients/doctor-manages-patients.service';
 import { Roles } from 'src/guard/roles.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
+import {
+  CreateLocalMedicationPlanDto,
+  CreateMedicationPlanDto,
+} from './dto/create-medication-plan.dto';
 import { MedicationPlansService } from './medication-plans.service';
 
 export class CheckInteractionDto {
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Medication Id list',
+    minItems: 2,
+    type: 'array',
+    items: {
+      type: 'number',
+    },
+  })
   @IsNotEmpty()
   @ArrayMinSize(2)
   medicationIdList: number[];
@@ -306,7 +316,7 @@ export class MedicationPlansController {
   async addLocalMed(
     @Param('patientCode') patientCode: string,
     @Body()
-    createDto: CreateMedicationPlanDto,
+    createDto: CreateLocalMedicationPlanDto,
   ) {
     try {
       const { localReminderPlans, patientId } = createDto;
@@ -337,7 +347,7 @@ export class MedicationPlansController {
           medicationPlan.roomId,
         );
       }
-      const medicationPlan = await this.medicationPlansService.createOne(
+      const medicationPlan = await this.medicationPlansService.createLocalOne(
         createDto,
       );
 

@@ -1,13 +1,15 @@
 import { Body, Controller, Delete, Get, Param } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiProperty, ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '@prisma/client';
 import { IsNotEmpty } from 'class-validator';
 import { Roles } from 'src/guard/roles.guard';
-import { SkipAuth } from 'src/guard/skip-auth.guard';
 import { HospitalAdminsService } from './hospital-admins.service';
 
 export class SystemReportDto {
+  @ApiProperty({
+    description: 'Hospital id',
+  })
   @IsNotEmpty()
   hospitalId: number;
 }

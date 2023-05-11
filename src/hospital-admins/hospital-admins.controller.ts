@@ -1,12 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { ApiProperty, ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '@prisma/client';
 import { IsNotEmpty } from 'class-validator';
 import { Roles } from 'src/guard/roles.guard';
-import { HospitalAdminsService } from './hospital-admins.service';
-import { SkipAuth } from 'src/guard/skip-auth.guard';
 import { firebaseActivation } from './constants';
+import { HospitalAdminsService } from './hospital-admins.service';
 
 export class SystemReportDto {
   @ApiProperty({
@@ -21,9 +28,9 @@ export class HospitalAdminsController {
   constructor(private readonly hospitalAdminsService: HospitalAdminsService) {}
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
-  @Get('report')
-  async systemReport(@Body() systemReportDto: SystemReportDto) {
-    return await this.hospitalAdminsService.getSystemReport(systemReportDto);
+  @Get('report/:hospitalId')
+  async systemReport(@Param('hospitalId', ParseIntPipe) hospitalId: number) {
+    return await this.hospitalAdminsService.getSystemReport(hospitalId);
   }
 
   @Roles(UserRole.ADMIN)

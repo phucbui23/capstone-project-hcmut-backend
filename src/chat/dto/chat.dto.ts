@@ -30,7 +30,23 @@ export class SendMsgDto {
   })
   @IsString()
   @IsNotEmpty()
-  senderId: string;
+  senderCode: string;
+
+  @ApiProperty({
+    description: 'Room id',
+  })
+  @IsString()
+  @IsNotEmpty()
+  roomId: string;
+}
+
+export class SendImgMsgDto {
+  @ApiProperty({
+    description: 'Sender user code',
+  })
+  @IsString()
+  @IsNotEmpty()
+  senderCode: string;
 
   @ApiProperty({
     description: 'Room id',

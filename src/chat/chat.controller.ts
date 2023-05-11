@@ -2,17 +2,27 @@ import {
   BadRequestException,
   Body,
   Controller,
+  FileTypeValidator,
   Get,
   HttpStatus,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
+import { AttachmentsService } from 'src/attachments/attachments.service';
+import { IMAGE_MAX_SIZE } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChatService } from './chat.service';
-import { InitConversationDto, SendMsgDto } from './dto/chat.dto';
+import { InitConversationDto, SendImgMsgDto, SendMsgDto } from './dto/chat.dto';
 
 @ApiTags('chat')
 @Controller('chat')
@@ -20,6 +30,7 @@ export class ChatController {
   constructor(
     private readonly chatService: ChatService,
     private readonly prismaService: PrismaService,
+    private readonly attachmentsService: AttachmentsService,
   ) {}
 
   @Post('conversation/init')
@@ -68,8 +79,8 @@ export class ChatController {
 
       await this.sendMsg({
         content:
-          'A new conversation is initiate between you and your healthcare professional',
-        senderId: 'System',
+          'A new conversation is initiated between you and your healthcare professional',
+        senderCode: 'System',
         roomId: roomId,
       });
 
@@ -90,8 +101,45 @@ export class ChatController {
     UserRole.PATIENT,
   )
   async sendMsg(@Body() sendMsgDto: SendMsgDto) {
-    const { content, senderId, roomId } = sendMsgDto;
-    return await this.chatService.sendMsg(content, senderId, roomId);
+    const { content, senderCode, roomId } = sendMsgDto;
+    return await this.chatService.sendMsg(content, senderCode, roomId);
+  }
+
+  @Post('send/img')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @UseInterceptors(FileInterceptor('file'))
+  async sendImg(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: IMAGE_MAX_SIZE }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body('data') data: any,
+  ) {
+    const jsonField = JSON.parse(data);
+    const sendImgMsgDto = plainToClass(SendImgMsgDto, jsonField);
+    const errors = await validate(sendImgMsgDto);
+
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
+    }
+    //upload file => get url
+    const imgUrl = await this.attachmentsService.uploadImage(file);
+    // send url as content
+    return await this.chatService.sendMsg(
+      imgUrl.downloadUrl,
+      sendImgMsgDto.senderCode,
+      sendImgMsgDto.roomId,
+    );
   }
 
   @Get('conversations/:userCode')

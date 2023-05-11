@@ -94,9 +94,9 @@ export class ChatService {
     return { roomId: roomId };
   }
 
-  async sendMsg(content: string, senderId: string, roomId: string) {
+  async sendMsg(content: string, senderCode: string, roomId: string) {
     const user = await this.prismaService.userAccount.findUnique({
-      where: { code: senderId },
+      where: { code: senderCode },
     });
     const senderName = `${user.firstName}` + ' ' + `${user.lastName}`;
     const timestamp = new Date().toISOString();
@@ -104,7 +104,7 @@ export class ChatService {
       roomId: roomId,
       content: content,
       sender: senderName,
-      senderId: senderId,
+      senderCode: senderCode,
       senAt: timestamp,
     };
 
@@ -127,7 +127,7 @@ export class ChatService {
       roomId: roomId,
       content: content,
       sender: senderName,
-      senderId: senderId,
+      senderCode: senderCode,
       sentAt: timestamp,
     };
   }

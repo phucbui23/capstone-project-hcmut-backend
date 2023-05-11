@@ -17,7 +17,7 @@ export class AttachmentsService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  async uploadImage(file: Express.Multer.File, userAccountId: number) {
+  async uploadProfile(file: Express.Multer.File, userAccountId: number) {
     try {
       const fileRef = `images/${file.originalname + ' ' + Date.now()}`;
 
@@ -96,6 +96,36 @@ export class AttachmentsService {
           photoUrl: downloadUrl,
         },
       );
+
+      return {
+        message: 'Image upload sucessfully!',
+        name: file.originalname,
+        type: file.mimetype,
+        downloadUrl: downloadUrl,
+      };
+    } catch (error) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: error.message,
+      });
+    }
+  }
+
+  async uploadImage(file: Express.Multer.File) {
+    try {
+      const fileRef = `chat_images/${file.originalname + ' ' + Date.now()}`;
+
+      const imagesRef = ref(this.firebaseService.storage, fileRef);
+      const metadata = {
+        contentType: file.mimetype,
+      };
+
+      const snapshot = await uploadBytesResumable(
+        imagesRef,
+        file.buffer,
+        metadata,
+      );
+      const downloadUrl = await getDownloadURL(snapshot.ref);
 
       return {
         message: 'Image upload sucessfully!',

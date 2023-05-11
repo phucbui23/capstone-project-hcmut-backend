@@ -32,6 +32,7 @@ import { ReminderPlansModule } from './reminder-plans/reminder-plans.module';
 import { ResourcesModule } from './resources/resources.module';
 import { RolesModule } from './roles/roles.module';
 import { UserAccountsModule } from './user-accounts/user-accounts.module';
+import { AttachmentsService } from './attachments/attachments.service';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { UserAccountsModule } from './user-accounts/user-accounts.module';
       useClass: RolesGuard,
     },
     FirebaseService,
+    AttachmentsService
   ],
 })
 // export class AppModule {}

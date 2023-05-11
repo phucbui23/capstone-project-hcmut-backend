@@ -12,6 +12,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+import { PROFILE_IMAGE_MAX_SIZE } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { AttachmentsService } from './attachments.service';
 @ApiTags('attchments')
@@ -40,7 +41,7 @@ export class AttachmentsController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 1024000 }),
+          new MaxFileSizeValidator({ maxSize: PROFILE_IMAGE_MAX_SIZE }),
           new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
         ],
       }),
@@ -48,7 +49,7 @@ export class AttachmentsController {
     file: Express.Multer.File,
     @Param('userAccountId', ParseIntPipe) userAccountId: number,
   ) {
-    return await this.attachmentsService.uploadImage(file, userAccountId);
+    return await this.attachmentsService.uploadProfile(file, userAccountId);
   }
 
   // @Roles(UserRole.ADMIN)

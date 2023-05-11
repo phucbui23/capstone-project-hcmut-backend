@@ -18,3 +18,11 @@ export const hospitalAdminIncludeFields: Prisma.UserAccountInclude = {
     },
   },
 };
+
+export type firebaseActivation = {
+  code: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  role: 'DOCTOR' | 'HOSPITAL_ADMIN';
+};

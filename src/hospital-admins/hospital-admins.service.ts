@@ -5,10 +5,15 @@ import { MILLISECONDS_LAST_WEEK } from 'src/constant';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hospitalAdminIncludeFields } from './constants';
 import { SystemReportDto } from './hospital-admins.controller';
+import { FirebaseService } from 'src/firebase/firebase.service';
+import { collection, doc, setDoc } from 'firebase/firestore';
 
 @Injectable()
 export class HospitalAdminsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
   async createOne(
     firstName: string,
@@ -193,6 +198,31 @@ export class HospitalAdminsService {
       activeUsersWeekly,
       newlyRegisteredPatients,
     };
+  }
+
+  async activateFirebase(
+    firstName: string,
+    lastName: string,
+    username: string,
+    code: string,
+    role: 'DOCTOR' | 'HOSPITAL_ADMIN',
+  ) {
+    const displayName = `${firstName.trim()} ${lastName.trim()}`;
+    const userData = {
+      id: code,
+      displayName: displayName,
+      phoneNumber: '',
+      photoURL: '',
+      username: username,
+      rooms: [],
+      role: role,
+    };
+    const newUserRef = doc(
+      collection(this.firebaseService.firestoreRef, 'users'),
+      code,
+    );
+    await setDoc(newUserRef, userData);
+    return userData;
   }
 
   async deleteOne(where: Prisma.DoctorAccountWhereUniqueInput) {

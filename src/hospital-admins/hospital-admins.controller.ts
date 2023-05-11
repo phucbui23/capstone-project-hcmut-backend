@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiProperty, ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '@prisma/client';
 import { IsNotEmpty } from 'class-validator';
 import { Roles } from 'src/guard/roles.guard';
 import { HospitalAdminsService } from './hospital-admins.service';
+import { SkipAuth } from 'src/guard/skip-auth.guard';
+import { firebaseActivation } from './constants';
 
 export class SystemReportDto {
   @ApiProperty({
@@ -34,6 +36,18 @@ export class HospitalAdminsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.hospitalAdminsService.findOne({ userAccountId: +id });
+  }
+
+  @Roles(UserRole.HOSPITAL_ADMIN)
+  @Post('activateFirebase')
+  async activateFB(@Body() body: firebaseActivation) {
+    return await this.hospitalAdminsService.activateFirebase(
+      body.firstName,
+      body.lastName,
+      body.username,
+      body.code,
+      body.role,
+    );
   }
 
   @Roles(UserRole.ADMIN)

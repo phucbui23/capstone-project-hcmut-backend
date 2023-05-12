@@ -1,9 +1,9 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role, UserRole } from '@prisma/client';
 
-import { RolesService } from './roles.service';
 import { Roles } from 'src/guard/roles.guard';
+import { RolesService } from './roles.service';
 
 @ApiTags('roles')
 @Controller('roles')
@@ -18,7 +18,7 @@ export class RolesController {
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Role> {
-    return await this.rolesService.findOne({ id: +id });
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Role> {
+    return await this.rolesService.findOne({ id });
   }
 }

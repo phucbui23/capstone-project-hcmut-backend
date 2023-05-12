@@ -41,8 +41,8 @@ export class HospitalAdminsController {
 
   @Roles(UserRole.ADMIN)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.hospitalAdminsService.findOne({ userAccountId: +id });
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.hospitalAdminsService.findOne({ userAccountId: id });
   }
 
   @Roles(UserRole.HOSPITAL_ADMIN)
@@ -59,7 +59,7 @@ export class HospitalAdminsController {
 
   @Roles(UserRole.ADMIN)
   @Delete(':id')
-  async deleteOne(@Param('id') id: string) {
-    return this.hospitalAdminsService.deleteOne({ operatorAccountId: +id });
+  async deleteOne(@Param('id', ParseIntPipe) id: number) {
+    return this.hospitalAdminsService.deleteOne({ operatorAccountId: id });
   }
 }

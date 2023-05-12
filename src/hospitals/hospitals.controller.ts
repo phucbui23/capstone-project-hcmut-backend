@@ -78,8 +78,8 @@ export class HospitalsController {
 
   @Roles(UserRole.ADMIN)
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Hospital> {
-    return await this.hospitalsService.findOne({ id: +id });
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Hospital> {
+    return await this.hospitalsService.findOne({ id });
   }
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)

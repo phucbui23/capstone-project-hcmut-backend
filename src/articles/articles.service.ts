@@ -140,7 +140,12 @@ export class ArticlesService {
   }
 
   async findOne(id: number) {
-    return `This action returns a #${id} article`;
+    return await this.prismaService.article.findUnique({
+      where: {
+        id,
+      },
+      include: articleIncludeFields,
+    });
   }
 
   async recommendArticles(patientAccountId: number) {
@@ -191,11 +196,27 @@ export class ArticlesService {
   }
 
   async update(id: number, updateArticleDto: UpdateArticleDto) {
-    return `This action updates a #${id} article`;
+    const { content, hospitalId, tags, title } = updateArticleDto;
+    return await this.prismaService.article.update({
+      where: {
+        id,
+      },
+      data: {
+        content,
+        hospitalId,
+        title,
+      },
+      include: articleIncludeFields,
+    });
   }
 
   async remove(id: number) {
-    return `This action removes a #${id} article`;
+    await this.prismaService.article.delete({
+      where: {
+        id,
+      },
+    });
+    return 'Delete successfully';
   }
 
   async saveArticle(articleId: number, patientAccountId: number) {

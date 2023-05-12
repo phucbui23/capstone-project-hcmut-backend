@@ -1,9 +1,9 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Resource, UserRole } from '@prisma/client';
 
-import { ResourcesService } from './resources.service';
 import { Roles } from 'src/guard/roles.guard';
+import { ResourcesService } from './resources.service';
 
 @ApiTags('resources')
 @Controller('resources')
@@ -18,7 +18,7 @@ export class ResourcesController {
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Resource> {
-    return await this.resourcesService.findOne({ id: +id });
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Resource> {
+    return await this.resourcesService.findOne({ id });
   }
 }

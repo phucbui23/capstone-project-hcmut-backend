@@ -142,8 +142,8 @@ export class ArticlesController {
     UserRole.PATIENT,
   )
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.articlesService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.articlesService.findOne(id);
   }
 
   @Roles(UserRole.ADMIN, UserRole.PATIENT)
@@ -175,15 +175,15 @@ export class ArticlesController {
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Patch(':id')
   async updateArticle(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateArticleDto: UpdateArticleDto,
   ) {
-    return this.articlesService.update(+id, updateArticleDto);
+    return this.articlesService.update(id, updateArticleDto);
   }
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
-  async removeArticle(@Param('id') id: string) {
-    return this.articlesService.remove(+id);
+  async removeArticle(@Param('id', ParseIntPipe) id: number) {
+    return this.articlesService.remove(id);
   }
 }

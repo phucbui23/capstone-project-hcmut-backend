@@ -82,6 +82,14 @@ export class MedicationPlansService {
     return result;
   }
 
+  async patientFindAll(patientId: number) {
+    return await this.prismaSerivce.medicationPlan.findMany({
+      where: {
+        patientAccountId: patientId,
+      },
+      include: medicationPlanIncludeFields,
+    });
+  }
   async findOne(where: Prisma.MedicationPlanWhereUniqueInput) {
     return await this.prismaSerivce.medicationPlan.findUnique({
       where,

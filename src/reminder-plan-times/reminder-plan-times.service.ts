@@ -12,6 +12,7 @@ import { ReminderPlansService } from 'src/reminder-plans/reminder-plans.service'
 import {
   localReminderPlanTimeIncludeFields,
   reminderPlanTimeIncludeFields,
+  reminderPlanTimeSelectFields,
 } from './constants';
 
 @Injectable()
@@ -560,5 +561,28 @@ export class ReminderPlanTimesService {
     });
 
     return 'Deleted';
+  }
+
+  // TODO: Unnest object
+  async findAll(where: Prisma.ReminderPlanTimeWhereInput) {
+    const reminderPlanTimes =
+      await this.prismaSerivce.reminderPlanTime.findMany({
+        where,
+        select: reminderPlanTimeSelectFields,
+      });
+
+    const results = reminderPlanTimes.map((reminderPlanTime) => {
+      const { reminderPlan, ...restReminderPlanTime } = reminderPlanTime;
+      const { medication, ...restReminderPlan } = reminderPlan;
+      const { name } = medication;
+
+      return {
+        ...restReminderPlanTime,
+        ...restReminderPlan,
+        name,
+      };
+    });
+
+    return results;
   }
 }

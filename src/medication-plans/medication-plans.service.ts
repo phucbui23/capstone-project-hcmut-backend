@@ -13,6 +13,21 @@ import {
   CreateMedicationPlanDto,
 } from './dto/create-medication-plan.dto';
 
+export const localReport: Prisma.MedicationPlanSelect = {
+  id: true,
+  name: true,
+  completed: true,
+  countTotal: true,
+  countTaken: true,
+  countSkipped: true,
+  createdAt: true,
+  localReminderPlans: {
+    select: {
+      stock: true,
+      localMedicationName: true,
+    },
+  },
+};
 export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
   reminderPlans: {
     include: {
@@ -557,16 +572,93 @@ export class MedicationPlansService {
     );
   }
 
-  async getMedicationPlanReport(patientCode: string) {
-    const ret = await this.prismaSerivce.medicationPlan.findFirst({
+  async getPatientReport(where: Prisma.MedicationPlanWhereUniqueInput) {
+    const planedByDoctor = await this.prismaSerivce.medicationPlan.findUnique({
       where: {
-        patientAccount: {
-          userAccount: {
-            code: patientCode,
+        id: where.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        completed: true,
+        countTotal: true,
+        countTaken: true,
+        countSkipped: true,
+        createdAt: true,
+        reminderPlans: {
+          select: {
+            stock: true,
+            medication: {
+              select: {
+                name: true,
+                code: true,
+                id: true,
+              },
+            },
+            reminderPlanTimes: {
+              select: {
+                dosage: true,
+                isSkipped: true,
+                isTaken: true,
+                sentAt: true,
+              },
+            },
           },
         },
       },
     });
+    return planedByDoctor;
+    const byDoctor = [];
+    planedByDoctor.reminderPlans.forEach((plan) => {
+      byDoctor.push({
+        stock: plan.stock,
+        medicationName: plan.medication.name,
+        medicationCode: plan.medication.code,
+        medicationId: plan.medication.id,
+        reminderPlanTimes: plan.reminderPlanTimes.forEach((reminderTime) => {}),
+      });
+    });
+
+    return {
+      id: planedByDoctor.id,
+      name: planedByDoctor.name,
+      completed: planedByDoctor.completed,
+      countTotal: planedByDoctor.countTotal,
+      countTaken: planedByDoctor.countTaken,
+      countSkipped: planedByDoctor.countSkipped,
+      createdAt: planedByDoctor.createdAt,
+      reminderPlans: byDoctor,
+    };
+  }
+
+  async getLocalPatientReport(where: Prisma.MedicationPlanWhereUniqueInput) {
+    const local = await this.prismaSerivce.medicationPlan.findUnique({
+      where: {
+        id: where.id,
+      },
+      select: localReport,
+    });
+
+    return local;
+
+    const localReminderPlan = [];
+    local.localReminderPlans.forEach((plan) => {
+      localReminderPlan.push({
+        stock: plan.stock,
+        localMedcationName: plan.localMedicationName,
+      });
+    });
+
+    return {
+      id: local.id,
+      name: local.name,
+      completed: local.completed,
+      countTotal: local.countTotal,
+      countTaken: local.countTaken,
+      countSkipped: local.countSkipped,
+      createdAt: local.createdAt,
+      localReminderPlans: localReminderPlan,
+    };
   }
 
   async uploadMedicationPlanBill(

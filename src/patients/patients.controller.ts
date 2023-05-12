@@ -60,7 +60,7 @@ export class PatientsController {
   }
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
-  @Get(':phoneNumber')
+  @Get('byphone/:phoneNumber')
   async findOneByPhoneNum(@Param('phoneNumber') phoneNumber: string) {
     return await this.patientsService.findOne({
       phoneNumber,

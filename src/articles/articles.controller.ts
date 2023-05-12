@@ -28,11 +28,15 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
 export class SaveArticleDto {
-  @ApiProperty({})
+  @ApiProperty({
+    description: "Article's id",
+  })
   @IsNotEmpty()
   articleId: number;
 
-  @ApiProperty({})
+  @ApiProperty({
+    description: "Patient's id",
+  })
   @IsNotEmpty()
   patientAccountId: number;
 }
@@ -142,7 +146,7 @@ export class ArticlesController {
     return await this.articlesService.findOne(+id);
   }
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
   @Get('recommend/:patientAccountId')
   async recommendArticles(
     @Param('patientAccountId', ParseIntPipe) patientAccountId: number,
@@ -150,7 +154,7 @@ export class ArticlesController {
     return await this.articlesService.recommendArticles(patientAccountId);
   }
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
   @Patch('save')
   async saveArticle(@Body() saveArticleDto: SaveArticleDto) {
     return this.articlesService.saveArticle(
@@ -159,7 +163,7 @@ export class ArticlesController {
     );
   }
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
   @Patch('unsave')
   async unsaveArticle(@Body() saveArticleDto: SaveArticleDto) {
     return this.articlesService.unsaveArticle(

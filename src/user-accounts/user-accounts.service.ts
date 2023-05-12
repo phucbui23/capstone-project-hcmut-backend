@@ -167,7 +167,6 @@ export class UserAccountsService {
       nationality,
       socialSecurityNumber,
       phoneNumber,
-      username,
     } = data;
 
     return await this.prismaService.userAccount.update({
@@ -182,7 +181,7 @@ export class UserAccountsService {
         nationality,
         socialSecurityNumber,
         operatorAccount: {
-          update: { phoneNumber, username },
+          update: { phoneNumber },
         },
       },
       include: UserAccountIncludeFields,

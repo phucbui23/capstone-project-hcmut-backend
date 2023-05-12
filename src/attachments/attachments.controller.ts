@@ -1,14 +1,10 @@
 import {
-  Body,
   Controller,
-  Delete,
   FileTypeValidator,
-  Get,
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
   ParseIntPipe,
-  Patch,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -16,9 +12,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+import { PROFILE_IMAGE_MAX_SIZE } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { AttachmentsService } from './attachments.service';
-import { UpdateAttachmentDto } from './dto/update-attachment.dto';
 @ApiTags('attchments')
 @Controller('attachments')
 export class AttachmentsController {
@@ -45,7 +41,7 @@ export class AttachmentsController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 1024000 }),
+          new MaxFileSizeValidator({ maxSize: PROFILE_IMAGE_MAX_SIZE }),
           new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
         ],
       }),
@@ -53,33 +49,33 @@ export class AttachmentsController {
     file: Express.Multer.File,
     @Param('userAccountId', ParseIntPipe) userAccountId: number,
   ) {
-    return await this.attachmentsService.uploadImage(file, userAccountId);
+    return await this.attachmentsService.uploadProfile(file, userAccountId);
   }
 
-  @Roles(UserRole.ADMIN)
-  @Get()
-  findAll() {
-    return this.attachmentsService.findAll();
-  }
+  // @Roles(UserRole.ADMIN)
+  // @Get()
+  // findAll() {
+  //   return this.attachmentsService.findAll();
+  // }
 
-  @Roles(UserRole.ADMIN)
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.attachmentsService.findOne(+id);
-  }
+  // @Roles(UserRole.ADMIN)
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.attachmentsService.findOne(+id);
+  // }
 
-  @Roles(UserRole.ADMIN)
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateAttachmentDto: UpdateAttachmentDto,
-  ) {
-    return this.attachmentsService.update(+id, updateAttachmentDto);
-  }
+  // @Roles(UserRole.ADMIN)
+  // @Patch(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateAttachmentDto: UpdateAttachmentDto,
+  // ) {
+  //   return this.attachmentsService.update(+id, updateAttachmentDto);
+  // }
 
-  @Roles(UserRole.ADMIN)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.attachmentsService.remove(+id);
-  }
+  // @Roles(UserRole.ADMIN)
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.attachmentsService.remove(+id);
+  // }
 }

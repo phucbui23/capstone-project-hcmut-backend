@@ -29,11 +29,21 @@ import { PAGINATION } from 'src/constant';
 import { DoctorManagesPatientsService } from 'src/doctor-manages-patients/doctor-manages-patients.service';
 import { Roles } from 'src/guard/roles.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateMedicationPlanDto } from './dto/create-medication-plan.dto';
+import {
+  CreateLocalMedicationPlanDto,
+  CreateMedicationPlanDto,
+} from './dto/create-medication-plan.dto';
 import { MedicationPlansService } from './medication-plans.service';
 
 export class CheckInteractionDto {
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Medication Id list',
+    minItems: 2,
+    type: 'array',
+    items: {
+      type: 'number',
+    },
+  })
   @IsNotEmpty()
   @ArrayMinSize(2)
   medicationIdList: number[];
@@ -48,48 +58,6 @@ export class MedicationPlansController {
     private readonly chatService: ChatService,
     private readonly prismaService: PrismaService,
   ) {}
-
-  @Roles(
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.HOSPITAL_ADMIN,
-    UserRole.PATIENT,
-  )
-  @Get('check-interaction')
-  async checkInteraction(@Body() data: CheckInteractionDto) {
-    const medicationCodeList = [];
-    for (const medicationId of data.medicationIdList) {
-      const medication = await this.prismaService.medication.findUnique({
-        where: { id: medicationId },
-      });
-      if (!medication) {
-        throw new BadRequestException({
-          status: HttpStatus.BAD_REQUEST,
-          message: `Error with finding medication id ${medicationId}`,
-        });
-      }
-      medicationCodeList.push(medication.code);
-    }
-
-    const reactions = await this.medicationPlansService.checkInteractions(
-      medicationCodeList,
-    );
-
-    return { reactions };
-  }
-
-  @Roles(
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.HOSPITAL_ADMIN,
-    UserRole.PATIENT,
-  )
-  @Get('report/:patientCode')
-  async medicationPlanReport(@Param('patientCode') patientCode: string) {
-    return await this.medicationPlansService.getMedicationPlanReport(
-      patientCode,
-    );
-  }
 
   @ApiQuery({
     name: 'patientId',
@@ -156,6 +124,60 @@ export class MedicationPlansController {
     });
   }
 
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @Get('report/:medicationPlanId')
+  async medicationPlanReport(
+    @Param('medicationPlanId', ParseIntPipe) medicationPlanId: number,
+  ) {
+    return await this.medicationPlansService.getPatientReport({
+      id: medicationPlanId,
+    });
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
+  @Get('local/report/:medicationPlanId')
+  async localMedicationPlanReport(
+    @Param('medicationPlanId', ParseIntPipe) medicationPlanId: number,
+  ) {
+    return await this.medicationPlansService.getLocalPatientReport({
+      id: medicationPlanId,
+    });
+  }
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @Get('check-interaction')
+  async checkInteraction(@Body() data: CheckInteractionDto) {
+    const medicationCodeList = [];
+    for (const medicationId of data.medicationIdList) {
+      const medication = await this.prismaService.medication.findUnique({
+        where: { id: medicationId },
+      });
+      if (!medication) {
+        throw new BadRequestException({
+          status: HttpStatus.BAD_REQUEST,
+          message: `Error with finding medication id ${medicationId}`,
+        });
+      }
+      medicationCodeList.push(medication.code);
+    }
+
+    const reactions = await this.medicationPlansService.checkInteractions(
+      medicationCodeList,
+    );
+
+    return { reactions };
+  }
+
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get('associated-med-plans/:doctorCode')
   async getAssociatedMedicationPlans(
@@ -186,12 +208,7 @@ export class MedicationPlansController {
     return await this.medicationPlansService.findOne({ id });
   }
 
-  @Roles(
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.HOSPITAL_ADMIN,
-    UserRole.PATIENT,
-  )
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Post('/upload/:medicationPlanId')
   @UseInterceptors(FileInterceptor('file'))
   async uploadBill(
@@ -301,12 +318,12 @@ export class MedicationPlansController {
     }
   }
 
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT)
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
   @Post('local/:patientCode')
   async addLocalMed(
     @Param('patientCode') patientCode: string,
     @Body()
-    createDto: CreateMedicationPlanDto,
+    createDto: CreateLocalMedicationPlanDto,
   ) {
     try {
       const { localReminderPlans, patientId } = createDto;
@@ -337,7 +354,7 @@ export class MedicationPlansController {
           medicationPlan.roomId,
         );
       }
-      const medicationPlan = await this.medicationPlansService.createOne(
+      const medicationPlan = await this.medicationPlansService.createLocalOne(
         createDto,
       );
 

@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { MILLISECONDS_LAST_WEEK } from 'src/constant';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hospitalAdminIncludeFields } from './constants';
-import { SystemReportDto } from './hospital-admins.controller';
 
 @Injectable()
 export class HospitalAdminsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
   async createOne(
     firstName: string,
@@ -64,11 +68,11 @@ export class HospitalAdminsService {
     });
   }
 
-  async getSystemReport(systemReportDto: SystemReportDto) {
+  async getSystemReport(hospitalId: number) {
     const doctorsAvailable = await this.prismaService.doctorAccount.count({
       where: {
         operatorAccount: {
-          hospitalId: systemReportDto.hospitalId,
+          hospitalId,
         },
       },
     });
@@ -79,7 +83,7 @@ export class HospitalAdminsService {
           every: {
             doctorAccount: {
               operatorAccount: {
-                hospitalId: systemReportDto.hospitalId,
+                hospitalId,
               },
             },
           },
@@ -91,7 +95,7 @@ export class HospitalAdminsService {
 
     const articlesAvailable = await this.prismaService.article.count({
       where: {
-        hospitalId: systemReportDto.hospitalId,
+        hospitalId,
       },
     });
 
@@ -130,16 +134,18 @@ export class HospitalAdminsService {
       const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
       daysOfWeek.push(date.toISOString().split('T')[0]);
     }
-
     // Loop through the past 7 days and find the corresponding count in the result array
-    const activeUsersWeekly = daysOfWeek.map((day) => {
-      const found = lastActiveCounts.find((obj) => obj.lastActive === day);
-      if (found) {
-        return { lastActive: found.lastActive, count: found._count.lastActive };
-      } else {
-        return { lastActive: day, count: 0 };
+    const activeUsersWeekly = {};
+    for (const date of daysOfWeek) {
+      activeUsersWeekly[date] = 0;
+    }
+
+    for (const item of lastActiveCounts) {
+      const date = item.lastActive.toISOString().split('T')[0];
+      if (activeUsersWeekly[date] !== undefined) {
+        activeUsersWeekly[date] += item._count.lastActive;
       }
-    });
+    }
 
     const newlyRegisteredPatients =
       await this.prismaService.doctorManagesPatient.findMany({
@@ -193,6 +199,31 @@ export class HospitalAdminsService {
       activeUsersWeekly,
       newlyRegisteredPatients,
     };
+  }
+
+  async activateFirebase(
+    firstName: string,
+    lastName: string,
+    username: string,
+    code: string,
+    role: 'DOCTOR' | 'HOSPITAL_ADMIN',
+  ) {
+    const displayName = `${firstName.trim()} ${lastName.trim()}`;
+    const userData = {
+      id: code,
+      displayName: displayName,
+      phoneNumber: '',
+      photoURL: '',
+      username: username,
+      rooms: [],
+      role: role,
+    };
+    const newUserRef = doc(
+      collection(this.firebaseService.firestoreRef, 'users'),
+      code,
+    );
+    await setDoc(newUserRef, userData);
+    return userData;
   }
 
   async deleteOne(where: Prisma.DoctorAccountWhereUniqueInput) {

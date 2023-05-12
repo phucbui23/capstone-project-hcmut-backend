@@ -123,7 +123,8 @@ export class DoctorsService {
     const deletedOperator = await this.prismaService.operatorAccount.delete({
       where: { userAccountId: deletedDoctor.operatorAccountId },
     });
-    const deletedUser = await this.prismaService.userAccount.delete({
+    
+    await this.prismaService.userAccount.delete({
       where: { id: deletedOperator.userAccountId },
     });
 

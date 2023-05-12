@@ -17,6 +17,7 @@ import {
 
 class ReminderPlanTime {
   @ApiProperty({
+    description: 'Num of pills to take',
     default: 1,
   })
   @IsNotEmpty()
@@ -24,12 +25,14 @@ class ReminderPlanTime {
   dosage: number = 1;
 
   @ApiProperty({
+    description: 'Time of reminder plan',
     example: '18:00',
   })
   @IsNotEmpty()
   time: string;
 
   @ApiProperty({
+    description: 'Sent time',
     required: false,
   })
   @Type(() => Date)
@@ -40,6 +43,7 @@ class ReminderPlanTime {
 
 class LocalReminderPlan {
   @ApiProperty({
+    description: 'Reminder plan interval',
     default: 1,
     required: false,
   })
@@ -50,6 +54,8 @@ class LocalReminderPlan {
   interval: number = 1;
 
   @ApiProperty({
+    description:
+      'Selected days for reminder plan (Sunday - 0, Monday - 1, ...)',
     default: [Array.from(Array(7).keys())],
     required: false,
   })
@@ -60,30 +66,37 @@ class LocalReminderPlan {
 
   @ApiProperty({
     enum: Frequency,
+    description: 'Frequency of reminder plan',
   })
   @IsNotEmpty()
   @IsEnum(Frequency)
   frequency: Frequency;
 
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Reminder plan start date',
+  })
   @IsNotEmpty()
   @Type(() => Date)
   @IsDate()
   startDate: Date;
 
   @ApiProperty({
+    description: 'Reminder plan note',
     required: false,
   })
   @IsOptional()
   note?: string;
 
   @ApiProperty({
+    description: 'Name of outside drug',
     required: true,
+    default: 'outside drug',
   })
   @IsNotEmpty()
   localMedicationName: string;
 
   @ApiProperty({
+    description: 'Total num of pills',
     required: false,
   })
   @IsOptional()
@@ -91,6 +104,7 @@ class LocalReminderPlan {
 
   @ApiProperty({
     required: false,
+    description: 'Reminder plan end date',
   })
   @Type(() => Date)
   @IsOptional()
@@ -99,6 +113,7 @@ class LocalReminderPlan {
 
   @ApiProperty({
     type: [ReminderPlanTime],
+    description: 'Time to send reminder',
   })
   @IsNotEmpty()
   @IsArray()
@@ -112,6 +127,7 @@ class ReminderPlan {
   @ApiProperty({
     default: 1,
     required: false,
+    description: 'Reminder plan interval',
   })
   @IsNumber()
   @Min(1)
@@ -122,6 +138,8 @@ class ReminderPlan {
   @ApiProperty({
     default: [Array.from(Array(7).keys())],
     required: false,
+    description:
+      'Selected days for reminder plan (Sunday - 0, Monday - 1, ...)',
   })
   @IsArray()
   @ArrayMinSize(1)
@@ -130,41 +148,43 @@ class ReminderPlan {
 
   @ApiProperty({
     enum: Frequency,
+    description: 'Frequency of reminder plan',
   })
   @IsNotEmpty()
   @IsEnum(Frequency)
   frequency: Frequency;
 
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Reminder plan start date',
+  })
   @IsNotEmpty()
   @Type(() => Date)
   @IsDate()
   startDate: Date;
 
-  @ApiProperty({})
-  @IsOptional() // TODO: change medicationId to optional
+  @ApiProperty({
+    description: 'Medication id in database',
+  })
+  @IsOptional()
   medicationId: number;
 
   @ApiProperty({
     required: false,
+    description: 'Reminder plan note',
   })
   @IsOptional()
   note?: string;
 
   @ApiProperty({
     required: false,
-  })
-  @IsOptional()
-  localMedicationName?: string;
-
-  @ApiProperty({
-    required: false,
+    description: 'Total num of pills',
   })
   @IsOptional()
   stock?: number;
 
   @ApiProperty({
     required: false,
+    description: 'Reminder plan end date',
   })
   @Type(() => Date)
   @IsOptional()
@@ -173,6 +193,7 @@ class ReminderPlan {
 
   @ApiProperty({
     type: [ReminderPlanTime],
+    description: 'Time to send reminder',
   })
   @IsNotEmpty()
   @IsArray()
@@ -183,16 +204,23 @@ class ReminderPlan {
 }
 
 export class CreateMedicationPlanDto {
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Patient id',
+  })
   @IsNotEmpty()
   patientId: number;
 
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Medication plan name',
+    default: 'medication plan name',
+  })
   @IsNotEmpty()
   name: string;
 
   @ApiProperty({
+    description: 'All reminder plan',
     type: [ReminderPlan],
+    required: false,
   })
   @IsOptional()
   @Type(() => ReminderPlan)
@@ -201,7 +229,37 @@ export class CreateMedicationPlanDto {
   reminderPlans: ReminderPlan[];
 
   @ApiProperty({
+    description: 'Medication plan note',
+    required: false,
+  })
+  @IsOptional()
+  note?: string;
+
+  @ApiProperty({
+    description: 'Id of doctor who prescribes',
+    required: false,
+  })
+  @IsOptional()
+  doctorId?: number;
+}
+
+export class CreateLocalMedicationPlanDto {
+  @ApiProperty({
+    description: 'Patient id',
+  })
+  @IsNotEmpty()
+  patientId: number;
+
+  @ApiProperty({
+    description: 'Medication plan name',
+  })
+  @IsNotEmpty()
+  name: string;
+
+  @ApiProperty({
+    description: 'All reminder plan',
     type: [LocalReminderPlan],
+    required: false,
   })
   @IsOptional()
   @Type(() => LocalReminderPlan)
@@ -216,8 +274,4 @@ export class CreateMedicationPlanDto {
   })
   @IsOptional()
   note?: string;
-
-  @ApiProperty({})
-  @IsOptional()
-  doctorId?: number;
 }

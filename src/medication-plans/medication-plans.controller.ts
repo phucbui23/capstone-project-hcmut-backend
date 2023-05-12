@@ -124,6 +124,22 @@ export class MedicationPlansController {
     });
   }
 
+  @ApiQuery({
+    name: 'patientId',
+    type: Number,
+    required: false,
+  })
+  @Get('patient-find-all')
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
+  async patientFindAll(
+    @Query('patientId', new DefaultValuePipe(-1), ParseIntPipe)
+    patientId: number,
+  ): Promise<MedicationPlan[]> {
+    return await this.medicationPlansService.patientFindAll(
+      patientId === -1 ? undefined : patientId,
+    );
+  }
+
   @Roles(
     UserRole.ADMIN,
     UserRole.DOCTOR,

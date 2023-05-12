@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -92,8 +93,8 @@ export class MedicationsController {
   })
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR)
-  async findOne(@Param('id') id: string) {
-    return await this.medicationsService.findOne({ id: +id });
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.medicationsService.findOne({ id });
   }
 
   @ApiParam({
@@ -105,12 +106,12 @@ export class MedicationsController {
   @Patch(':id')
   @Roles(UserRole.ADMIN)
   async updateOne(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() data: Prisma.MedicationUpdateInput,
   ) {
     return await this.medicationsService.updateOne({
       data,
-      where: { id: +id },
+      where: { id },
     });
   }
 
@@ -121,7 +122,7 @@ export class MedicationsController {
   })
   @Roles(UserRole.ADMIN)
   @Delete(':id')
-  async deleteOne(@Param('id') id: string) {
-    return await this.medicationsService.deleteOne({ id: +id });
+  async deleteOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.medicationsService.deleteOne({ id });
   }
 }

@@ -4,14 +4,15 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Query,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '@prisma/client';
+import { PAGINATION } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { DoctorsService } from './doctors.service';
-import { PAGINATION } from 'src/constant';
 
 @ApiTags('doctors')
 @Controller('doctors')
@@ -65,13 +66,13 @@ export class DoctorsController {
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.doctorsService.findOne({ userAccountId: +id });
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.doctorsService.findOne({ userAccountId: id });
   }
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
-  async deleteOne(@Param('id') id: string) {
-    return this.doctorsService.deleteOne({ operatorAccountId: +id });
+  async deleteOne(@Param('id', ParseIntPipe) id: number) {
+    return this.doctorsService.deleteOne({ operatorAccountId: id });
   }
 }

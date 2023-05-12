@@ -69,22 +69,22 @@ export class PatientsController {
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.patientsService.findOne({
-      userAccountId: +id,
+      userAccountId: id,
     });
   }
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
-  async deleteOne(@Param('id') id: string) {
-    return this.patientsService.deleteOne({ userAccountId: +id });
+  async deleteOne(@Param('id', ParseIntPipe) id: number) {
+    return this.patientsService.deleteOne({ userAccountId: id });
   }
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Patch(':id')
   async updateOne(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body()
     {
       address,
@@ -93,7 +93,7 @@ export class PatientsController {
     }: { insuranceNumber: string; email: string; address: string },
   ) {
     return await this.patientsService.updateOne({
-      where: { id: +id },
+      where: { id },
       data: {
         address,
         email,

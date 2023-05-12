@@ -173,8 +173,8 @@ export class UserAccountsController {
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.userAccountsService.remove(+id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    return this.userAccountsService.remove(id);
   }
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
@@ -191,7 +191,7 @@ export class UserAccountsController {
   @Patch('update-role/:id')
   async updateUserRole(
     @Param('id', ParseIntPipe) id: number,
-    @Body('newRole', ParseIntPipe) newRole: number,
+    @Body() { newRole }: { newRole: number },
   ) {
     const user = await this.findOne(id);
 

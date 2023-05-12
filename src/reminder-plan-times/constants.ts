@@ -25,7 +25,6 @@ export const reminderPlanTimeSelectFields = {
   time: true,
   reminderPlan: {
     select: {
-      localMedicationName: true,
       medication: {
         select: {
           name: true,

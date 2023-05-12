@@ -59,48 +59,6 @@ export class MedicationPlansController {
     private readonly prismaService: PrismaService,
   ) {}
 
-  @Roles(
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.HOSPITAL_ADMIN,
-    UserRole.PATIENT,
-  )
-  @Get('check-interaction')
-  async checkInteraction(@Body() data: CheckInteractionDto) {
-    const medicationCodeList = [];
-    for (const medicationId of data.medicationIdList) {
-      const medication = await this.prismaService.medication.findUnique({
-        where: { id: medicationId },
-      });
-      if (!medication) {
-        throw new BadRequestException({
-          status: HttpStatus.BAD_REQUEST,
-          message: `Error with finding medication id ${medicationId}`,
-        });
-      }
-      medicationCodeList.push(medication.code);
-    }
-
-    const reactions = await this.medicationPlansService.checkInteractions(
-      medicationCodeList,
-    );
-
-    return { reactions };
-  }
-
-  @Roles(
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.HOSPITAL_ADMIN,
-    UserRole.PATIENT,
-  )
-  @Get('report/:patientCode')
-  async medicationPlanReport(@Param('patientCode') patientCode: string) {
-    return await this.medicationPlansService.getMedicationPlanReport(
-      patientCode,
-    );
-  }
-
   @ApiQuery({
     name: 'patientId',
     type: Number,
@@ -164,6 +122,60 @@ export class MedicationPlansController {
         ],
       },
     });
+  }
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @Get('report/:medicationPlanId')
+  async medicationPlanReport(
+    @Param('medicationPlanId', ParseIntPipe) medicationPlanId: number,
+  ) {
+    return await this.medicationPlansService.getPatientReport({
+      id: medicationPlanId,
+    });
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
+  @Get('local/report/:medicationPlanId')
+  async localMedicationPlanReport(
+    @Param('medicationPlanId', ParseIntPipe) medicationPlanId: number,
+  ) {
+    return await this.medicationPlansService.getLocalPatientReport({
+      id: medicationPlanId,
+    });
+  }
+
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @Get('check-interaction')
+  async checkInteraction(@Body() data: CheckInteractionDto) {
+    const medicationCodeList = [];
+    for (const medicationId of data.medicationIdList) {
+      const medication = await this.prismaService.medication.findUnique({
+        where: { id: medicationId },
+      });
+      if (!medication) {
+        throw new BadRequestException({
+          status: HttpStatus.BAD_REQUEST,
+          message: `Error with finding medication id ${medicationId}`,
+        });
+      }
+      medicationCodeList.push(medication.code);
+    }
+
+    const reactions = await this.medicationPlansService.checkInteractions(
+      medicationCodeList,
+    );
+
+    return { reactions };
   }
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)

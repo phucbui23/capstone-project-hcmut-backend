@@ -90,6 +90,7 @@ export class MedicationPlansService {
       include: medicationPlanIncludeFields,
     });
   }
+
   async findOne(where: Prisma.MedicationPlanWhereUniqueInput) {
     return await this.prismaSerivce.medicationPlan.findUnique({
       where,

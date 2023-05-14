@@ -1,5 +1,15 @@
 import { Prisma, PrismaClient, Resource, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+} from 'firebase/firestore';
+import { User } from 'src/decorator/user.decorator';
+import { firestore } from './firebase';
 
 import articlesJson from './json/articles.json';
 import medicationsJson from './json/medications.json';
@@ -8,6 +18,16 @@ import { HOSPITAL_ADMINS } from './seed-data/hospital-admins';
 import { HOSPITALS } from './seed-data/hospitals';
 import { PATIENTS } from './seed-data/patients';
 import { INDEPENDENT_RESOURCE_LIST, RESOURCES } from './seed-data/resources';
+
+interface FirebaseUser {
+  id: string;
+  displayName: string;
+  phoneNumber: string;
+  photoUrl: string;
+  username: string;
+  rooms: string[];
+  role: UserRole;
+}
 
 // Map the data to data array to be used in createMany
 const data = medicationsJson.drugbank.drug.map((drug) => ({
@@ -22,7 +42,23 @@ async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, process.env.BCRYPT_SALT);
 }
 
+async function findAllFirebaseUserIds() {
+  const querySnapshot = await getDocs(query(collection(firestore, 'users')));
+  const ids = [];
+  querySnapshot.forEach((doc) => {
+    ids.push(doc.id);
+  });
+
+  return ids;
+}
+
 async function clearTables(): Promise<void> {
+  // Remove all firebase users
+  const firebaseUserIds = await findAllFirebaseUserIds();
+  for (const firebaseUserId of firebaseUserIds) {
+    await deleteDoc(doc(firestore, 'users', firebaseUserId));
+  }
+
   await prisma.reminderPlanTime.deleteMany({});
   await prisma.reminderPlan.deleteMany({});
   await prisma.medicationPlan.deleteMany({});
@@ -399,28 +435,51 @@ async function populateHospitals() {
 }
 
 async function populatePatients() {
-  PATIENTS.forEach(async (patient) => {
-    await prisma.patientAccount.create({
+  for (const patient of PATIENTS) {
+    const patientAccount = await prisma.patientAccount.create({
       data: {
         phoneNumber: patient.phoneNumber,
         userAccount: {
           create: {
             passwordHash: await hashPassword(patient.password),
-            role: { connect: { name: UserRole.PATIENT } },
+            role: {
+              connect: {
+                name: UserRole.PATIENT,
+              },
+            },
           },
         },
       },
     });
-  });
+
+    const userAccount = await prisma.userAccount.findUnique({
+      where: { id: patientAccount.userAccountId },
+    });
+
+    const firebaseUser: FirebaseUser = {
+      id: userAccount.code,
+      displayName: `${userAccount.firstName}` + ' ' + `${userAccount.lastName}`,
+      phoneNumber: patientAccount.phoneNumber,
+      photoUrl: '',
+      username: '',
+      rooms: [],
+      role: UserRole.PATIENT,
+    };
+
+    await setDoc(
+      doc(collection(firestore, 'users'), userAccount.code),
+      firebaseUser,
+    );
+  }
 }
 
 async function populateDoctors() {
   for (const doctor of DOCTORS) {
     const numOfUser = (await prisma.userAccount.count({})) + 1;
     const username =
-      `${doctor.firstName}` + '.' + `${doctor.lastName}` + '.' + `${numOfUser}`;
+      `${doctor.firstName}.${doctor.lastName}.${numOfUser}`.replace(/\s+/g, '');
 
-    await prisma.doctorAccount.create({
+    const doctorAccount = await prisma.doctorAccount.create({
       data: {
         operatorAccount: {
           create: {
@@ -440,6 +499,25 @@ async function populateDoctors() {
         },
       },
     });
+
+    const userAccount = await prisma.userAccount.findUnique({
+      where: { id: doctorAccount.operatorAccountId },
+    });
+
+    const firebaseUser: FirebaseUser = {
+      username,
+      id: userAccount.code,
+      displayName: `${userAccount.firstName.trim()} ${userAccount.lastName.trim()}`,
+      phoneNumber: '',
+      photoUrl: '',
+      rooms: [],
+      role: UserRole.DOCTOR,
+    };
+
+    await setDoc(
+      doc(collection(firestore, 'users'), userAccount.code),
+      firebaseUser,
+    );
   }
 }
 
@@ -447,13 +525,12 @@ async function populateHospitalAdmins() {
   for (const hospitalAdmin of HOSPITAL_ADMINS) {
     const numOfUser = (await prisma.userAccount.count({})) + 1;
     const username =
-      `${hospitalAdmin.firstName}` +
-      '.' +
-      `${hospitalAdmin.lastName}` +
-      '.' +
-      `${numOfUser}`;
+      `${hospitalAdmin.firstName}.${hospitalAdmin.lastName}.${numOfUser}`.replace(
+        /\s+/g,
+        '',
+      );
 
-    await prisma.hospitalAdminAccount.create({
+    const hospitalAdminAccount = await prisma.hospitalAdminAccount.create({
       data: {
         operatorAccount: {
           create: {
@@ -477,6 +554,25 @@ async function populateHospitalAdmins() {
         },
       },
     });
+
+    const userAccount = await prisma.userAccount.findUnique({
+      where: { id: hospitalAdminAccount.operatorAccountId },
+    });
+
+    const firebaseUser: FirebaseUser = {
+      username,
+      id: userAccount.code,
+      displayName: `${userAccount.firstName.trim()} ${userAccount.lastName.trim()}`,
+      phoneNumber: '',
+      photoUrl: '',
+      rooms: [],
+      role: UserRole.HOSPITAL_ADMIN,
+    };
+
+    await setDoc(
+      doc(collection(firestore, 'users'), userAccount.code),
+      firebaseUser,
+    );
   }
 }
 

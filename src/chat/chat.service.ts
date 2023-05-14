@@ -147,7 +147,17 @@ export class ChatService {
         const roomSnap = await getDoc(
           doc(this.firebaseService.firestoreRef, 'rooms', room),
         );
-        ret.push(roomSnap.data());
+
+        const medicationPlanName =
+          await this.prismaService.medicationPlan.findFirst({
+            where: {
+              roomId: roomSnap.data().id,
+            },
+            select: {
+              name: true,
+            },
+          });
+        ret.push({ ...roomSnap.data(), name: medicationPlanName.name });
       }
 
       ret.sort((a, b) => {

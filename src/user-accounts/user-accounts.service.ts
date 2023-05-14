@@ -1,7 +1,9 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { doc, updateDoc } from 'firebase/firestore';
 import { createPaginator } from 'prisma-pagination';
 import { AuthHelper } from 'src/auth/auth.helper';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserAccountIncludeFields } from './constants';
 import {
@@ -16,6 +18,7 @@ export class UserAccountsService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly authHelper: AuthHelper,
+    private readonly firebaseService: FirebaseService,
   ) {}
 
   async findAll(
@@ -202,6 +205,23 @@ export class UserAccountsService {
       occupation,
     } = data;
 
+    if (firstName || lastName) {
+      const user = await this.prismaService.userAccount.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          code: true,
+        },
+      });
+      await updateDoc(
+        doc(this.firebaseService.firestoreRef, 'users', user.code),
+        {
+          displayName: `${firstName} ${lastName}`,
+        },
+      );
+    }
+
     return await this.prismaService.userAccount.update({
       where: { id },
       data: {
@@ -232,6 +252,24 @@ export class UserAccountsService {
       faculty,
       yearOfExperience,
     } = data;
+
+    if (firstName || lastName) {
+      const user = await this.prismaService.userAccount.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          code: true,
+        },
+      });
+      await updateDoc(
+        doc(this.firebaseService.firestoreRef, 'users', user.code),
+        {
+          displayName: `${firstName} ${lastName}`,
+        },
+      );
+    }
+
     return await this.prismaService.userAccount.update({
       where: { id },
       data: {

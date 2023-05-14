@@ -277,7 +277,7 @@ export class ReminderPlanTimesService {
         data: {
           isSkipped: true,
         },
-        include: reminderPlanTimeIncludeFields,
+        include: localReminderPlanTimeIncludeFields,
       });
     // Update countSkipped
     const medicationPlan = await this.prismaSerivce.medicationPlan.update({

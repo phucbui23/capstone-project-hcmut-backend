@@ -23,10 +23,12 @@ import { ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MedicationPlan, UserRole } from '@prisma/client';
 import { ArrayMinSize, IsNotEmpty } from 'class-validator';
+import { doc, updateDoc } from 'firebase/firestore';
 import { PaginatedResult } from 'prisma-pagination';
 import { ChatService } from 'src/chat/chat.service';
 import { PAGINATION } from 'src/constant';
 import { DoctorManagesPatientsService } from 'src/doctor-manages-patients/doctor-manages-patients.service';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { Roles } from 'src/guard/roles.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
@@ -57,6 +59,7 @@ export class MedicationPlansController {
     private readonly doctorManagesPatientsService: DoctorManagesPatientsService,
     private readonly chatService: ChatService,
     private readonly prismaService: PrismaService,
+    private readonly firebaseService: FirebaseService,
   ) {}
 
   @ApiQuery({
@@ -280,6 +283,14 @@ export class MedicationPlansController {
         const conversation = await this.chatService.createRoom(
           patient.code,
           doctor.code,
+        );
+
+        // update room name on firebase
+        await updateDoc(
+          doc(this.firebaseService.firestoreRef, 'rooms', conversation.roomId),
+          {
+            name: medicationPlan.name,
+          },
         );
 
         // Update room id and countTotal

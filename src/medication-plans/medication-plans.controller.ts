@@ -175,11 +175,17 @@ export class MedicationPlansController {
     UserRole.PATIENT,
   )
   @Get('check-interaction')
-  async checkInteraction(@Body() data: CheckInteractionDto) {
+  async checkInteraction(@Query('medicationIds') medicationIdList: number[]) {
+    if (medicationIdList.length < 2)
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: 'Need at least 2 medication ids',
+      });
+
     const medicationCodeList = [];
-    for (const medicationId of data.medicationIdList) {
+    for (const medicationId of medicationIdList) {
       const medication = await this.prismaService.medication.findUnique({
-        where: { id: medicationId },
+        where: { id: +medicationId },
       });
       if (!medication) {
         throw new BadRequestException({

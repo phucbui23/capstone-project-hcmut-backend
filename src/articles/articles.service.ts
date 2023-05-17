@@ -152,6 +152,9 @@ export class ArticlesService {
     const medicationPlan = await this.prismaService.medicationPlan.findFirst({
       where: {
         patientAccountId,
+        doctorAccountId: {
+          not: null,
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -169,30 +172,49 @@ export class ArticlesService {
         medicationPlanId: medicationPlan.id,
       },
       select: {
-        medication: true,
+        medication: {
+          select: {
+            code: true,
+            name: true,
+          },
+        },
       },
     });
 
     const retArticles = [];
 
-    reminders.forEach(async (reminder) => {
-      console.log(reminder);
-      const articles = await this.prismaService.article.findMany({
-        where: {
-          articleIncludesTags: {
-            every: {
-              tag: {
-                id: reminder.medication.id,
+    await Promise.all(
+      reminders.map(async (reminder) => {
+        const articles = await this.prismaService.article.findMany({
+          where: {
+            articleIncludesTags: {
+              some: {
+                tag: {
+                  OR: [
+                    {
+                      name: {
+                        contains: reminder.medication.name,
+                        mode: 'insensitive',
+                      },
+                    },
+                    {
+                      name: {
+                        contains: reminder.medication.code,
+                        mode: 'insensitive',
+                      },
+                    },
+                  ],
+                },
               },
             },
           },
-        },
-        include: articleIncludeFields,
-      });
-      console.log(articles);
-    });
+          include: articleIncludeFields,
+        });
+        retArticles.push(...articles);
+      }),
+    );
 
-    return { retArticles };
+    return retArticles;
   }
 
   async update(id: number, updateArticleDto: UpdateArticleDto) {

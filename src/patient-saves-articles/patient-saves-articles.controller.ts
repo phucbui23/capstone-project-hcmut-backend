@@ -18,7 +18,7 @@ export class PatientSavesArticlesController {
     return this.patientSavesArticlesService.create(patientSavesArticleDto);
   }
 
-  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  @Roles(UserRole.ADMIN, UserRole.PATIENT)
   @Delete('unsave')
   async unsaveArticle(@Body() patientSavesArticleDto: PatientSavesArticleDto) {
     return this.patientSavesArticlesService.remove(patientSavesArticleDto);

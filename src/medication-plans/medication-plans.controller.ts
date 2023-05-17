@@ -9,6 +9,7 @@ import {
   HttpStatus,
   MaxFileSizeValidator,
   Param,
+  ParseArrayPipe,
   ParseFilePipe,
   ParseIntPipe,
   Post,
@@ -175,15 +176,18 @@ export class MedicationPlansController {
     UserRole.PATIENT,
   )
   @Get('check-interaction')
-  async checkInteraction(@Query('medicationIds') medicationIdList: number[]) {
-    if (medicationIdList.length < 2)
+  async checkInteraction(
+    @Query('ids', new ParseArrayPipe({ items: Number }))
+    ids: number[],
+  ) {
+    if (ids.length < 2)
       throw new BadRequestException({
         status: HttpStatus.BAD_REQUEST,
         error: 'Need at least 2 medication ids',
       });
 
     const medicationCodeList = [];
-    for (const medicationId of medicationIdList) {
+    for (const medicationId of ids) {
       const medication = await this.prismaService.medication.findUnique({
         where: { id: +medicationId },
       });

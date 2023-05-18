@@ -4,8 +4,9 @@ import {
   Prisma,
   ReminderPlanTime,
 } from '@prisma/client';
-import { MILLISECONDS_PER_DAY } from 'src/constant';
+import { MILLISECONDS_PER_DAY, SKIP_ALERT_RATE } from 'src/constant';
 
+import { ChatService } from 'src/chat/chat.service';
 import { MedicationPlansService } from 'src/medication-plans/medication-plans.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReminderPlansService } from 'src/reminder-plans/reminder-plans.service';
@@ -21,6 +22,7 @@ export class ReminderPlanTimesService {
     private readonly prismaSerivce: PrismaService,
     private readonly medicationPlansService: MedicationPlansService,
     private readonly reminderPlansService: ReminderPlansService,
+    private readonly chatService: ChatService,
   ) {}
 
   async findOne(
@@ -247,6 +249,19 @@ export class ReminderPlanTimesService {
         countTotal: true,
         countTaken: true,
         countSkipped: true,
+        name: true,
+        roomId: true,
+        patientAccount: {
+          select: {
+            userAccount: {
+              select: {
+                firstName: true,
+                lastName: true,
+                code: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -262,6 +277,18 @@ export class ReminderPlanTimesService {
         data: { completed: true },
       });
     }
+
+    // check if skipped many time and alert doctor
+    if (
+      medicationPlan.countSkipped >=
+      medicationPlan.countTotal * SKIP_ALERT_RATE
+    )
+      await this.chatService.sendMsg(
+        `Medication plan ${medicationPlan.name} of patient ${medicationPlan.patientAccount.userAccount.firstName} ${medicationPlan.patientAccount.userAccount.lastName} may not working as expected because more than 30% of the remedy has not been taken properly.`,
+        medicationPlan.patientAccount.userAccount.code,
+        medicationPlan.roomId,
+      );
+
     return updatedReminderPlanTime;
   }
 

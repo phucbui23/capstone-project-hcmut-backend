@@ -1,13 +1,19 @@
 import { Module } from '@nestjs/common';
 
-import { ReminderPlanTimesService } from './reminder-plan-times.service';
-import { ReminderPlanTimesController } from './reminder-plan-times.controller';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { ChatModule } from 'src/chat/chat.module';
 import { MedicationPlansModule } from 'src/medication-plans/medication-plans.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
 import { ReminderPlansModule } from 'src/reminder-plans/reminder-plans.module';
+import { ReminderPlanTimesController } from './reminder-plan-times.controller';
+import { ReminderPlanTimesService } from './reminder-plan-times.service';
 
 @Module({
-  imports: [PrismaModule, MedicationPlansModule, ReminderPlansModule],
+  imports: [
+    PrismaModule,
+    MedicationPlansModule,
+    ReminderPlansModule,
+    ChatModule,
+  ],
   controllers: [ReminderPlanTimesController],
   providers: [ReminderPlanTimesService],
 })

@@ -26,6 +26,7 @@ export class ChatService {
   ): Promise<{ roomId: string }> {
     const timestamp = new Date().toISOString();
     const roomData = {
+      name: '',
       createdAt: timestamp,
       createdBy: '',
       members: [patientCode, doctorCode],

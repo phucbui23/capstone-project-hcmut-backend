@@ -106,7 +106,7 @@ export class ChatService {
       content: content,
       sender: senderName,
       senderCode: senderCode,
-      senAt: timestamp,
+      sentAt: timestamp,
     };
 
     const newMsgRef = collection(
@@ -162,9 +162,9 @@ export class ChatService {
       }
 
       ret.sort((a, b) => {
-        return a.recentMessages.readBy.senAt < b.recentMessages.readBy.senAt
+        return a.recentMessages.readBy.sentAt < b.recentMessages.readBy.sentAt
           ? -1
-          : a.recentMessages.readBy.senAt > b.recentMessages.readBy.senAt
+          : a.recentMessages.readBy.sentAt > b.recentMessages.readBy.sentAt
           ? 1
           : 0;
       });
@@ -198,7 +198,7 @@ export class ChatService {
     });
 
     messages.sort((a, b) => {
-      return a.senAt > b.senAt ? -1 : a.senAt > b.senAt ? 1 : 0;
+      return a.sentAt > b.sentAt ? -1 : a.sentAt > b.sentAt ? 1 : 0;
     });
 
     return { messages };

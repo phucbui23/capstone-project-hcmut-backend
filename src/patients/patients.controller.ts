@@ -9,16 +9,21 @@ import {
   Patch,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { PAGINATION } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
+import { UpdatePatientAccountDto } from 'src/user-accounts/dto/user-account.dto';
+import { UserAccountsService } from 'src/user-accounts/user-accounts.service';
 import { PatientsService } from './patients.service';
 
 @ApiTags('patients')
 @Controller('patients')
 export class PatientsController {
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly userAccountsService: UserAccountsService,
+  ) {}
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get()
@@ -100,5 +105,18 @@ export class PatientsController {
         patientAccount: { update: { insuranceNumber } },
       },
     });
+  }
+
+  @ApiBody({
+    description: 'Update field',
+    type: UpdatePatientAccountDto,
+  })
+  @Patch('update/:id')
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  async updatePatientAccountInfo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdatePatientAccountDto,
+  ) {
+    return this.userAccountsService.updatePatient(id, data);
   }
 }

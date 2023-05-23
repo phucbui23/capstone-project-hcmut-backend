@@ -1,23 +1,30 @@
 import {
+  Body,
   Controller,
   DefaultValuePipe,
   Delete,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Query,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '@prisma/client';
 import { PAGINATION } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
+import { UpdateDoctorAccountDto } from 'src/user-accounts/dto/user-account.dto';
+import { UserAccountsService } from 'src/user-accounts/user-accounts.service';
 import { DoctorsService } from './doctors.service';
 
 @ApiTags('doctors')
 @Controller('doctors')
 export class DoctorsController {
-  constructor(private readonly doctorsService: DoctorsService) {}
+  constructor(
+    private readonly doctorsService: DoctorsService,
+    private readonly userAccountsService: UserAccountsService,
+  ) {}
 
   @ApiQuery({
     name: 'page',
@@ -74,5 +81,18 @@ export class DoctorsController {
   @Delete(':id')
   async deleteOne(@Param('id', ParseIntPipe) id: number) {
     return this.doctorsService.deleteOne({ operatorAccountId: id });
+  }
+
+  @ApiBody({
+    description: 'Update field',
+    type: UpdateDoctorAccountDto,
+  })
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR)
+  @Patch('update/:id')
+  async updateDoctorAccountInfo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateDoctorAccountDto,
+  ) {
+    return this.userAccountsService.updateDoctor(id, data);
   }
 }

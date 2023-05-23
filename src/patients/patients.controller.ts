@@ -88,32 +88,32 @@ export class PatientsController {
     return this.patientsService.deleteOne({ userAccountId: id });
   }
 
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
-  @Patch(':id')
-  async updateOne(
-    @Param('id', ParseIntPipe) id: number,
-    @Body()
-    {
-      address,
-      email,
-      insuranceNumber,
-    }: { insuranceNumber: string; email: string; address: string },
-  ) {
-    return await this.patientsService.updateOne({
-      where: { id },
-      data: {
-        address,
-        email,
-        patientAccount: { update: { insuranceNumber } },
-      },
-    });
-  }
+  // @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
+  // @Patch(':id')
+  // async updateOne(
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Body()
+  //   {
+  //     address,
+  //     email,
+  //     insuranceNumber,
+  //   }: { insuranceNumber: string; email: string; address: string },
+  // ) {
+  //   return await this.patientsService.updateOne({
+  //     where: { id },
+  //     data: {
+  //       address,
+  //       email,
+  //       patientAccount: { update: { insuranceNumber } },
+  //     },
+  //   });
+  // }
 
   @ApiBody({
     description: 'Update field',
     type: UpdatePatientAccountDto,
   })
-  @Patch('update/:id')
+  @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
   async updatePatientAccountInfo(
     @Param('id', ParseIntPipe) id: number,

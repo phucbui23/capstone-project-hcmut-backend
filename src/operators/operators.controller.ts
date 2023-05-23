@@ -39,7 +39,7 @@ export class OperatorsController {
     type: UpdateOperatorAccountDto,
   })
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
-  @Patch('update/:id')
+  @Patch(':id')
   async updateOperatorAccountInfo(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: UpdateOperatorAccountDto,

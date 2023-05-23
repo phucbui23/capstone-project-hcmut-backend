@@ -88,7 +88,7 @@ export class DoctorsController {
     type: UpdateDoctorAccountDto,
   })
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR)
-  @Patch('update/:id')
+  @Patch(':id')
   async updateDoctorAccountInfo(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: UpdateDoctorAccountDto,

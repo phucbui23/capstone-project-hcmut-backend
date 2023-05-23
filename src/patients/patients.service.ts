@@ -197,6 +197,7 @@ export class PatientsService {
     perPage: number,
     field: string,
     order: string,
+    keyword: string,
   ) {
     const paginate = createPaginator({ perPage });
     return await paginate(
@@ -219,6 +220,61 @@ export class PatientsService {
                   },
                 },
               },
+            },
+            {
+              OR: [
+                {
+                  code: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  email: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  firstName: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  lastName: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  address: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  socialSecurityNumber: {
+                    contains: keyword,
+                  },
+                },
+                {
+                  patientAccount: {
+                    OR: [
+                      {
+                        phoneNumber: {
+                          contains: keyword,
+                        },
+                      },
+                      {
+                        insuranceNumber: {
+                          contains: keyword,
+                        },
+                      },
+                      {
+                        username: {
+                          contains: keyword,
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
             },
           ],
         },

@@ -216,6 +216,7 @@ export class MedicationPlansController {
     perPage: number,
     @Query('field', new DefaultValuePipe('updatedAt')) field: string,
     @Query('order', new DefaultValuePipe('desc')) order: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword: string,
   ) {
     return await this.medicationPlansService.getAssociatedMedicationPlans(
       doctorCode,
@@ -223,6 +224,7 @@ export class MedicationPlansController {
       perPage,
       field,
       order,
+      keyword
     );
   }
 

@@ -54,6 +54,7 @@ export class PatientsController {
     perPage: number,
     @Query('field', new DefaultValuePipe('updatedAt')) field: string,
     @Query('order', new DefaultValuePipe('desc')) order: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword: string,
   ) {
     return await this.patientsService.getAssociatedPatients(
       doctorCode,
@@ -61,6 +62,7 @@ export class PatientsController {
       perPage,
       field,
       order,
+      keyword,
     );
   }
 

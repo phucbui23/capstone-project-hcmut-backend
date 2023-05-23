@@ -420,6 +420,45 @@ export class MedicationPlansController {
     }
   }
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
+  @Post('send/:id')
+  async sendBill(@Param('id', ParseIntPipe) id: number) {
+    const medicationPlan = await this.prismaService.medicationPlan.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        bill: true,
+        doctorAccount: {
+          select: {
+            operatorAccount: {
+              select: {
+                userAccount: {
+                  select: {
+                    code: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        roomId: true,
+      },
+    });
+
+    if (!medicationPlan) {
+      throw new BadRequestException({
+        status: HttpStatus.NOT_FOUND,
+        error: 'Can not find medication plan',
+      });
+    }
+    return await this.chatService.sendMsg(
+      medicationPlan.bill.filePath,
+      medicationPlan.doctorAccount.operatorAccount.userAccount.code,
+      medicationPlan.roomId,
+    );
+  }
+
   @Roles(
     UserRole.ADMIN,
     UserRole.DOCTOR,

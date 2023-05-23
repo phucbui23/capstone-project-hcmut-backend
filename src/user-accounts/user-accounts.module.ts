@@ -8,5 +8,6 @@ import { UserAccountsService } from './user-accounts.service';
 @Module({
   controllers: [UserAccountsController],
   providers: [UserAccountsService, AuthHelper, JwtService, FirebaseService],
+  exports: [UserAccountsService],
 })
 export class UserAccountsModule {}

@@ -130,11 +130,17 @@ export class AuthService {
           name: operator.operatorAccount.hospital.name,
           description: operator.operatorAccount.hospital.description,
         },
-        doctorAccount: {
-          operatorAccountId: operator.operatorAccount.doctorAccount.operatorAccountId,
-          faculty: operator.operatorAccount.doctorAccount.operatorAccountId.faculty,
-          yearOfExperience: operator.operatorAccount.doctorAccount.yearOfExperience,
-        },
+        doctorAccount: operator.operatorAccount.doctorAccount
+          ? {
+              operatorAccountId:
+                operator.operatorAccount.doctorAccount.operatorAccountId,
+              faculty:
+                operator.operatorAccount.doctorAccount.operatorAccountId
+                  .faculty,
+              yearOfExperience:
+                operator.operatorAccount.doctorAccount.yearOfExperience,
+            }
+          : null,
         hospitalAdminAccount: operator.operatorAccount.hospitalAdminAccount,
       },
     };

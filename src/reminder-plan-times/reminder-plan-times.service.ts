@@ -281,7 +281,8 @@ export class ReminderPlanTimesService {
     // check if skipped many time and alert doctor
     if (
       medicationPlan.countSkipped >=
-      medicationPlan.countTotal * SKIP_ALERT_RATE
+        medicationPlan.countTotal * SKIP_ALERT_RATE &&
+      medicationPlan.roomId
     )
       await this.chatService.sendMsg(
         `Medication plan ${medicationPlan.name} of patient ${medicationPlan.patientAccount.userAccount.firstName} ${medicationPlan.patientAccount.userAccount.lastName} may not working as expected because more than 30% of the remedy has not been taken properly.`,

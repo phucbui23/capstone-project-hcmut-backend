@@ -558,6 +558,7 @@ export class MedicationPlansService {
     perPage: number,
     field: string,
     order: string,
+    keyword: string,
   ) {
     const paginate = createPaginator({ perPage });
 
@@ -565,13 +566,22 @@ export class MedicationPlansService {
       this.prismaSerivce.medicationPlan,
       {
         where: {
-          doctorAccount: {
-            operatorAccount: {
-              userAccount: {
-                code: doctorCode,
+          AND: [
+            {
+              doctorAccount: {
+                operatorAccount: {
+                  userAccount: {
+                    code: doctorCode,
+                  },
+                },
               },
             },
-          },
+            {
+              name: {
+                contains: keyword,
+              },
+            },
+          ],
         },
         orderBy: {
           [field]: order,

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
-
 import { PrismaService } from 'src/prisma/prisma.service';
 import { operatorIncludeFields } from './constants';
+
 
 @Injectable()
 export class OperatorsService {

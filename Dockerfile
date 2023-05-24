@@ -18,4 +18,4 @@ COPY --from=builder --chown=node:node /app/package*.json /app/tsconfig*.json ./
 
 USER node
 EXPOSE 3000
-CMD [ "npm", "run", "start:migrate:dev" ]
+CMD [ "npm", "run", "start:migrate" ]

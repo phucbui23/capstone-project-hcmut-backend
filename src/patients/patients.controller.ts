@@ -9,16 +9,21 @@ import {
   Patch,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { PAGINATION } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
+import { UpdatePatientAccountDto } from 'src/user-accounts/dto/user-account.dto';
+import { UserAccountsService } from 'src/user-accounts/user-accounts.service';
 import { PatientsService } from './patients.service';
 
 @ApiTags('patients')
 @Controller('patients')
 export class PatientsController {
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly userAccountsService: UserAccountsService,
+  ) {}
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get()
@@ -49,6 +54,7 @@ export class PatientsController {
     perPage: number,
     @Query('field', new DefaultValuePipe('updatedAt')) field: string,
     @Query('order', new DefaultValuePipe('desc')) order: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword: string,
   ) {
     return await this.patientsService.getAssociatedPatients(
       doctorCode,
@@ -56,6 +62,7 @@ export class PatientsController {
       perPage,
       field,
       order,
+      keyword,
     );
   }
 
@@ -81,24 +88,37 @@ export class PatientsController {
     return this.patientsService.deleteOne({ userAccountId: id });
   }
 
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
+  // @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
+  // @Patch(':id')
+  // async updateOne(
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Body()
+  //   {
+  //     address,
+  //     email,
+  //     insuranceNumber,
+  //   }: { insuranceNumber: string; email: string; address: string },
+  // ) {
+  //   return await this.patientsService.updateOne({
+  //     where: { id },
+  //     data: {
+  //       address,
+  //       email,
+  //       patientAccount: { update: { insuranceNumber } },
+  //     },
+  //   });
+  // }
+
+  @ApiBody({
+    description: 'Update field',
+    type: UpdatePatientAccountDto,
+  })
   @Patch(':id')
-  async updateOne(
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.PATIENT)
+  async updatePatientAccountInfo(
     @Param('id', ParseIntPipe) id: number,
-    @Body()
-    {
-      address,
-      email,
-      insuranceNumber,
-    }: { insuranceNumber: string; email: string; address: string },
+    @Body() data: UpdatePatientAccountDto,
   ) {
-    return await this.patientsService.updateOne({
-      where: { id },
-      data: {
-        address,
-        email,
-        patientAccount: { update: { insuranceNumber } },
-      },
-    });
+    return this.userAccountsService.updatePatient(id, data);
   }
 }

@@ -60,33 +60,7 @@ export class AuthService {
 
     return {
       token,
-      id: patient.id,
-      code: patient.code,
-      email: patient.email,
-      firstName: patient.firstName,
-      lastName: patient.lastName,
-      gender: patient.gender,
-      address: patient.address,
-      socialSecurityNumber: patient.socialSecurityNumber,
-      nationality: patient.nationality,
-      birthday: patient.birthday,
-      lastActive: patient.lastActive,
-      createdAt: patient.createdAt,
-      updatedAt: patient.updatedAt,
-      roleId: patient.roleId,
-      attachment: patient.attachment,
-      role: {
-        id: patient.role.id,
-        name: patient.role.name,
-        description: patient.role.description,
-      },
-      patientAccount: {
-        insuranceNumber: patient.patientAccount.insuranceNumber,
-        occupation: patient.patientAccount.occupation,
-        userAccountId: patient.patientAccount.userAccountId,
-        phoneNumber: patient.patientAccount.phoneNumber,
-        username: patient.patientAccount.username,
-      },
+      ...patient,
     };
   }
   // Data returned from the local guard
@@ -100,49 +74,7 @@ export class AuthService {
 
     return {
       token,
-      id: operator.id,
-      code: operator.code,
-      email: operator.email,
-      firstName: operator.firstName,
-      lastName: operator.lastName,
-      gender: operator.gender,
-      address: operator.address,
-      socialSecurityNumber: operator.socialSecurityNumber,
-      nationality: operator.nationality,
-      birthday: operator.birthday,
-      lastActive: operator.lastActive,
-      createdAt: operator.createdAt,
-      updatedAt: operator.updatedAt,
-      roleId: operator.roleId,
-      attachment: operator.attachment,
-      role: {
-        id: operator.role.id,
-        name: operator.role.name,
-        description: operator.role.description,
-      },
-      operatorAccount: {
-        userAccountId: operator.operatorAccount.userAccountId,
-        username: operator.operatorAccount.username,
-        phoneNumber: operator.operatorAccount.phoneNumber,
-        hospitalId: operator.operatorAccount.hospitalId,
-        hospital: {
-          id: operator.operatorAccount.hospital.id,
-          name: operator.operatorAccount.hospital.name,
-          description: operator.operatorAccount.hospital.description,
-        },
-        doctorAccount: operator.operatorAccount.doctorAccount
-          ? {
-              operatorAccountId:
-                operator.operatorAccount.doctorAccount.operatorAccountId,
-              faculty:
-                operator.operatorAccount.doctorAccount.operatorAccountId
-                  .faculty,
-              yearOfExperience:
-                operator.operatorAccount.doctorAccount.yearOfExperience,
-            }
-          : null,
-        hospitalAdminAccount: operator.operatorAccount.hospitalAdminAccount,
-      },
+      ...operator,
     };
   }
 

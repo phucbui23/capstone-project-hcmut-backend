@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { createPaginator } from 'prisma-pagination';
 
 import { collection, doc, setDoc } from 'firebase/firestore';
+import { AuthHelper } from 'src/auth/auth.helper';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
@@ -10,12 +11,14 @@ import {
   patientList,
   patientSelectedFields,
 } from './constants';
+import { CreatePatientDto } from './dto/patients.dto';
 
 @Injectable()
 export class PatientsService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly firebaseService: FirebaseService,
+    private readonly authHelper: AuthHelper,
   ) {}
 
   async findAll(
@@ -285,5 +288,51 @@ export class PatientsService {
       },
       { page },
     );
+  }
+
+  async createFirstTimePatient(data: CreatePatientDto) {
+    const {
+      address,
+      birthday,
+      email,
+      firstName,
+      gender,
+      insuranceNumber,
+      lastName,
+      nationality,
+      occupation,
+      phoneNumber,
+      socialSecurityNumber,
+    } = data;
+
+    const existingPatient = await this.findOne({ phoneNumber });
+
+    if (existingPatient)
+      throw new BadRequestException('Patient already exists');
+
+    return await this.prismaService.userAccount.create({
+      data: {
+        passwordHash: await this.authHelper.encodePassword(
+          process.env.PATIENT_PASSWORD || 'patient',
+        ),
+        address,
+        birthday,
+        email,
+        firstName,
+        lastName,
+        gender,
+        nationality,
+        socialSecurityNumber,
+        role: { connect: { name: UserRole.PATIENT } },
+        patientAccount: {
+          create: {
+            phoneNumber,
+            insuranceNumber,
+            occupation,
+          },
+        },
+      },
+      include: patientIncludeFields,
+    });
   }
 }

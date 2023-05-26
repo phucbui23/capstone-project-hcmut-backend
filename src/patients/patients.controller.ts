@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Post,
   Query,
 } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
@@ -15,6 +16,7 @@ import { PAGINATION } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { UpdatePatientAccountDto } from 'src/user-accounts/dto/user-account.dto';
 import { UserAccountsService } from 'src/user-accounts/user-accounts.service';
+import { CreatePatientDto } from './dto/patients.dto';
 import { PatientsService } from './patients.service';
 
 @ApiTags('patients')
@@ -120,5 +122,11 @@ export class PatientsController {
     @Body() data: UpdatePatientAccountDto,
   ) {
     return this.userAccountsService.updatePatient(id, data);
+  }
+
+  @Post()
+  @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN, UserRole.DOCTOR)
+  async createPatient(@Body() data: CreatePatientDto) {
+    return await this.patientsService.createFirstTimePatient(data);
   }
 }

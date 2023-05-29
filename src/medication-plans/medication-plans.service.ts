@@ -5,6 +5,7 @@ import { child, get, ref } from 'firebase/database';
 import { PaginatedResult, createPaginator } from 'prisma-pagination';
 import { FirebaseService } from 'src/firebase/firebase.service';
 
+import { arrayRemove, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import * as firebaseStorage from 'firebase/storage';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getDateAndTime } from 'src/utils/date';
@@ -487,30 +488,73 @@ export class MedicationPlansService {
   }
 
   async deleteOne(where: Prisma.MedicationPlanWhereUniqueInput) {
-    const reminderPlanTimesToDelete =
-      this.prismaSerivce.reminderPlanTime.deleteMany({
-        where: {
-          reminderPlanMedicationPlanId: { equals: where.id },
+    const medicationPlanToDelete =
+      await this.prismaSerivce.medicationPlan.delete({
+        where: { id: where.id },
+        select: {
+          roomId: true,
+          doctorAccount: {
+            select: {
+              operatorAccount: {
+                select: {
+                  userAccount: {
+                    select: {
+                      code: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          patientAccount: {
+            select: {
+              userAccount: {
+                select: {
+                  code: true,
+                },
+              },
+            },
+          },
         },
       });
 
-    const reminderPlansToDelete = this.prismaSerivce.reminderPlan.deleteMany({
-      where: {
-        medicationPlanId: { equals: where.id },
-      },
-    });
+    // Delete room on firebase & update rooms of doctor and patient
+    await deleteDoc(
+      doc(
+        this.firebaseService.firestoreRef,
+        'rooms',
+        medicationPlanToDelete.roomId,
+      ),
+    );
 
-    const medicationPlanToDelete = this.prismaSerivce.medicationPlan.delete({
-      where: { id: where.id },
-    });
+    await updateDoc(
+      doc(
+        this.firebaseService.firestoreRef,
+        'users',
+        medicationPlanToDelete.doctorAccount.operatorAccount.userAccount.code,
+      ),
+      { rooms: arrayRemove(medicationPlanToDelete.roomId) },
+    );
 
-    await this.prismaSerivce.$transaction([
-      reminderPlanTimesToDelete,
-      reminderPlansToDelete,
-      medicationPlanToDelete,
-    ]);
+    await updateDoc(
+      doc(
+        this.firebaseService.firestoreRef,
+        'users',
+        medicationPlanToDelete.patientAccount.userAccount.code,
+      ),
+      { rooms: arrayRemove(medicationPlanToDelete.roomId) },
+    );
 
-    return 'Deleted';
+    // Delete roomMessages
+    await deleteDoc(
+      doc(
+        this.firebaseService.firestoreRef,
+        'roomMessages',
+        medicationPlanToDelete.roomId,
+      ),
+    );
+
+    return { message: 'Deleted' };
   }
 
   async checkInteractions(medicationCodeList: string[]) {

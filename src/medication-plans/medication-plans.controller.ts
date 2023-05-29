@@ -224,7 +224,7 @@ export class MedicationPlansController {
       perPage,
       field,
       order,
-      keyword
+      keyword,
     );
   }
 
@@ -461,12 +461,7 @@ export class MedicationPlansController {
     );
   }
 
-  @Roles(
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.HOSPITAL_ADMIN,
-    UserRole.PATIENT,
-  )
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Delete(':id')
   async deleteOne(@Param('id', ParseIntPipe) id: number) {
     return await this.medicationPlansService.deleteOne({ id });

@@ -58,7 +58,7 @@ export class ChatService {
     });
 
     // create new roomMessges
-    doc(this.firebaseService.firestoreRef, roomId, 'messages');
+    // doc(this.firebaseService.firestoreRef, roomId, 'messages');
 
     // update user's room
     const patient = await getDocs(

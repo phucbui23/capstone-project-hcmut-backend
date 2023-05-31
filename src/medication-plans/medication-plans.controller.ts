@@ -466,4 +466,10 @@ export class MedicationPlansController {
   async deleteOne(@Param('id', ParseIntPipe) id: number) {
     return await this.medicationPlansService.deleteOne({ id });
   }
+
+  @Roles(UserRole.PATIENT)
+  @Delete('local/:id')
+  async deleteLocal(@Param('id', ParseIntPipe) id: number) {
+    return await this.medicationPlansService.deleteLocal(id);
+  }
 }

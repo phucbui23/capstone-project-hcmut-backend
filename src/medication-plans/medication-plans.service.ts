@@ -557,6 +557,33 @@ export class MedicationPlansService {
     return { message: 'Deleted' };
   }
 
+  async deleteLocal(id: number) {
+    const medicationPlanToDelete =
+      await this.prismaSerivce.medicationPlan.findFirst({
+        where: {
+          id,
+          doctorAccountId: {
+            equals: null,
+          },
+        },
+      });
+
+    if (!medicationPlanToDelete)
+      throw new BadRequestException({
+        status: HttpStatus.NOT_FOUND,
+        error:
+          "Can't delete this medication plan because it is prescribe by a doctor",
+      });
+
+    await this.prismaSerivce.medicationPlan.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Deleted',
+    };
+  }
+
   async checkInteractions(medicationCodeList: string[]) {
     const ret = [];
     for (const medicationCode of medicationCodeList) {

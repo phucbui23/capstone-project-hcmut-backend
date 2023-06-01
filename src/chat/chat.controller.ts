@@ -150,8 +150,7 @@ export class ChatController {
     UserRole.PATIENT,
   )
   async getConversations(@Param('userCode') userCode: string) {
-    const result = await this.chatService.getRooms(userCode);
-    return result;
+    return await this.chatService.getRooms(userCode);
   }
 
   @Get('messages/:roomId')

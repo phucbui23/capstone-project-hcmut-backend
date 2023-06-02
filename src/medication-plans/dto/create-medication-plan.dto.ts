@@ -207,8 +207,9 @@ export class CreateMedicationPlanDto {
   @ApiProperty({
     description: 'Patient id',
   })
-  @IsNotEmpty()
-  patientId: number;
+  // @IsNotEmpty()
+  @IsOptional()
+  patientId?: number;
 
   @ApiProperty({
     description: 'Medication plan name',

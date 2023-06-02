@@ -7,6 +7,7 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 
 import { arrayRemove, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import * as firebaseStorage from 'firebase/storage';
+import { ChatService } from 'src/chat/chat.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getDateAndTime } from 'src/utils/date';
 import {
@@ -50,6 +51,7 @@ export class MedicationPlansService {
   constructor(
     private readonly prismaSerivce: PrismaService,
     private readonly firebaseService: FirebaseService,
+    private readonly chatService: ChatService,
   ) {}
 
   async findAll(
@@ -110,7 +112,9 @@ export class MedicationPlansService {
       data: {
         name,
         note,
-        patientAccount: { connect: { userAccountId: patientId } },
+        patientAccount: patientId
+          ? { connect: { userAccountId: patientId } }
+          : undefined,
         doctorAccount: doctorId
           ? {
               connect: {
@@ -158,9 +162,11 @@ export class MedicationPlansService {
                               dosage,
                               time: timestamp,
                               sentAt: timestamp,
-                              patientAccount: {
-                                connect: { userAccountId: patientId },
-                              },
+                              patientAccount: patientId
+                                ? {
+                                    connect: { userAccountId: patientId },
+                                  }
+                                : undefined,
                             };
                           createdReminderPlanTimes.push(
                             createdReminderPlanTime,
@@ -189,9 +195,11 @@ export class MedicationPlansService {
                                 dosage,
                                 time: timestamp,
                                 sentAt: timestamp,
-                                patientAccount: {
-                                  connect: { userAccountId: patientId },
-                                },
+                                patientAccount: patientId
+                                  ? {
+                                      connect: { userAccountId: patientId },
+                                    }
+                                  : undefined,
                               };
                             createdReminderPlanTimes.push(
                               createdReminderPlanTime,
@@ -224,9 +232,11 @@ export class MedicationPlansService {
                               dosage,
                               time: timestamp,
                               sentAt: timestamp,
-                              patientAccount: {
-                                connect: { userAccountId: patientId },
-                              },
+                              patientAccount: patientId
+                                ? {
+                                    connect: { userAccountId: patientId },
+                                  }
+                                : undefined,
                             };
                           createdReminderPlanTimes.push(
                             createdReminderPlanTime,
@@ -253,9 +263,11 @@ export class MedicationPlansService {
                                 dosage,
                                 time: timestamp,
                                 sentAt: timestamp,
-                                patientAccount: {
-                                  connect: { userAccountId: patientId },
-                                },
+                                patientAccount: patientId
+                                  ? {
+                                      connect: { userAccountId: patientId },
+                                    }
+                                  : undefined,
                               };
                             createdReminderPlanTimes.push(
                               createdReminderPlanTime,
@@ -804,5 +816,113 @@ export class MedicationPlansService {
         error: error.message,
       });
     }
+  }
+
+  async syncUserWithPlan(id: number, medicationPlanId: number) {
+    // check if plan already connected
+    const medicationPlan =
+      await this.prismaSerivce.medicationPlan.findFirstOrThrow({
+        where: {
+          id: medicationPlanId,
+        },
+      });
+
+    if (medicationPlan.patientAccountId) {
+      throw new BadRequestException({
+        status: HttpStatus.FORBIDDEN,
+        error: 'Medication plan already scanned.',
+      });
+    }
+
+    // connect plan with user account
+    const updatedMedicationPlan =
+      await this.prismaSerivce.medicationPlan.update({
+        where: {
+          id: medicationPlanId,
+        },
+        data: {
+          patientAccount: {
+            connect: {
+              userAccountId: id,
+            },
+          },
+        },
+        select: {
+          name: true,
+          reminderPlans: true,
+          patientAccountId: true,
+          patientAccount: {
+            select: {
+              userAccount: {
+                select: {
+                  code: true,
+                },
+              },
+            },
+          },
+          doctorAccount: {
+            select: {
+              operatorAccount: {
+                select: {
+                  userAccount: {
+                    select: {
+                      code: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+    // update reminder plan time
+    await this.prismaSerivce.reminderPlanTime.updateMany({
+      where: {
+        reminderPlan: {
+          medicationPlanId,
+        },
+      },
+      data: {
+        patientAccountId: {
+          set: id,
+        },
+      },
+    });
+
+    // create room
+    const conversation = await this.chatService.createRoom(
+      updatedMedicationPlan.patientAccount.userAccount.code,
+      updatedMedicationPlan.doctorAccount.operatorAccount.userAccount.code,
+    );
+
+    // update room name on firebase
+    await updateDoc(
+      doc(this.firebaseService.firestoreRef, 'rooms', conversation.roomId),
+      {
+        name: medicationPlan.name,
+      },
+    );
+
+    // Update room id and countTotal
+    let total: number = 0;
+
+    for (const reminderPlan of updatedMedicationPlan.reminderPlans) {
+      total += reminderPlan.stock;
+    }
+
+    await this.prismaSerivce.medicationPlan.update({
+      where: {
+        id: medicationPlanId,
+      },
+      data: {
+        roomId: conversation.roomId,
+        countTotal: total,
+      },
+    });
+
+    return {
+      message: 'Scan successfully',
+    };
   }
 }

@@ -234,16 +234,16 @@ model LocalReminderPlan {
 }
 
 model ReminderPlanTime {
-  isTaken                      Boolean        @default(false) @map("is_taken")
-  isSkipped                    Boolean        @default(false) @map("is_skipped")
+  isTaken                      Boolean         @default(false) @map("is_taken")
+  isSkipped                    Boolean         @default(false) @map("is_skipped")
   time                         DateTime
-  dosage                       Int            @default(1)
-  sentAt                       DateTime?      @map("sent_at")
-  patientAccountId             Int            @map("patient_account_id")
+  dosage                       Int             @default(1)
+  sentAt                       DateTime?       @map("sent_at")
+  patientAccountId             Int?            @map("patient_account_id")
   reminderPlanMedicationPlanId Int
   reminderPlanMedicationId     Int
-  patientAccount               PatientAccount @relation(fields: [patientAccountId], references: [userAccountId], onDelete: Cascade)
-  reminderPlan                 ReminderPlan   @relation(fields: [reminderPlanMedicationPlanId, reminderPlanMedicationId], references: [medicationPlanId, medicationId], onDelete: Cascade)
+  patientAccount               PatientAccount? @relation(fields: [patientAccountId], references: [userAccountId], onDelete: Cascade)
+  reminderPlan                 ReminderPlan    @relation(fields: [reminderPlanMedicationPlanId, reminderPlanMedicationId], references: [medicationPlanId, medicationId], onDelete: Cascade)
 
   @@id([reminderPlanMedicationPlanId, reminderPlanMedicationId, time])
   @@map("reminder_plan_time")

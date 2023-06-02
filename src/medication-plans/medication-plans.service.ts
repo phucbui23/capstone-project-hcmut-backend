@@ -911,7 +911,7 @@ export class MedicationPlansService {
       total += reminderPlan.stock;
     }
 
-    await this.prismaSerivce.medicationPlan.update({
+    const ret = await this.prismaSerivce.medicationPlan.update({
       where: {
         id: medicationPlanId,
       },
@@ -919,10 +919,9 @@ export class MedicationPlansService {
         roomId: conversation.roomId,
         countTotal: total,
       },
+      include: medicationPlanIncludeFields,
     });
 
-    return {
-      message: 'Scan successfully',
-    };
+    return ret;
   }
 }

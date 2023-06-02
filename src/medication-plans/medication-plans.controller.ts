@@ -388,6 +388,9 @@ export class MedicationPlansController {
               not: null,
             },
             completed: false,
+            roomId: {
+              not: '',
+            },
           },
           select: {
             id: true,
@@ -410,16 +413,15 @@ export class MedicationPlansController {
       );
 
       // Update countTotal
-      const { reminderPlans, id } = medicationPlan;
       let total: number = 0;
 
-      for (const reminderPlan of reminderPlans) {
-        total += reminderPlan.stock;
+      for (const localReminderPlan of medicationPlan.localReminderPlans) {
+        total += localReminderPlan.stock;
       }
 
       await this.prismaService.medicationPlan.update({
         where: {
-          id,
+          id: medicationPlan.id,
         },
         data: {
           countTotal: total,

@@ -12,6 +12,7 @@ import {
   ParseArrayPipe,
   ParseFilePipe,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UploadedFile,
@@ -51,7 +52,13 @@ export class CheckInteractionDto {
   @ArrayMinSize(2)
   medicationIdList: number[];
 }
-
+export class ConnectFirstTimeUserDto {
+  @ApiProperty({
+    description: 'Medication plan id',
+  })
+  @IsNotEmpty()
+  medicationPlanId: number;
+}
 @ApiTags('medication plans')
 @Controller('medication-plans')
 export class MedicationPlansController {
@@ -275,7 +282,7 @@ export class MedicationPlansController {
     try {
       const { doctorId, patientId } = createDto;
 
-      if (doctorId) {
+      if (doctorId !== undefined && patientId !== undefined) {
         // pre-process: check and create management
         await this.doctorManagesPatientsService.create({ doctorId, patientId });
 
@@ -325,7 +332,7 @@ export class MedicationPlansController {
 
         const ret = { ...medicationPlan, roomId: conversation.roomId };
         return ret;
-      } else {
+      } else if (!(doctorId == undefined && patientId == undefined)) {
         const medicationPlan = await this.medicationPlansService.createOne(
           createDto,
         );
@@ -348,6 +355,11 @@ export class MedicationPlansController {
         });
 
         return medicationPlan;
+      } else {
+        throw new BadRequestException({
+          status: HttpStatus.BAD_REQUEST,
+          error: 'Missing patient id or doctor id',
+        });
       }
     } catch (error) {
       throw new BadRequestException({
@@ -465,5 +477,23 @@ export class MedicationPlansController {
   @Delete(':id')
   async deleteOne(@Param('id', ParseIntPipe) id: number) {
     return await this.medicationPlansService.deleteOne({ id });
+  }
+
+  @Roles(UserRole.PATIENT)
+  @Delete('local/:id')
+  async deleteLocal(@Param('id', ParseIntPipe) id: number) {
+    return await this.medicationPlansService.deleteLocal(id);
+  }
+
+  @Roles(UserRole.PATIENT)
+  @Patch(':id')
+  async connectFirstTimeUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: ConnectFirstTimeUserDto,
+  ) {
+    return await this.medicationPlansService.syncUserWithPlan(
+      id,
+      data.medicationPlanId,
+    );
   }
 }

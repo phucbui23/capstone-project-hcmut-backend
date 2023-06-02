@@ -305,7 +305,11 @@ export class PatientsService {
       socialSecurityNumber,
     } = data;
 
-    const existingPatient = await this.findOne({ phoneNumber });
+    const existingPatient = await this.prismaService.patientAccount.findFirst({
+      where: {
+        phoneNumber,
+      },
+    });
 
     if (existingPatient)
       throw new BadRequestException('Patient already exists');

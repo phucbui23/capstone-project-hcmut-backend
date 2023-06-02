@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
-import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+} from 'class-validator';
 
 export class CreatePatientDto {
   @ApiProperty({
@@ -20,6 +26,7 @@ export class CreatePatientDto {
   @ApiProperty({
     description: 'Patient phone number',
   })
+  @IsPhoneNumber('VN')
   phoneNumber: string;
 
   @ApiProperty({

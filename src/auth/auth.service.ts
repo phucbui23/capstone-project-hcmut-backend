@@ -96,9 +96,9 @@ export class AuthService {
     hospitalId: number,
   ) {
     const username =
-      `${firstName}` +
+      `${firstName.toLowerCase()}` +
       '.' +
-      `${lastName}` +
+      `${lastName.toLowerCase()}` +
       '.' +
       `${(await this.prismaService.userAccount.count({})) + 1}`;
     const existingDoctor = await this.doctorsService.findOne({ username });
@@ -124,9 +124,9 @@ export class AuthService {
     hospitalId: number,
   ) {
     const username =
-      `${firstName}` +
+      `${firstName.toLowerCase()}` +
       '.' +
-      `${lastName}` +
+      `${lastName.toLowerCase()}` +
       '.' +
       `${(await this.prismaService.userAccount.count({})) + 1}`;
     const existingHospitalAdmin = await this.hospitalAdminsService.findOne({

@@ -258,7 +258,7 @@ model LocalReminderPlanTime {
   patientAccountId                     Int               @map("patient_account_id")
   localReminderPlanMedicationPlanId    Int
   localReminderPlanLocalMedicationName String
-  LocalReminderPlan                    LocalReminderPlan @relation(fields: [localReminderPlanMedicationPlanId, localReminderPlanLocalMedicationName], references: [medicationPlanId, localMedicationName])
+  LocalReminderPlan                    LocalReminderPlan @relation(fields: [localReminderPlanMedicationPlanId, localReminderPlanLocalMedicationName], references: [medicationPlanId, localMedicationName], onDelete: Cascade)
   patientAccount                       PatientAccount    @relation(fields: [patientAccountId], references: [userAccountId], onDelete: Cascade)
 
   @@id([localReminderPlanMedicationPlanId, localReminderPlanLocalMedicationName, time])

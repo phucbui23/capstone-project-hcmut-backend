@@ -580,7 +580,7 @@ export class MedicationPlansService {
         },
       });
 
-    if (!medicationPlanToDelete)
+    if (medicationPlanToDelete)
       throw new BadRequestException({
         status: HttpStatus.NOT_FOUND,
         error:

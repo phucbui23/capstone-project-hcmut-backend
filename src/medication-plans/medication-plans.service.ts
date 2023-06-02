@@ -580,11 +580,11 @@ export class MedicationPlansService {
         },
       });
 
-    if (medicationPlanToDelete)
+    if (!medicationPlanToDelete)
       throw new BadRequestException({
         status: HttpStatus.NOT_FOUND,
         error:
-          "Can't delete this medication plan because it is prescribe by a doctor",
+          "Can't delete this medication plan because it is prescribed by a doctor",
       });
 
     await this.prismaSerivce.medicationPlan.delete({

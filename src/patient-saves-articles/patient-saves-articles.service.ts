@@ -47,7 +47,12 @@ export class PatientSavesArticlesService {
         },
       },
       include: {
-        article: true,
+        article: {
+          include: {
+            articleIncludesTags: true,
+            attachment: true,
+          },
+        },
       },
     });
   }

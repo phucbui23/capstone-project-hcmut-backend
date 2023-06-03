@@ -20,9 +20,8 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
-
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MedicationPlan, UserRole } from '@prisma/client';
 import { ArrayMinSize, IsNotEmpty } from 'class-validator';
 import { doc, updateDoc } from 'firebase/firestore';

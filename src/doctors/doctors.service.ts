@@ -88,8 +88,49 @@ export class DoctorsService {
     return user;
   }
 
-  async findAll(page: number, perPage: number, field: string, order: string) {
+  async findAll(
+    page: number,
+    perPage: number,
+    field: string,
+    order: string,
+    keyword: string,
+  ) {
     const paginate = createPaginator({ perPage });
+
+    if (keyword.length > 0) {
+      return await paginate(
+        this.prismaService.userAccount,
+        {
+          where: {
+            role: { name: { equals: UserRole.DOCTOR } },
+            OR: [
+              {
+                firstName: {
+                  contains: keyword,
+                },
+              },
+              {
+                lastName: {
+                  contains: keyword,
+                },
+              },
+              {
+                operatorAccount: {
+                  username: {
+                    contains: keyword,
+                  },
+                },
+              },
+            ],
+          },
+          include: doctorFieldIncludes,
+          orderBy: {
+            [field]: order,
+          },
+        },
+        { page },
+      );
+    }
 
     return await paginate(
       this.prismaService.userAccount,

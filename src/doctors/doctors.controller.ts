@@ -67,8 +67,15 @@ export class DoctorsController {
     @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage: number,
     @Query('field', new DefaultValuePipe('id')) field: string,
     @Query('order', new DefaultValuePipe('desc')) order: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword: string,
   ) {
-    return await this.doctorsService.findAll(page, perPage, field, order);
+    return await this.doctorsService.findAll(
+      page,
+      perPage,
+      field,
+      order,
+      keyword,
+    );
   }
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)

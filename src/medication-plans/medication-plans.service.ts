@@ -44,6 +44,11 @@ export const medicationPlanIncludeFields: Prisma.MedicationPlanInclude = {
   },
   doctorAccount: false,
   patientAccount: false,
+  bill: {
+    select: {
+      filePath: true,
+    },
+  },
 };
 
 @Injectable()

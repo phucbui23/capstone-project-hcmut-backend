@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
 import {
-  IsDate,
+  IsDateString,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -35,7 +35,7 @@ export class UpdateUserAccountDto {
 
   @ApiProperty({
     required: false,
-    enum: [Gender],
+    enum: Gender,
     description: 'Gender',
   })
   @IsOptional()
@@ -66,7 +66,7 @@ export class UpdateUserAccountDto {
     required: false,
     description: 'Date of birth',
   })
-  @IsDate()
+  @IsDateString()
   @IsOptional()
   birthday: Date;
 }

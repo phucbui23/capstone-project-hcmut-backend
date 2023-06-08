@@ -217,6 +217,18 @@ export class ArticlesService {
     return retArticles;
   }
 
+  async getSavedArticles(patientAccountId: number) {
+    return await this.prismaService.article.findMany({
+      where: {
+        patientSavesArticles: {
+          every: {
+            patientAccountId,
+          },
+        },
+      },
+      include: articleIncludeFields,
+    });
+  }
   async update(id: number, updateArticleDto: UpdateArticleDto) {
     const { content, hospitalId, tags, title } = updateArticleDto;
     return await this.prismaService.article.update({

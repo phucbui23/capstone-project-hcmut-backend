@@ -129,6 +129,11 @@ export class MedicationPlansController {
           {
             patientAccountId: patientId === -1 ? undefined : patientId,
           },
+          {
+            doctorAccountId: {
+              not: null,
+            },
+          },
         ],
       },
     });

@@ -154,6 +154,14 @@ export class ArticlesController {
     return await this.articlesService.recommendArticles(patientAccountId);
   }
 
+  @Roles(UserRole.PATIENT)
+  @Get('saved-articles/:patientAccountId')
+  async getSavedArticles(
+    @Param('patientAccountId', ParseIntPipe) patientAccountId: number,
+  ) {
+    return await this.articlesService.getSavedArticles(patientAccountId);
+  }
+
   @Roles(UserRole.ADMIN, UserRole.PATIENT)
   @Patch('save')
   async saveArticle(@Body() saveArticleDto: SaveArticleDto) {

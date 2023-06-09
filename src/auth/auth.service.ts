@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { DoctorsService } from 'src/doctors/doctors.service';
 import { HospitalAdminsService } from 'src/hospital-admins/hospital-admins.service';
 import { OperatorsService } from 'src/operators/operators.service';
@@ -145,5 +145,23 @@ export class AuthService {
       ),
       hospitalId,
     );
+  }
+
+  async precheckPhoneNumber(phoneNumber: string) {
+    if (
+      await this.prismaService.patientAccount.findUnique({
+        where: {
+          phoneNumber,
+        },
+      })
+    ) {
+      throw new BadRequestException({
+        status: HttpStatus.BAD_REQUEST,
+        error: 'Patient already existed',
+      });
+    }
+    return {
+      valid: true,
+    };
   }
 }

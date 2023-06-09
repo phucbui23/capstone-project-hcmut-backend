@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
@@ -8,17 +8,23 @@ import { PATIENTS_EXAMPLES } from 'prisma/seed-data/patients';
 import { User } from 'src/decorator/user.decorator';
 import { OperatorLocalAuthGuard } from 'src/guard/operator/local-auth.guard';
 import { PatientLocalAuthGuard } from 'src/guard/patient/local-auth.guard';
+import { Roles } from 'src/guard/roles.guard';
 import { SkipAuth } from 'src/guard/skip-auth.guard';
 import { AuthService } from './auth.service';
 import { CreateOperatorDto } from './dto/create-operator.dto';
 import { OperatorAuthDto } from './dto/operator-auth.dto';
 import { PatientAuthDto } from './dto/patient-auth.dto';
-import { Roles } from 'src/guard/roles.guard';
 
 @ApiTags('authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('patient/check/:phoneNumber')
+  @SkipAuth()
+  async precheckPhoneNumber(@Param() phoneNumber: string) {
+    return await this.authService.precheckPhoneNumber(phoneNumber);
+  }
 
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Post('operator/register')

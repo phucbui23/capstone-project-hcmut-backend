@@ -665,6 +665,11 @@ export class MedicationPlansService {
               },
             },
             {
+              doctorAccountId: {
+                not: null,
+              },
+            },
+            {
               name: {
                 contains: keyword,
               },

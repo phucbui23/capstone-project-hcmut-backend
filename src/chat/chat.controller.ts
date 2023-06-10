@@ -125,6 +125,45 @@ export class ChatController {
     file: Express.Multer.File,
     @Body('data') data: any,
   ) {
+    console.log(file);
+    const jsonField = JSON.parse(data);
+    const sendImgMsgDto = plainToClass(SendImgMsgDto, jsonField);
+    const errors = await validate(sendImgMsgDto);
+
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
+    }
+    //upload file => get url
+    const imgUrl = await this.attachmentsService.uploadImage(file);
+    // send url as content
+    return await this.chatService.sendMsg(
+      imgUrl.downloadUrl,
+      sendImgMsgDto.senderCode,
+      sendImgMsgDto.roomId,
+    );
+  }
+
+  @Post('send/image')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.HOSPITAL_ADMIN,
+    UserRole.PATIENT,
+  )
+  @UseInterceptors(FileInterceptor('image'))
+  async sendImage(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: IMAGE_MAX_SIZE }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body('data') data: any,
+  ) {
+    console.log(file);
     const jsonField = JSON.parse(data);
     const sendImgMsgDto = plainToClass(SendImgMsgDto, jsonField);
     const errors = await validate(sendImgMsgDto);

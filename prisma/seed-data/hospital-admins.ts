@@ -26,7 +26,8 @@ export const HOSPITAL_ADMIN_EXAMPLES = Object.fromEntries(
     {
       description: `An example account of hospital admin ${index + 1}`,
       value: {
-        username: `${firstName}+'.'+${lastName}+'.'+${index + 1}`,
+        username: `${firstName}.${lastName}.${index + 1}`,
+        password: `${process.env.HOSPITAL_ADMIN_PASSWORD}`
       } as OperatorAuthDto,
     } as ExampleObject,
   ]),

@@ -6,7 +6,7 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Hospital, UserRole } from '@prisma/client';
 
 import { PaginatedResult } from 'prisma-pagination';
@@ -16,6 +16,7 @@ import { HospitalsService } from './hospitals.service';
 
 @ApiTags('hospitals')
 @Controller('hospitals')
+@ApiBearerAuth()
 export class HospitalsController {
   constructor(private readonly hospitalsService: HospitalsService) {}
 

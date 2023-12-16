@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Roles } from 'src/guard/roles.guard';
 import { PatientSavesArticleDto } from './dto/patient-saves-article.dto';
@@ -7,6 +7,7 @@ import { PatientSavesArticlesService } from './patient-saves-articles.service';
 
 @ApiTags('patient-saves-articles')
 @Controller('patient-saves-articles')
+@ApiBearerAuth()
 export class PatientSavesArticlesController {
   constructor(
     private readonly patientSavesArticlesService: PatientSavesArticlesService,

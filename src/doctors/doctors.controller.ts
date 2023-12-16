@@ -9,7 +9,7 @@ import {
   Patch,
   Query,
 } from '@nestjs/common';
-import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '@prisma/client';
 import { PAGINATION } from 'src/constant';
@@ -20,6 +20,7 @@ import { DoctorsService } from './doctors.service';
 
 @ApiTags('doctors')
 @Controller('doctors')
+@ApiBearerAuth()
 export class DoctorsController {
   constructor(
     private readonly doctorsService: DoctorsService,
@@ -62,12 +63,17 @@ export class DoctorsController {
   })
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Get()
+  @ApiQuery({name: 'page', required: false, type: Number})
+  @ApiQuery({name: 'perPage', required: false, type: Number})
+  @ApiQuery({name: 'field', required: false, type: String})
+  @ApiQuery({name: 'order', required: false, type: String})
+  @ApiQuery({name: 'keyword', required: false, type: String})
   async findAll(
-    @Query('page', new DefaultValuePipe(1)) page: number,
-    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage: number,
-    @Query('field', new DefaultValuePipe('id')) field: string,
-    @Query('order', new DefaultValuePipe('desc')) order: string,
-    @Query('keyword', new DefaultValuePipe('')) keyword: string,
+    @Query('page', new DefaultValuePipe(1)) page?: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage?: number,
+    @Query('field', new DefaultValuePipe('id')) field?: string,
+    @Query('order', new DefaultValuePipe('desc')) order?: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword?: string,
   ) {
     return await this.doctorsService.findAll(
       page,

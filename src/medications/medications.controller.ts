@@ -10,7 +10,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Prisma, UserRole } from '@prisma/client';
 import { PAGINATION } from 'src/constant';
 import { CreateMedicationDto } from './dto/medications.dto';
@@ -20,6 +20,7 @@ import { MedicationsService } from './medications.service';
 
 @ApiTags('medications')
 @Controller('medications')
+@ApiBearerAuth()
 export class MedicationsController {
   constructor(private readonly medicationsService: MedicationsService) {}
 
@@ -62,12 +63,17 @@ export class MedicationsController {
     UserRole.HOSPITAL_ADMIN,
   )
   @Get()
+  @ApiQuery({name: 'page', required: false, type: Number})
+  @ApiQuery({name: 'perPage', required: false, type: Number})
+  @ApiQuery({name: 'field', required: false, type: String})
+  @ApiQuery({name: 'order', required: false, type: String})
+  @ApiQuery({name: 'keyword', required: false, type: String})
   async getListMedications(
-    @Query('page', new DefaultValuePipe(1)) page: number,
-    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage: number,
-    @Query('field', new DefaultValuePipe('updatedAt')) field: string,
-    @Query('order', new DefaultValuePipe('desc')) order: string,
-    @Query('keyword', new DefaultValuePipe('')) keyword: string,
+    @Query('page', new DefaultValuePipe(1)) page?: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage?: number,
+    @Query('field', new DefaultValuePipe('updatedAt')) field?: string,
+    @Query('order', new DefaultValuePipe('desc')) order?: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword?: string,
   ) {
     const result = await this.medicationsService.findAll(
       page,

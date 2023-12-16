@@ -21,7 +21,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MedicationPlan, UserRole } from '@prisma/client';
 import { ArrayMinSize, IsNotEmpty } from 'class-validator';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -60,6 +60,7 @@ export class ConnectFirstTimeUserDto {
 }
 @ApiTags('medication plans')
 @Controller('medication-plans')
+@ApiBearerAuth()
 export class MedicationPlansController {
   constructor(
     private readonly medicationPlansService: MedicationPlansService,
@@ -220,14 +221,19 @@ export class MedicationPlansController {
 
   @Roles(UserRole.ADMIN, UserRole.DOCTOR, UserRole.HOSPITAL_ADMIN)
   @Get('associated-med-plans/:doctorCode')
+  @ApiQuery({name: 'page', required: false, type: Number})
+  @ApiQuery({name: 'perPage', required: false, type: Number})
+  @ApiQuery({name: 'field', required: false, type: String})
+  @ApiQuery({name: 'order', required: false, type: String})
+  @ApiQuery({name: 'keyword', required: false, type: String})
   async getAssociatedMedicationPlans(
     @Param('doctorCode') doctorCode: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE), ParseIntPipe)
-    perPage: number,
-    @Query('field', new DefaultValuePipe('updatedAt')) field: string,
-    @Query('order', new DefaultValuePipe('desc')) order: string,
-    @Query('keyword', new DefaultValuePipe('')) keyword: string,
+    perPage?: number,
+    @Query('field', new DefaultValuePipe('updatedAt')) field?: string,
+    @Query('order', new DefaultValuePipe('desc')) order?: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword?: string,
   ) {
     return await this.medicationPlansService.getAssociatedMedicationPlans(
       doctorCode,

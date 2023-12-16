@@ -1,5 +1,5 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Resource, UserRole } from '@prisma/client';
 
 import { Roles } from 'src/guard/roles.guard';
@@ -7,6 +7,7 @@ import { ResourcesService } from './resources.service';
 
 @ApiTags('resources')
 @Controller('resources')
+@ApiBearerAuth()
 export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) {}
 

@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
@@ -26,6 +26,7 @@ import { InitConversationDto, SendImgMsgDto, SendMsgDto } from './dto/chat.dto';
 
 @ApiTags('chat')
 @Controller('chat')
+@ApiBearerAuth()
 export class ChatController {
   constructor(
     private readonly chatService: ChatService,

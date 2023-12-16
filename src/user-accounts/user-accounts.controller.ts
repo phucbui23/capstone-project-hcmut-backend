@@ -12,7 +12,7 @@ import {
   Query,
   Res,
 } from '@nestjs/common';
-import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Response } from 'express';
 import { AuthHelper } from 'src/auth/auth.helper';
@@ -29,6 +29,7 @@ import { UserAccountsService } from './user-accounts.service';
 
 @ApiTags('user-accounts')
 @Controller('user-accounts')
+@ApiBearerAuth()
 export class UserAccountsController {
   constructor(
     private readonly userAccountsService: UserAccountsService,
@@ -77,14 +78,19 @@ export class UserAccountsController {
   })
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL_ADMIN)
   @Get()
+  @ApiQuery({name: 'page', required: false, type: Number})
+  @ApiQuery({name: 'perPage', required: false, type: Number})
+  @ApiQuery({name: 'field', required: false, type: String})
+  @ApiQuery({name: 'order', required: false, type: String})
+  @ApiQuery({name: 'keyword', required: false, type: String})
   async getListUserAccounts(
-    @Query('page', new DefaultValuePipe(1)) page: number,
-    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE), ParseIntPipe)
-    perPage: number,
-    @Query('field', new DefaultValuePipe('createdAt')) field: string,
-    @Query('order', new DefaultValuePipe('desc')) order: string,
-    @Query('keyword', new DefaultValuePipe('')) keyword: string,
     @Res({ passthrough: true }) res: Response,
+    @Query('page', new DefaultValuePipe(1)) page?: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE), ParseIntPipe)
+    perPage?: number,
+    @Query('field', new DefaultValuePipe('createdAt')) field?: string,
+    @Query('order', new DefaultValuePipe('desc')) order?: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword?: string,
   ) {
     const result = await this.userAccountsService.findAll(
       page,

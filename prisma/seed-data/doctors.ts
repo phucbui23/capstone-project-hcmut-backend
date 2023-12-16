@@ -25,7 +25,8 @@ export const DOCTORS_EXAMPLES = Object.fromEntries(
     {
       description: `An example account of doctor ${index + 1}`,
       value: {
-        username: `${firstName}+'.'+${lastName}+'.'+${index + 1}`,
+        username: `${firstName}.${lastName}.${index + 1}`,
+        password: `${process.env.DOCTOR_PASSWORD}`,
       } as OperatorAuthDto,
     } as ExampleObject,
   ]),

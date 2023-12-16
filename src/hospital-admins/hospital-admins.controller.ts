@@ -7,7 +7,7 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '@prisma/client';
 import { IsNotEmpty } from 'class-validator';
@@ -24,6 +24,7 @@ export class SystemReportDto {
 }
 @ApiTags('hospital admins')
 @Controller('hospital-admins')
+@ApiBearerAuth()
 export class HospitalAdminsController {
   constructor(private readonly hospitalAdminsService: HospitalAdminsService) {}
 

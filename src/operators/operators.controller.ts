@@ -6,7 +6,7 @@ import {
   ParseIntPipe,
   Patch,
 } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 
 import { UserRole } from '@prisma/client';
 import { Roles } from 'src/guard/roles.guard';
@@ -16,6 +16,7 @@ import { OperatorsService } from './operators.service';
 
 @ApiTags('operators')
 @Controller('operators')
+@ApiBearerAuth()
 export class OperatorsController {
   constructor(
     private readonly operatorsService: OperatorsService,

@@ -17,7 +17,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { plainToClass } from 'class-transformer';
 import { IsNotEmpty, validate } from 'class-validator';
@@ -43,6 +43,7 @@ export class SaveArticleDto {
 
 @ApiTags('articles')
 @Controller('articles')
+@ApiBearerAuth()
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
@@ -118,12 +119,17 @@ export class ArticlesController {
     UserRole.PATIENT,
   )
   @Get()
+  @ApiQuery({name: 'page', required: false, type: Number})
+  @ApiQuery({name: 'perPage', required: false, type: Number})
+  @ApiQuery({name: 'field', required: false, type: String})
+  @ApiQuery({name: 'order', required: false, type: String})
+  @ApiQuery({name: 'keyword', required: false, type: String})
   async getListArticles(
-    @Query('page', new DefaultValuePipe(1)) page: number,
-    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage: number,
-    @Query('field', new DefaultValuePipe('createdAt')) field: string,
-    @Query('order', new DefaultValuePipe('desc')) order: string,
-    @Query('keyword', new DefaultValuePipe('')) keyword: string,
+    @Query('page', new DefaultValuePipe(1)) page?: number,
+    @Query('perPage', new DefaultValuePipe(PAGINATION.PERPAGE)) perPage?: number,
+    @Query('field', new DefaultValuePipe('createdAt')) field?: string,
+    @Query('order', new DefaultValuePipe('desc')) order?: string,
+    @Query('keyword', new DefaultValuePipe('')) keyword?: string,
   ) {
     const result = await this.articlesService.findAll(
       page,

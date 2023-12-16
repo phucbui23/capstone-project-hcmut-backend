@@ -10,13 +10,14 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { PROFILE_IMAGE_MAX_SIZE } from 'src/constant';
 import { Roles } from 'src/guard/roles.guard';
 import { AttachmentsService } from './attachments.service';
 @ApiTags('attchments')
 @Controller('attachments')
+@ApiBearerAuth()
 export class AttachmentsController {
   constructor(private readonly attachmentsService: AttachmentsService) {}
 

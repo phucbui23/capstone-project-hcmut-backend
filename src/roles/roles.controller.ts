@@ -1,5 +1,5 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role, UserRole } from '@prisma/client';
 
 import { Roles } from 'src/guard/roles.guard';
@@ -7,6 +7,7 @@ import { RolesService } from './roles.service';
 
 @ApiTags('roles')
 @Controller('roles')
+@ApiBearerAuth()
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

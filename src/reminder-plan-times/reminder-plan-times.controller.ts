@@ -7,7 +7,7 @@ import {
   Patch,
   Query,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import {
   LocalReminderPlanTime,
   ReminderPlanTime,
@@ -23,6 +23,7 @@ import { ReminderPlanTimesService } from './reminder-plan-times.service';
 
 @ApiTags('reminder plan times')
 @Controller('reminder-plan-times')
+@ApiBearerAuth()
 export class ReminderPlanTimesController {
   constructor(
     private readonly reminderPlanTimesService: ReminderPlanTimesService,
